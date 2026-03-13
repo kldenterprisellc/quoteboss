@@ -300,6 +300,7 @@
 <script>
   // Inject Flask data for JS
   window.__PRICING__ = {{ pricing|safe }};
+  window.__PLAN_TIER__ = "{{ plan_tier }}";
   {% if shared_quote is defined and shared_quote %}
   window.__SHARED_QUOTE__ = {{ shared_quote|safe }};
   {% else %}

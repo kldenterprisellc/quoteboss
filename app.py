@@ -3,8 +3,10 @@ import io
 import json
 import uuid
 import base64
+import urllib.request
+import urllib.error
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, render_template, send_file, abort
+from flask import Flask, request, jsonify, render_template, send_file, abort, session, redirect
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -15,6 +17,7 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'qb-dev-secret-2026')
 
 # In-memory quote store (stateless MVP — quotes expire on restart)
 quote_store = {}
@@ -518,7 +521,60 @@ def generate_pdf(quote_data: dict) -> bytes:
 
 @app.route("/")
 def index():
-    return render_template("index.html", pricing=json.dumps(PRICING))
+    if not session.get('verified_license'):
+        return redirect('/access')
+    tier = session.get('plan_tier', 'basic')
+    return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier)
+
+
+@app.route("/access")
+def access_page():
+    if session.get('verified_license'):
+        return redirect('/')
+    return render_template("access.html")
+
+
+@app.route("/api/verify-license", methods=["POST"])
+def verify_license():
+    data = request.get_json(force=True)
+    license_key = data.get("license_key", "").strip()
+    if not license_key:
+        return jsonify({"error": "License key required"}), 400
+
+    try:
+        req = urllib.request.Request(
+            f"https://api.whop.com/api/v2/memberships/{license_key}",
+            headers={"Authorization": "Bearer REDACTED_ROTATED_KEY"}
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            membership = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return jsonify({"error": "Invalid license key"}), 400
+        return jsonify({"error": "Verification failed, try again"}), 500
+    except Exception:
+        return jsonify({"error": "Verification failed, try again"}), 500
+
+    if membership.get("status") != "active":
+        return jsonify({"error": "This license is not active. Please check your Whop account."}), 400
+
+    if membership.get("product_id") != "prod_Bunxdbxo96qpc":
+        return jsonify({"error": "This key is not valid for QuoteBoss"}), 400
+
+    plan_id = membership.get("plan_id", "")
+    tier = "pro" if plan_id == "plan_v5y4UTJONBPVB" else "basic"
+
+    session['verified_license'] = license_key
+    session['plan_tier'] = tier
+    session.permanent = True
+
+    return jsonify({"success": True, "tier": tier})
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect('/access')
 
 
 @app.route("/api/labor-defaults", methods=["GET"])
@@ -528,6 +584,8 @@ def api_labor_defaults():
 
 @app.route("/api/quote", methods=["POST"])
 def api_quote():
+    if not session.get('verified_license'):
+        return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(force=True)
     try:
         calc = calculate_quote(data)
@@ -576,6 +634,8 @@ def api_quote():
 
 @app.route("/api/pdf/<quote_id>", methods=["GET"])
 def api_pdf(quote_id):
+    if not session.get('verified_license'):
+        return jsonify({"error": "Unauthorized"}), 401
     quote = quote_store.get(quote_id.upper())
     if not quote:
         abort(404)
@@ -591,9 +651,10 @@ def api_pdf(quote_id):
 @app.route("/q/<quote_id>")
 def view_quote(quote_id):
     quote = quote_store.get(quote_id.upper())
+    tier = session.get('plan_tier', 'basic')
     if not quote:
-        return render_template("index.html", pricing=json.dumps(PRICING), error="Quote not found or expired.")
-    return render_template("index.html", pricing=json.dumps(PRICING), shared_quote=json.dumps(quote))
+        return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, error="Quote not found or expired.")
+    return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, shared_quote=json.dumps(quote))
 
 
 if __name__ == "__main__":
