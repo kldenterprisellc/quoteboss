@@ -625,7 +625,7 @@ def auth_callback():
     except Exception:
         return redirect('/access?error=user_fetch_failed')
 
-    WHOP_API_KEY = 'REDACTED_ROTATED_KEY'
+    WHOP_API_KEY = os.environ.get('WHOP_API_KEY', '')
     try:
         mem_req = urllib.request.Request(
             f'https://api.whop.com/api/v2/memberships?product_id=prod_Bunxdbxo96qpc&valid=true&user_id={user_id}',
