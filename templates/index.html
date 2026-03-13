@@ -18,6 +18,7 @@
   </a>
   <span class="tagline">Professional quotes in 2 minutes</span>
   <div style="display:flex;align-items:center;gap:0.5rem;">
+    <a href="/history" style="font-size:0.85rem;color:#888;text-decoration:none;margin-right:0.5rem;">📋 History</a>
     <a href="/settings" style="font-size:0.85rem;color:#888;text-decoration:none;margin-right:0.5rem;">⚙️ Settings</a>
     <a href="/logout" style="font-size:0.85rem;color:#888;text-decoration:none;">Sign out</a>
   </div>
@@ -283,6 +284,9 @@
         <input type="text" id="share-url" class="share-url" readonly>
         <button class="btn btn-navy btn-sm" onclick="copyShareLink()">Copy</button>
       </div>
+      <button onclick="copyQuoteLink()" id="copy-btn" class="btn btn-secondary" style="margin-top:0.5rem;width:100%;">
+        📋 Copy Quote Link
+      </button>
     </div>
 
     <div style="text-align:center; margin-top: 0.5rem;">
@@ -310,6 +314,18 @@
   {% else %}
   window.__SHARED_QUOTE__ = null;
   {% endif %}
+</script>
+<script>
+function copyQuoteLink() {
+  const linkEl = document.getElementById('share-url') || document.querySelector('[data-quote-url]') || document.querySelector('.share-url');
+  const url = linkEl ? (linkEl.href || linkEl.value || linkEl.textContent) : window.location.href;
+  navigator.clipboard.writeText(url.trim()).then(() => {
+    const btn = document.getElementById('copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
 </script>
 <script src="/static/app.js"></script>
 </body>

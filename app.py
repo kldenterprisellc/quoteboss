@@ -23,12 +23,21 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from database import init_db, get_contractor, upsert_contractor, save_quote, get_quote, init_feedback_table, save_feedback, get_all_feedback
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'qb-dev-secret-2026')
+app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(32)
 init_db()
 init_feedback_table()
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 
 # In-memory quote store (backed by SQLite for persistence across restarts)
 quote_store = {}
@@ -547,6 +556,7 @@ def access_page():
 
 
 @app.route("/auth/login")
+@limiter.limit("10 per minute")
 def auth_login():
     code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b'=').decode()
     code_challenge = base64.urlsafe_b64encode(
@@ -575,6 +585,7 @@ def auth_login():
 
 
 @app.route("/auth/callback")
+@limiter.limit("10 per minute")
 def auth_callback():
     error = request.args.get('error')
     if error:
@@ -670,6 +681,7 @@ def api_labor_defaults():
 
 
 @app.route("/api/quote", methods=["POST"])
+@limiter.limit("30 per minute")
 def api_quote():
     if not session.get('whop_user_id'):
         return jsonify({"error": "Unauthorized"}), 401
@@ -792,6 +804,7 @@ def update_settings():
 
 
 @app.route("/auth/stripe-connect")
+@limiter.limit("5 per minute")
 def stripe_connect():
     if not session.get('whop_user_id'):
         return redirect('/access')
@@ -821,6 +834,7 @@ def stripe_connect():
 
 
 @app.route("/api/create-checkout/<quote_id>", methods=["POST"])
+@limiter.limit("20 per minute")
 def create_checkout(quote_id):
     quote = quote_store.get(quote_id.upper())
     db_quote = None
@@ -896,6 +910,7 @@ def feedback_page():
     return render_template("feedback.html")
 
 @app.route("/api/feedback", methods=["POST"])
+@limiter.limit("5 per minute")
 def submit_feedback():
     if not session.get('whop_user_id'):
         return jsonify({"error": "Unauthorized"}), 401
@@ -948,6 +963,36 @@ def terms_page():
 @app.route("/privacy")
 def privacy_page():
     return render_template("privacy.html")
+
+
+@app.route("/history")
+def quote_history():
+    if not session.get('whop_user_id'):
+        return redirect('/access')
+    conn = __import__('database').get_db()
+    c = conn.cursor()
+    rows = c.execute(
+        'SELECT quote_id, quote_data, created_at FROM quotes WHERE whop_user_id = ? ORDER BY created_at DESC LIMIT 50',
+        (session['whop_user_id'],)
+    ).fetchall()
+    conn.close()
+    import json as json_lib
+    quotes = []
+    for row in rows:
+        try:
+            qd = json_lib.loads(row['quote_data'])
+            quotes.append({
+                'quote_id': row['quote_id'],
+                'created_at': row['created_at'][:10],
+                'trade': qd.get('trade', ''),
+                'job_type': qd.get('job_type', ''),
+                'total_min': qd.get('total_min', 0),
+                'total_max': qd.get('total_max', 0),
+                'contractor_business': qd.get('contractor_business', ''),
+            })
+        except Exception:
+            pass
+    return render_template("history.html", quotes=quotes)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuoteBoss - Quote History</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23FF6B00'/><text x='50%' y='62%' dominant-baseline='middle' text-anchor='middle' font-size='18'>💼</text></svg>">
+</head>
+<body>
+<nav class="topbar">
+  <a class="logo" href="/">
+    <div class="logo-icon">💼</div>
+    <span class="logo-text">Quote<span>Boss</span></span>
+  </a>
+  <div style="display:flex;gap:1rem;align-items:center;">
+    <a href="/settings" style="font-size:0.85rem;color:#aaa;text-decoration:none;">Settings</a>
+    <a href="/logout" style="font-size:0.85rem;color:#aaa;text-decoration:none;">Sign out</a>
+  </div>
+</nav>
+
+<div class="container" style="max-width:720px;padding-top:2rem;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+    <h2 style="font-size:1.4rem;font-weight:800;color:#0B1F3A;">Quote History</h2>
+    <a href="/" class="btn btn-primary" style="font-size:0.85rem;padding:0.5rem 1rem;">New Quote</a>
+  </div>
+
+  {% if quotes %}
+  <div class="card" style="padding:0;overflow:hidden;">
+    {% for q in quotes %}
+    <div style="padding:1rem 1.25rem;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+      <div style="min-width:0;">
+        <div style="font-weight:700;font-size:0.95rem;color:#0B1F3A;">{{ q.trade }} - {{ q.job_type }}</div>
+        <div style="font-size:0.8rem;color:#888;margin-top:0.2rem;">{{ q.created_at }} {% if q.contractor_business %} &middot; {{ q.contractor_business }}{% endif %}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-weight:700;color:#FF6B00;font-size:0.95rem;">${{ "{:,.0f}".format(q.total_min) }} - ${{ "{:,.0f}".format(q.total_max) }}</div>
+        <a href="/q/{{ q.quote_id }}" style="font-size:0.78rem;color:#888;text-decoration:none;" target="_blank">View quote</a>
+        <span style="color:#ddd;margin:0 0.25rem;">|</span>
+        <button onclick="copyLink('/q/{{ q.quote_id }}')" style="font-size:0.78rem;color:#FF6B00;border:none;background:none;cursor:pointer;padding:0;">Copy link</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center;padding:3rem;">
+    <div style="font-size:2.5rem;margin-bottom:1rem;">📄</div>
+    <div style="font-weight:700;color:#0B1F3A;margin-bottom:0.5rem;">No quotes yet</div>
+    <div style="color:#888;font-size:0.9rem;margin-bottom:1.5rem;">Generate your first quote and it will appear here.</div>
+    <a href="/" class="btn btn-primary">Create a Quote</a>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function copyLink(path) {
+  navigator.clipboard.writeText(window.location.origin + path).then(() => {
+    alert('Link copied!');
+  });
+}
+</script>
+</body>
+</html>
