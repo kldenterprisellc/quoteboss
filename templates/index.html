@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <title>QuoteBoss — Professional Quotes for Contractors</title>
+  <meta name="description" content="Generate professional contractor quotes in under 2 minutes. HVAC, Plumbing, Electrical, Roofing, Landscaping.">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23FF6B00'/><text x='50%' y='62%' dominant-baseline='middle' text-anchor='middle' font-size='18'>💼</text></svg>">
+</head>
+<body>
+
+<!-- Top Bar -->
+<nav class="topbar">
+  <a class="logo" href="/">
+    <div class="logo-icon">💼</div>
+    <span class="logo-text">Quote<span>Boss</span></span>
+  </a>
+  <span class="tagline">Professional quotes in 2 minutes</span>
+</nav>
+
+<div class="container">
+
+  <!-- Progress Indicators -->
+  <div class="progress-wrap">
+    <div class="step-indicator active" data-step="1">
+      <div class="step-dot">1</div>
+      <div class="step-label">Trade</div>
+    </div>
+    <div class="step-line" data-after="1"></div>
+    <div class="step-indicator" data-step="2">
+      <div class="step-dot">2</div>
+      <div class="step-label">Details</div>
+    </div>
+    <div class="step-line" data-after="2"></div>
+    <div class="step-indicator" data-step="3">
+      <div class="step-dot">3</div>
+      <div class="step-label">Info</div>
+    </div>
+    <div class="step-line" data-after="3"></div>
+    <div class="step-indicator" data-step="4">
+      <div class="step-dot">4</div>
+      <div class="step-label">Quote</div>
+    </div>
+  </div>
+
+  <!-- Error Banner -->
+  <div id="error-banner" class="error-banner"></div>
+
+  <!-- ═══════════════ STEP 1 — Trade & Job ═══════════════ -->
+  <div id="step-1" class="step-section">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🏗️</div>
+        <div>
+          <div class="card-title">Select Your Trade</div>
+          <div class="card-subtitle">What type of contractor are you?</div>
+        </div>
+      </div>
+
+      <div id="trade-grid" class="trade-grid"></div>
+    </div>
+
+    <!-- Job Type (shown after trade selected) -->
+    <div id="job-section" class="card hidden">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        <div>
+          <div class="card-title">Select Job Type</div>
+          <div class="card-subtitle">What's the job?</div>
+        </div>
+      </div>
+      <div id="job-grid" class="job-grid"></div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn btn-primary btn-lg btn-full" onclick="goToStep2()">
+        Next: Job Details →
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ STEP 2 — Job Details ═══════════════ -->
+  <div id="step-2" class="step-section hidden">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📐</div>
+        <div>
+          <div class="card-title">Job Details</div>
+          <div class="card-subtitle">Help us calculate an accurate estimate</div>
+        </div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div>
+          <label for="property-size">Property Size (sq ft)</label>
+          <input type="number" id="property-size" placeholder="e.g. 1800" value="1500" min="100" max="50000">
+        </div>
+        <div>
+          <label for="labor-hours">Est. Labor Hours</label>
+          <input type="number" id="labor-hours" placeholder="e.g. 6" value="4" min="0.5" max="500" step="0.5">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="location">Location (City, State)</label>
+          <input type="text" id="location" placeholder="e.g. Austin, TX">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Materials Needed</label>
+          <div id="materials-grid" class="check-grid"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="job-description">Job Description (optional)</label>
+          <textarea id="job-description" placeholder="Describe the scope of work, any special requirements..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn btn-secondary" onclick="showStep(1)">← Back</button>
+      <button class="btn btn-primary btn-lg" style="flex:1" onclick="goToStep3()">
+        Next: Your Info →
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ STEP 3 — Contractor & Client Info ═══════════════ -->
+  <div id="step-3" class="step-section hidden">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">👷</div>
+        <div>
+          <div class="card-title">Your Business Info</div>
+          <div class="card-subtitle">This appears on the quote</div>
+        </div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div>
+          <label for="contractor-name">Your Name *</label>
+          <input type="text" id="contractor-name" placeholder="John Smith">
+        </div>
+        <div>
+          <label for="contractor-business">Business Name *</label>
+          <input type="text" id="contractor-business" placeholder="Smith HVAC LLC">
+        </div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div>
+          <label for="contractor-phone">Phone</label>
+          <input type="tel" id="contractor-phone" placeholder="(555) 123-4567">
+        </div>
+        <div>
+          <label for="contractor-email">Email</label>
+          <input type="email" id="contractor-email" placeholder="john@smithhvac.com">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🏡</div>
+        <div>
+          <div class="card-title">Client Info</div>
+          <div class="card-subtitle">Who is this quote for?</div>
+        </div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div>
+          <label for="client-name">Client Name</label>
+          <input type="text" id="client-name" placeholder="Jane Doe">
+        </div>
+        <div>
+          <label for="client-address">Property Address</label>
+          <input type="text" id="client-address" placeholder="123 Main St">
+        </div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn btn-secondary" onclick="showStep(2)">← Back</button>
+      <button id="generate-btn" class="btn btn-primary btn-lg" style="flex:1" onclick="generateQuote()">
+        <span id="generate-spinner" class="spinner"></span>
+        Generate Quote ✨
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ STEP 4 — Result ═══════════════ -->
+  <div id="step-4" class="step-section hidden">
+
+    <!-- Result Card -->
+    <div class="result-card">
+      <div class="result-header">
+        <div>
+          <div class="result-title">✅ Quote Ready!</div>
+          <div class="result-id" id="result-quote-id"></div>
+        </div>
+        <button class="btn btn-sm btn-outline-orange" onclick="newQuote()">+ New Quote</button>
+      </div>
+
+      <!-- Range Display -->
+      <div class="quote-range">
+        <div class="range-label">Estimated Project Cost</div>
+        <div class="range-value">
+          <span id="result-min"></span> – <span id="result-max"></span>
+        </div>
+        <div class="range-note">Regional pricing applied · Valid for 30 days</div>
+      </div>
+
+      <!-- Line Items -->
+      <div class="line-items" id="result-line-items"></div>
+
+      <!-- Actions -->
+      <div class="result-actions">
+        <button class="btn btn-primary" onclick="downloadPDF()">
+          📄 Download PDF
+        </button>
+        <button class="btn btn-secondary" onclick="copyShareLink()">
+          🔗 Copy Link
+        </button>
+      </div>
+    </div>
+
+    <!-- Share Box -->
+    <div class="share-box">
+      <label style="margin-bottom: 0.5rem; display: block; font-size: 0.8rem; font-weight: 600; color: var(--navy);">
+        🔗 Shareable Link
+      </label>
+      <div class="share-row">
+        <input type="text" id="share-url" class="share-url" readonly>
+        <button class="btn btn-navy btn-sm" onclick="copyShareLink()">Copy</button>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top: 0.5rem;">
+      <button class="btn btn-secondary" onclick="newQuote()">
+        ← Start a New Quote
+      </button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer class="app-footer">
+  Powered by QuoteBoss · Fast, professional quotes for trades contractors
+</footer>
+
+<!-- Toast container -->
+<div class="toast"></div>
+
+<script>
+  // Inject Flask data for JS
+  window.__PRICING__ = {{ pricing|safe }};
+  {% if shared_quote is defined and shared_quote %}
+  window.__SHARED_QUOTE__ = {{ shared_quote|safe }};
+  {% else %}
+  window.__SHARED_QUOTE__ = null;
+  {% endif %}
+</script>
+<script src="/static/app.js"></script>
+</body>
+</html>
