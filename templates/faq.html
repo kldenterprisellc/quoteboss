@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuoteBoss - FAQ</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .faq-section { margin-bottom: 2rem; }
+    .faq-section-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #FF6B00;
+      margin-bottom: 1rem;
+    }
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 1rem 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--navy);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .faq-question:hover { color: #FF6B00; }
+    .faq-chevron { font-size: 0.85rem; transition: transform 0.2s; flex-shrink: 0; }
+    .faq-answer {
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.6;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease, padding 0.25s ease;
+    }
+    .faq-item.open .faq-answer { max-height: 300px; padding-bottom: 1rem; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="logo" href="/">
+    <div class="logo-icon">💼</div>
+    <span class="logo-text">Quote<span>Boss</span></span>
+  </a>
+  <div style="display:flex;gap:1rem;align-items:center;">
+    <a href="/settings" style="font-size:0.85rem;color:#aaa;text-decoration:none;">Settings</a>
+    <a href="/logout" style="font-size:0.85rem;color:#aaa;text-decoration:none;">Sign out</a>
+  </div>
+</nav>
+
+<div class="container" style="max-width:660px;padding-top:2rem;">
+
+  <div style="margin-bottom:1.5rem;">
+    <h1 style="font-size:1.6rem;font-weight:800;color:var(--navy);">Frequently Asked Questions</h1>
+    <p style="color:#888;font-size:0.9rem;margin-top:0.25rem;">Everything you need to know about QuoteBoss.</p>
+  </div>
+
+  <div class="card">
+
+    <!-- Using QuoteBoss -->
+    <div class="faq-section">
+      <div class="faq-section-title">Using QuoteBoss</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          How do I send a quote to my client?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          After generating a quote, copy the shareable link and text or email it to your client. They can open it on any device - no account or app needed on their end. You can also download the PDF and send that directly.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          Does my client need to create an account?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          No. Your client gets a link, opens it in their browser, and sees the full quote with payment options. Nothing to sign up for on their end.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          What trades are supported?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          HVAC, Plumbing, Electrical, Roofing, Landscaping, and General Contracting. Each trade has multiple job types with accurate national average pricing.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          How accurate is the pricing?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Pricing is based on verified 2025 national averages from Angi, HomeAdvisor, and HomeWyse, adjusted for your state's labor costs. It gives you a solid starting range - you can always override it with your own rates on the Pro plan.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          Will my quotes be saved if I close the app?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Yes. Every quote is saved and accessible via its shareable link. You can bookmark quote links or share them anytime - they don't expire.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Pro Features -->
+    <div class="faq-section">
+      <div class="faq-section-title">Pro Features</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          Can I use my own prices instead of national averages?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Yes, on the Pro plan. When building your quote, enter your own low and high estimates in the custom rate fields. These override the national averages and your prices are used for the quote and PDF.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          How do I add my logo to quotes?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Logo upload is a Pro feature currently in development. It will appear in your Settings once live. When added, your logo will replace the QuoteBoss branding in every PDF you generate.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Payments -->
+    <div class="faq-section">
+      <div class="faq-section-title">Collecting Payments</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          How do I collect payment from clients?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Go to Settings and connect your Stripe account. Once connected, every quote link you send will show "Pay 50% Deposit" and "Pay in Full" buttons. Your client pays by card, money goes directly to your bank account.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          Is there a fee for collecting payments?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          There is a 1% processing fee in addition to Stripe's standard card fees (2.9% + 30 cents). By default this is added to the client's total so you receive your full quoted amount. Pro users can toggle this to absorb the fee themselves in Settings.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          Can clients pay via Zelle?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Yes. Add your Zelle email or phone number in Settings. It will appear on your quote links so clients can send payment directly to your Zelle. No processing fees for Zelle payments.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          When do I get paid?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Stripe typically deposits funds to your bank account within 2 business days of a payment. Your payout schedule is set in your Stripe account settings.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Account -->
+    <div class="faq-section">
+      <div class="faq-section-title">Account and Billing</div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          How do I cancel my subscription?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Log into your Whop account at whop.com, find QuoteBoss under your memberships, and cancel from there. No cancellation fees. You keep access until the end of your billing period.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          How do I upgrade from Basic to Pro?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Go to whop.com/web-growth-systems and purchase the Pro plan. Once your Whop membership is updated, sign out of QuoteBoss and sign back in - your Pro features will be unlocked automatically.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggle(this)">
+          Something is not working - how do I get help?
+          <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-answer">
+          Reach out through your Whop account or email support at the address on your Whop receipt. We typically respond within a few hours.
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div style="text-align:center;margin-top:1rem;margin-bottom:2rem;">
+    <a href="/" class="btn btn-primary">Back to QuoteBoss</a>
+  </div>
+
+</div>
+
+<script>
+function toggle(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+
+</body>
+</html>
