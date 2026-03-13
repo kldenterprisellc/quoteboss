@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/static/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <title>QuoteBoss - Welcome! Set Up Your Account</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0B1F3A;
+      --navy-light: #152d52;
+      --orange: #FF6B00;
+      --orange-dark: #e05c00;
+      --bg: #F0F2F5;
+      --card: #FFFFFF;
+      --text: #1a1a2e;
+      --muted: #666;
+      --border: #E0E4EA;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .topbar {
+      background: var(--navy);
+      padding: 0 1.5rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-text {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+    .logo-text span { color: var(--orange); }
+
+    /* Layout */
+    .wizard-wrap {
+      max-width: 480px;
+      margin: 2rem auto;
+      padding: 0 1rem 4rem;
+    }
+
+    /* Step indicator */
+    .step-indicator-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 2rem;
+    }
+    .step-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      border: 2px solid var(--border);
+      background: white;
+      color: var(--muted);
+      transition: all 0.3s;
+      position: relative;
+      z-index: 1;
+    }
+    .step-circle.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: white;
+      box-shadow: 0 0 0 4px rgba(255,107,0,0.15);
+    }
+    .step-circle.done {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: white;
+    }
+    .step-line-bar {
+      width: 60px;
+      height: 2px;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .step-line-bar.done { background: var(--navy); }
+
+    /* Step label row */
+    .step-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .step-labels span { text-align: center; flex: 1; }
+    .step-labels span.active-label { color: var(--orange); }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(11,31,58,0.10);
+      padding: 2rem;
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 0.3rem;
+    }
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Form */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 0.3rem;
+    }
+    .required-star { color: var(--orange); }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="file"] {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(255,107,0,0.12);
+    }
+
+    .form-row { margin-bottom: 1rem; }
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 420px) {
+      .form-row-2 { grid-template-columns: 1fr; }
+    }
+
+    /* Trade grid */
+    .trade-select-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+    }
+
+    .trade-option {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: white;
+    }
+    .trade-option:hover {
+      border-color: var(--orange);
+      background: rgba(255,107,0,0.04);
+    }
+    .trade-option.selected {
+      border-color: var(--orange);
+      background: rgba(255,107,0,0.09);
+      box-shadow: 0 0 0 3px rgba(255,107,0,0.13);
+    }
+    .trade-option input[type="radio"] {
+      display: none;
+    }
+    .trade-emoji-ob { font-size: 1.4rem; }
+    .trade-label-ob { font-size: 0.85rem; font-weight: 700; color: var(--navy); }
+
+    /* Team size radio */
+    .team-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+    }
+    .team-option {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 0.9rem;
+      cursor: pointer;
+      transition: all 0.18s;
+      background: white;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .team-option input[type="radio"] { display: none; }
+    .team-option:hover { border-color: var(--orange); background: rgba(255,107,0,0.04); }
+    .team-option.selected {
+      border-color: var(--orange);
+      background: rgba(255,107,0,0.09);
+      box-shadow: 0 0 0 3px rgba(255,107,0,0.13);
+    }
+
+    /* Buttons */
+    .btn-next {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--orange);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 1.25rem;
+      transition: background 0.2s, transform 0.15s;
+      box-shadow: 0 4px 12px rgba(255,107,0,0.3);
+    }
+    .btn-next:hover {
+      background: var(--orange-dark);
+      transform: translateY(-1px);
+    }
+    .btn-back {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 0.75rem;
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 0.4rem;
+    }
+    .btn-back:hover { color: var(--navy); }
+
+    /* Logo upload hint */
+    .upload-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    /* Error */
+    .field-error {
+      font-size: 0.75rem;
+      color: #c62828;
+      margin-top: 0.25rem;
+      display: none;
+    }
+    .field-error.show { display: block; }
+
+    /* Subtitle for trade step */
+    .trade-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    /* Animation */
+    .wizard-step { animation: fadeUp 0.25s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <span class="logo-text">Quote<span>Boss</span></span>
+</nav>
+
+<div class="wizard-wrap">
+
+  <!-- Step indicator -->
+  <div>
+    <div class="step-indicator-bar">
+      <div class="step-circle active" id="step-dot-1">1</div>
+      <div class="step-line-bar" id="step-line-1"></div>
+      <div class="step-circle" id="step-dot-2">2</div>
+      <div class="step-line-bar" id="step-line-2"></div>
+      <div class="step-circle" id="step-dot-3">3</div>
+    </div>
+    <div class="step-labels">
+      <span class="active-label" id="step-label-1">Your Business</span>
+      <span id="step-label-2">Your Trade</span>
+      <span id="step-label-3">Your Team</span>
+    </div>
+  </div>
+
+  <!-- The form wraps all 3 steps -->
+  <form action="/onboarding" method="POST" enctype="multipart/form-data" id="onboarding-form">
+
+    <!-- ============ STEP 1: Business Info ============ -->
+    <div id="ob-step-1" class="card wizard-step" style="margin-top:1.5rem;">
+      <div class="card-title">Tell us about your business</div>
+      <div class="card-subtitle">This info appears on your quotes</div>
+
+      <div class="form-row">
+        <label>Business Name <span class="required-star">*</span></label>
+        <input type="text" name="business_name" id="field-business-name" placeholder="Smith Roofing LLC" autocomplete="organization">
+        <div class="field-error" id="err-business-name">Business name is required</div>
+      </div>
+
+      <div class="form-row">
+        <label>Your Name <span class="required-star">*</span></label>
+        <input type="text" name="owner_name" id="field-owner-name" placeholder="John Smith" autocomplete="name">
+        <div class="field-error" id="err-owner-name">Your name is required</div>
+      </div>
+
+      <div class="form-row-2">
+        <div>
+          <label>Phone Number</label>
+          <input type="tel" name="phone" placeholder="(555) 123-4567" autocomplete="tel">
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" name="email" placeholder="john@example.com" autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>City, State</label>
+        <input type="text" name="city_state" placeholder="Austin, TX" autocomplete="address-level2">
+      </div>
+
+      <button type="button" class="btn-next" onclick="goToStep(2)">Next: Choose Your Trade &rarr;</button>
+    </div>
+
+    <!-- ============ STEP 2: Primary Trade ============ -->
+    <div id="ob-step-2" class="card wizard-step" style="margin-top:1.5rem;display:none;">
+      <div class="card-title">What's your primary trade?</div>
+      <div class="card-subtitle trade-hint">You can always switch trades when creating quotes</div>
+
+      <div class="trade-select-grid">
+        <label class="trade-option" onclick="selectTrade(this,'Roofing')">
+          <input type="radio" name="primary_trade" value="Roofing">
+          <span class="trade-emoji-ob">🏠</span>
+          <span class="trade-label-ob">Roofing</span>
+        </label>
+        <label class="trade-option" onclick="selectTrade(this,'HVAC')">
+          <input type="radio" name="primary_trade" value="HVAC">
+          <span class="trade-emoji-ob">❄️</span>
+          <span class="trade-label-ob">HVAC</span>
+        </label>
+        <label class="trade-option" onclick="selectTrade(this,'Plumbing')">
+          <input type="radio" name="primary_trade" value="Plumbing">
+          <span class="trade-emoji-ob">🔧</span>
+          <span class="trade-label-ob">Plumbing</span>
+        </label>
+        <label class="trade-option" onclick="selectTrade(this,'Electrical')">
+          <input type="radio" name="primary_trade" value="Electrical">
+          <span class="trade-emoji-ob">⚡</span>
+          <span class="trade-label-ob">Electrical</span>
+        </label>
+        <label class="trade-option" onclick="selectTrade(this,'Painting')">
+          <input type="radio" name="primary_trade" value="Painting">
+          <span class="trade-emoji-ob">🎨</span>
+          <span class="trade-label-ob">Painting</span>
+        </label>
+        <label class="trade-option" onclick="selectTrade(this,'Pressure Washing')">
+          <input type="radio" name="primary_trade" value="Pressure Washing">
+          <span class="trade-emoji-ob">💦</span>
+          <span class="trade-label-ob">Pressure Washing</span>
+        </label>
+        <label class="trade-option" onclick="selectTrade(this,'General')">
+          <input type="radio" name="primary_trade" value="General">
+          <span class="trade-emoji-ob">🛠️</span>
+          <span class="trade-label-ob">General Contractor</span>
+        </label>
+      </div>
+      <div class="field-error" id="err-trade" style="margin-top:-0.5rem;margin-bottom:0.5rem;">Please select your primary trade</div>
+
+      <button type="button" class="btn-next" onclick="goToStep(3)">Next: Your Team &rarr;</button>
+      <button type="button" class="btn-back" onclick="goToStep(1)">&larr; Back</button>
+    </div>
+
+    <!-- ============ STEP 3: Team and Logo ============ -->
+    <div id="ob-step-3" class="card wizard-step" style="margin-top:1.5rem;display:none;">
+      <div class="card-title">Almost done!</div>
+      <div class="card-subtitle">A couple quick things to personalize your account</div>
+
+      <div class="form-row">
+        <label>How big is your team?</label>
+        <div class="team-options">
+          <label class="team-option" onclick="selectTeam(this,'just_me')">
+            <input type="radio" name="team_size" value="just_me">
+            <span>Just me</span>
+          </label>
+          <label class="team-option" onclick="selectTeam(this,'2_5')">
+            <input type="radio" name="team_size" value="2_5">
+            <span>2-5 people</span>
+          </label>
+          <label class="team-option" onclick="selectTeam(this,'6_10')">
+            <input type="radio" name="team_size" value="6_10">
+            <span>6-10 people</span>
+          </label>
+          <label class="team-option" onclick="selectTeam(this,'10_plus')">
+            <input type="radio" name="team_size" value="10_plus">
+            <span>10+ people</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Logo (optional)</label>
+        <input type="file" name="logo" accept="image/*">
+        <div class="upload-hint">Upload your company logo to use on quotes. JPG or PNG recommended.</div>
+      </div>
+
+      <button type="submit" class="btn-next">Finish Setup and Start Quoting!</button>
+      <button type="button" class="btn-back" onclick="goToStep(2)">&larr; Back</button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+let currentStep = 1;
+
+function goToStep(n) {
+  // Validate before proceeding
+  if (n > currentStep) {
+    if (currentStep === 1) {
+      const biz = document.getElementById('field-business-name').value.trim();
+      const name = document.getElementById('field-owner-name').value.trim();
+      let valid = true;
+      if (!biz) {
+        document.getElementById('err-business-name').classList.add('show');
+        valid = false;
+      } else {
+        document.getElementById('err-business-name').classList.remove('show');
+      }
+      if (!name) {
+        document.getElementById('err-owner-name').classList.add('show');
+        valid = false;
+      } else {
+        document.getElementById('err-owner-name').classList.remove('show');
+      }
+      if (!valid) return;
+    }
+    if (currentStep === 2) {
+      const selected = document.querySelector('input[name="primary_trade"]:checked');
+      if (!selected) {
+        document.getElementById('err-trade').classList.add('show');
+        return;
+      }
+      document.getElementById('err-trade').classList.remove('show');
+    }
+  }
+
+  document.getElementById('ob-step-' + currentStep).style.display = 'none';
+  currentStep = n;
+  const el = document.getElementById('ob-step-' + currentStep);
+  el.style.display = 'block';
+  el.style.animation = 'none';
+  el.offsetHeight; // reflow
+  el.style.animation = '';
+  updateStepIndicator(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepIndicator(n) {
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('step-dot-' + i);
+    const label = document.getElementById('step-label-' + i);
+    dot.classList.remove('active', 'done');
+    label.classList.remove('active-label');
+    if (i < n) {
+      dot.classList.add('done');
+    } else if (i === n) {
+      dot.classList.add('active');
+      label.classList.add('active-label');
+    }
+    if (i < 3) {
+      const line = document.getElementById('step-line-' + i);
+      line.classList.toggle('done', i < n);
+    }
+  }
+}
+
+function selectTrade(el, value) {
+  document.querySelectorAll('.trade-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type="radio"]').checked = true;
+  document.getElementById('err-trade').classList.remove('show');
+}
+
+function selectTeam(el, value) {
+  document.querySelectorAll('.team-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type="radio"]').checked = true;
+}
+</script>
+
+</body>
+</html>

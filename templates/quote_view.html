@@ -611,12 +611,44 @@
     </div>
   </div>
 
-  <!-- 7. Footer -->
+  <!-- 7. Accept This Quote -->
+  {% if not quote.get('accepted') %}
+  <div style="margin-top:1rem;text-align:center;">
+    <button onclick="acceptQuote()" style="background:#0B1F3A;color:white;border:none;padding:0.85rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;">
+      Accept This Quote
+    </button>
+    <div style="font-size:0.75rem;color:#aaa;margin-top:0.5rem;">By accepting, you confirm you want to proceed with this project.</div>
+  </div>
+  {% else %}
+  <div style="background:#e8f5e9;border-radius:10px;padding:1rem;text-align:center;color:#2e7d32;font-weight:600;margin-top:1rem;">
+    ✓ Quote Accepted
+  </div>
+  {% endif %}
+
+  <!-- 8. Footer -->
   <div class="footer">Powered by QuoteBoss &bull; quoteboss.io</div>
 
 </div>
 
 <script>
+async function acceptQuote() {
+  const quoteId = '{{ quote.quote_id }}';
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Accepting...';
+  try {
+    const res = await fetch(`/api/quote/accept/${quoteId}`, {method: 'POST'});
+    if (res.ok) location.reload();
+    else {
+      btn.disabled = false;
+      btn.textContent = 'Accept This Quote';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Accept This Quote';
+  }
+}
+
 async function startPayment(type) {
   const quoteId = '{{ quote.quote_id }}';
   const res = await fetch(`/api/create-checkout/${quoteId}`, {

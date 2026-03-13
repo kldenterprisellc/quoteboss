@@ -8,6 +8,30 @@
   <meta name="description" content="Generate professional contractor quotes in under 2 minutes. HVAC, Plumbing, Electrical, Roofing, Landscaping.">
   <link rel="stylesheet" href="/static/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23FF6B00'/><text x='50%' y='62%' dominant-baseline='middle' text-anchor='middle' font-size='18'>💼</text></svg>">
+  <style>
+    .btn-share {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+      padding: 0.6rem 0.5rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--navy);
+      cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+      text-align: center;
+    }
+    .btn-share:hover {
+      border-color: var(--orange);
+      background: rgba(255,107,0,0.06);
+      color: var(--orange);
+    }
+  </style>
 </head>
 <body>
 
@@ -54,7 +78,7 @@
   <!-- Error Banner -->
   <div id="error-banner" class="error-banner"></div>
 
-  <!-- ═══════════════ STEP 1 — Trade & Job ═══════════════ -->
+  <!-- ═══════════════ STEP 1 — Trade and Job ═══════════════ -->
   <div id="step-1" class="step-section">
     <div class="card">
       <div class="card-header">
@@ -82,7 +106,7 @@
 
     <div class="step-nav">
       <button class="btn btn-primary btn-lg btn-full" onclick="goToStep2()">
-        Next: Job Details →
+        Next: Job Details &rarr;
       </button>
     </div>
   </div>
@@ -98,25 +122,204 @@
         </div>
       </div>
 
-      <div class="form-row cols-2">
-        <div>
-          <label for="property-size">Property / Job Size (sq ft) <span style="font-size:11px;color:#888;">Typical home: 1,200-3,500 sq ft</span></label>
-          <input type="number" id="property-size" placeholder="e.g. 1800" value="1500" min="100" max="20000">
+      <!-- ═══ TRADE-SPECIFIC INPUTS ═══ -->
+
+      <!-- Roofing -->
+      <div id="trade-inputs-Roofing" class="trade-input-group hidden">
+        <div class="form-row cols-2">
+          <div>
+            <label for="roofing-squares">Roof Squares <span style="font-size:11px;color:#888;">(1 square = 100 sqft)</span></label>
+            <input type="number" id="roofing-squares" placeholder="e.g. 25" min="1" max="200" value="25">
+          </div>
+          <div>
+            <label for="roofing-pitch">Roof Pitch</label>
+            <select id="roofing-pitch">
+              <option value="low">Low (flat to 4/12)</option>
+              <option value="medium" selected>Medium (4/12 to 7/12)</option>
+              <option value="steep">Steep (7/12+)</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label for="labor-hours">Est. Labor Hours</label>
-          <input type="number" id="labor-hours" placeholder="e.g. 6" value="4" min="0.5" max="500" step="0.5">
+        <div class="form-row cols-2">
+          <div>
+            <label for="roofing-material">Material</label>
+            <select id="roofing-material">
+              <option value="asphalt" selected>Asphalt Shingles</option>
+              <option value="metal">Metal</option>
+              <option value="tile">Tile</option>
+              <option value="flat">Flat/TPO</option>
+            </select>
+          </div>
+          <div>
+            <label for="location">Location (City, State)</label>
+            <input type="text" id="location" placeholder="e.g. Austin, TX">
+          </div>
         </div>
       </div>
 
-      <div class="form-row">
-        <div>
-          <label for="location">Location (City, State)</label>
-          <input type="text" id="location" placeholder="e.g. Austin, TX">
+      <!-- HVAC -->
+      <div id="trade-inputs-HVAC" class="trade-input-group hidden">
+        <div class="form-row cols-2">
+          <div>
+            <label for="hvac-tons">System Size (tons)</label>
+            <select id="hvac-tons">
+              <option value="1">1 ton</option>
+              <option value="1.5">1.5 tons</option>
+              <option value="2">2 tons</option>
+              <option value="2.5" selected>2.5 tons</option>
+              <option value="3">3 tons</option>
+              <option value="3.5">3.5 tons</option>
+              <option value="4">4 tons</option>
+              <option value="5">5 tons</option>
+            </select>
+          </div>
+          <div>
+            <label for="hvac-system-type">System Type</label>
+            <select id="hvac-system-type">
+              <option value="central_ac" selected>Central AC</option>
+              <option value="heat_pump">Heat Pump</option>
+              <option value="furnace">Furnace</option>
+              <option value="mini_split">Mini-Split</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="location-hvac">Location (City, State)</label>
+          <input type="text" id="location-hvac" placeholder="e.g. Austin, TX">
         </div>
       </div>
 
-      <div class="form-row">
+      <!-- Plumbing -->
+      <div id="trade-inputs-Plumbing" class="trade-input-group hidden">
+        <div class="form-row cols-2">
+          <div id="plumbing-fixtures-wrap">
+            <label for="plumbing-fixtures">Number of Fixtures</label>
+            <input type="number" id="plumbing-fixtures" placeholder="e.g. 2" min="1" max="10" value="2">
+          </div>
+          <div id="plumbing-home-size-wrap" style="display:none;">
+            <label for="plumbing-home-size">Home Size</label>
+            <select id="plumbing-home-size">
+              <option value="under_1000">Under 1,000 sqft</option>
+              <option value="1000_2000" selected>1,000-2,000 sqft</option>
+              <option value="2000_3500">2,000-3,500 sqft</option>
+              <option value="3500_plus">3,500+ sqft</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="location-plumbing">Location (City, State)</label>
+          <input type="text" id="location-plumbing" placeholder="e.g. Austin, TX">
+        </div>
+      </div>
+
+      <!-- Electrical -->
+      <div id="trade-inputs-Electrical" class="trade-input-group hidden">
+        <div class="form-row cols-2">
+          <div id="elec-panel-size-wrap" style="display:none;">
+            <label for="elec-panel-size">Panel Size</label>
+            <select id="elec-panel-size">
+              <option value="100">100A</option>
+              <option value="200" selected>200A</option>
+              <option value="400">400A</option>
+            </select>
+          </div>
+          <div>
+            <label for="elec-circuits">Number of Circuits/Fixtures</label>
+            <input type="number" id="elec-circuits" placeholder="e.g. 5" min="1" max="20" value="5">
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="location-electrical">Location (City, State)</label>
+          <input type="text" id="location-electrical" placeholder="e.g. Austin, TX">
+        </div>
+      </div>
+
+      <!-- Painting -->
+      <div id="trade-inputs-Painting" class="trade-input-group hidden">
+        <div class="form-row cols-2">
+          <div>
+            <label for="painting-stories">Stories</label>
+            <select id="painting-stories">
+              <option value="1" selected>1 Story</option>
+              <option value="2">2 Stories</option>
+              <option value="3">3+ Stories</option>
+            </select>
+          </div>
+          <div>
+            <label for="painting-prep">Prep Needed</label>
+            <select id="painting-prep">
+              <option value="minimal">Minimal</option>
+              <option value="moderate" selected>Moderate</option>
+              <option value="heavy">Heavy</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div>
+            <label for="painting-sqft">Square Footage</label>
+            <input type="number" id="painting-sqft" placeholder="e.g. 1500" min="100" value="1500">
+          </div>
+          <div>
+            <label for="location-painting">Location (City, State)</label>
+            <input type="text" id="location-painting" placeholder="e.g. Austin, TX">
+          </div>
+        </div>
+      </div>
+
+      <!-- Pressure Washing -->
+      <div id="trade-inputs-Pressure Washing" class="trade-input-group hidden">
+        <div id="pw-sqft-wrap" class="form-row cols-2">
+          <div>
+            <label for="pw-sqft">Area Size (sqft)</label>
+            <input type="number" id="pw-sqft" placeholder="e.g. 2000" min="100" value="1500">
+          </div>
+          <div>
+            <label for="location-pw">Location (City, State)</label>
+            <input type="text" id="location-pw" placeholder="e.g. Austin, TX">
+          </div>
+        </div>
+        <div id="pw-flat-note" style="display:none;font-size:0.82rem;color:#888;margin-bottom:0.75rem;">
+          This is a flat-rate job. Location still helps apply regional pricing.
+        </div>
+      </div>
+
+      <!-- General / Landscaping (existing sqft inputs) -->
+      <div id="trade-inputs-General" class="trade-input-group hidden">
+        <div class="form-row cols-2">
+          <div>
+            <label for="property-size">Property / Job Size (sq ft) <span style="font-size:11px;color:#888;">Typical home: 1,200-3,500 sq ft</span></label>
+            <input type="number" id="property-size" placeholder="e.g. 1800" value="1500" min="100" max="20000">
+          </div>
+          <div>
+            <label for="labor-hours">Est. Labor Hours</label>
+            <input type="number" id="labor-hours" placeholder="e.g. 6" value="4" min="0.5" max="500" step="0.5">
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="location-general">Location (City, State)</label>
+          <input type="text" id="location-general" placeholder="e.g. Austin, TX">
+        </div>
+      </div>
+
+      <div id="trade-inputs-Landscaping" class="trade-input-group hidden">
+        <div class="form-row cols-2">
+          <div>
+            <label for="landscaping-sqft">Property / Job Size (sq ft)</label>
+            <input type="number" id="landscaping-sqft" placeholder="e.g. 1800" value="1500" min="100" max="20000">
+          </div>
+          <div>
+            <label for="landscaping-labor">Est. Labor Hours</label>
+            <input type="number" id="landscaping-labor" placeholder="e.g. 6" value="4" min="0.5" max="500" step="0.5">
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="location-landscaping">Location (City, State)</label>
+          <input type="text" id="location-landscaping" placeholder="e.g. Austin, TX">
+        </div>
+      </div>
+
+      <!-- ═══ COMMON INPUTS (all trades) ═══ -->
+      <div class="form-row" style="margin-top:0.5rem;">
         <div>
           <label>Materials Needed</label>
           <div id="materials-grid" class="check-grid"></div>
@@ -124,7 +327,7 @@
       </div>
 
       <!-- Custom Rate Override -->
-      <div id="custom-rate-section" class="form-row cols-2" style="margin-top:1rem;">
+      <div class="form-row cols-2" style="margin-top:0.75rem;">
         <div>
           <label for="custom-min">Your Low Estimate ($) <span style="font-size:11px;color:#888;">Overrides national average</span></label>
           <input type="number" id="custom-min" placeholder="Leave blank to use national avg" min="0">
@@ -148,7 +351,7 @@
           ⚙️ Use my own rates <span id="custom-pricing-chevron">▼</span>
         </button>
         <div id="custom-pricing-panel" class="custom-pricing-panel hidden">
-          <p class="custom-pricing-hint">Override national averages with your actual pricing. Your rates will be used as-is — no regional adjustment applied.</p>
+          <p class="custom-pricing-hint">Override national averages with your actual pricing. Your rates will be used as-is, no regional adjustment applied.</p>
           <div class="form-row cols-2">
             <div>
               <label for="custom-price-min">Your Low Price ($)</label>
@@ -167,12 +370,12 @@
     <div class="step-nav">
       <button class="btn btn-secondary" onclick="showStep(1)">← Back</button>
       <button class="btn btn-primary btn-lg" style="flex:1" onclick="goToStep3()">
-        Next: Your Info →
+        Next: Your Info &rarr;
       </button>
     </div>
   </div>
 
-  <!-- ═══════════════ STEP 3 — Contractor & Client Info ═══════════════ -->
+  <!-- ═══════════════ STEP 3 — Contractor and Client Info ═══════════════ -->
   <div id="step-3" class="step-section hidden">
     <div class="card">
       <div class="card-header">
@@ -251,7 +454,7 @@
         <div class="card-icon">🏷️</div>
         <div>
           <div class="card-title">Discount (Optional)</div>
-          <div class="card-subtitle">Give your client a deal -- shows on their quote</div>
+          <div class="card-subtitle">Give your client a deal and it shows on their quote</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
@@ -352,9 +555,11 @@
         <input type="text" id="share-url" class="share-url" readonly>
         <button class="btn btn-navy btn-sm" onclick="copyShareLink()">Copy</button>
       </div>
-      <button onclick="copyQuoteLink()" id="copy-btn" class="btn btn-secondary" style="margin-top:0.5rem;width:100%;">
-        📋 Copy Quote Link
-      </button>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-top:0.75rem;">
+        <button onclick="copyQuoteLink()" id="copy-btn" class="btn-share">📋 Copy Link</button>
+        <a id="sms-share-btn" href="#" onclick="openSMS(event)" class="btn-share">💬 Text</a>
+        <a id="email-share-btn" href="#" onclick="openEmail(event)" class="btn-share">📧 Email</a>
+      </div>
     </div>
 
     <div style="text-align:center; margin-top: 0.5rem;">
@@ -388,6 +593,8 @@
   // Inject Flask data for JS
   window.__PRICING__ = {{ pricing|safe }};
   window.__PLAN_TIER__ = "{{ plan_tier }}";
+  var contractorBusiness = "{{ contractor.get('business_name', '')|e }}";
+  var primaryTrade = "{{ primary_trade|e }}";
   {% if shared_quote is defined and shared_quote %}
   window.__SHARED_QUOTE__ = {{ shared_quote|safe }};
   {% else %}
@@ -400,9 +607,15 @@ function copyQuoteLink() {
   const url = linkEl ? (linkEl.href || linkEl.value || linkEl.textContent) : window.location.href;
   navigator.clipboard.writeText(url.trim()).then(() => {
     const btn = document.getElementById('copy-btn');
-    const orig = btn.textContent;
-    btn.textContent = '✅ Copied!';
-    setTimeout(() => btn.textContent = orig, 2000);
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => btn.textContent = orig, 2000);
+    }
+    showToast('✅ Link copied!');
+  }).catch(() => {
+    if (linkEl) { linkEl.select(); document.execCommand('copy'); }
+    showToast('✅ Link copied!');
   });
 }
 </script>

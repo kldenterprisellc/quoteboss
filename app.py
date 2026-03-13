@@ -25,13 +25,18 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from database import init_db, get_contractor, upsert_contractor, save_quote, get_quote, init_feedback_table, save_feedback, get_all_feedback
+from database import (
+    init_db, get_contractor, upsert_contractor, save_quote, get_quote,
+    init_feedback_table, save_feedback, get_all_feedback,
+    record_quote_view, get_quote_views_batch, accept_quote
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(32)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 init_db()
 init_feedback_table()
 
@@ -80,7 +85,7 @@ PRICING = {
         "Generator Install":      {"min": 3000, "max": 10000, "unit": "job"},
     },
     "Roofing": {
-        # Sources: BillRagan 2025 ($20-25k for 30 sq = $667-833/sq), HomeWyse 2026 ($5.09-6.66/sqft = $509-666/sq)
+        # Sources: BillRagan 2025, HomeWyse 2026
         "Full Replacement (Asphalt)": {"min": 550, "max": 900, "unit": "per sq (100 sqft)"},
         "Full Replacement (Metal)":   {"min": 900, "max": 1600,"unit": "per sq (100 sqft)"},
         "Repair (Minor)":             {"min": 150, "max": 600, "unit": "job"},
@@ -211,8 +216,7 @@ def calculate_quote(data: dict) -> dict:
     state = get_state_from_location(location)
     multiplier = REGION_MULTIPLIERS.get(state, 1.0)
 
-    # Custom pricing override — contractor can supply their own min/max
-    # Accept both custom_min/custom_max (new) and custom_price_min/custom_price_max (legacy)
+    # Custom pricing override
     custom_min = data.get("custom_min") if data.get("custom_min") is not None else data.get("custom_price_min")
     custom_max = data.get("custom_max") if data.get("custom_max") is not None else data.get("custom_price_max")
     using_custom = False
@@ -225,18 +229,15 @@ def calculate_quote(data: dict) -> dict:
         except (TypeError, ValueError):
             pass
 
-    # Base price range from pricing table (or custom override)
     unit = pricing["unit"]
     if using_custom:
-        # Custom prices are already the contractor's final base — skip regional scaling
         base_min = custom_min
         base_max = custom_max
-        multiplier = 1.0  # already baked in contractor's own rates
+        multiplier = 1.0
     else:
         base_min = pricing["min"]
         base_max = pricing["max"]
 
-    # Scale by sqft for sqft-based jobs (skip scaling for custom prices — contractor set absolute values)
     if not using_custom:
         if "sqft" in unit:
             base_min = base_min * property_size
@@ -247,20 +248,15 @@ def calculate_quote(data: dict) -> dict:
             base_min = base_min * squares
             base_max = base_max * squares
 
-        # Apply regional multiplier
         base_min = base_min * multiplier
         base_max = base_max * multiplier
 
-    # Labor line
     labor_min = labor_hours * LABOR_RATE * 0.9
     labor_max = labor_hours * LABOR_RATE * 1.1
 
     materials_count = len(materials)
-
-    # Per-sq and per-sqft jobs already include materials in the base rate.
-    # Only add separate materials line for flat "job" type pricing.
     include_materials = (unit == "job" or using_custom) and materials_count > 0
-    mat_factor = 0.25  # materials as % of base mid for job-based pricing
+    mat_factor = 0.25
     if include_materials:
         mat_base = (base_min + base_max) / 2 * mat_factor
         materials_min = mat_base * 0.85
@@ -275,7 +271,6 @@ def calculate_quote(data: dict) -> dict:
         total_min = base_min + labor_min
         total_max = base_max + labor_max
 
-    # Round to nearest $50
     def r50(v):
         return round(v / 50) * 50
 
@@ -298,7 +293,7 @@ def calculate_quote(data: dict) -> dict:
 
     if include_materials:
         line_items.append({
-            "description": "Materials & Supplies",
+            "description": "Materials and Supplies",
             "detail": ", ".join(materials),
             "min": r50(materials_min),
             "max": r50(materials_max),
@@ -339,7 +334,6 @@ def generate_pdf(quote_data: dict) -> bytes:
     styles = getSampleStyleSheet()
     story = []
 
-    # ── Header ──────────────────────────────────────
     header_data = [[
         Paragraph(
             f"<font color='#FF6B00'><b>{quote_data['contractor_business'] or 'Your Business'}</b></font>",
@@ -363,7 +357,6 @@ def generate_pdf(quote_data: dict) -> bytes:
     story.append(header_table)
     story.append(Spacer(1, 0.2 * inch))
 
-    # ── Contractor + Client info ─────────────────────
     contractor_name = quote_data.get("contractor_name", "")
     contractor_phone = quote_data.get("contractor_phone", "")
     contractor_email = quote_data.get("contractor_email", "")
@@ -399,10 +392,6 @@ def generate_pdf(quote_data: dict) -> bytes:
         Paragraph(f"<b>Valid Until:</b> {valid_until}", meta_style),
     ]
 
-    def para_cell(items):
-        buf2 = io.BytesIO()
-        return items  # will be used inline in table
-
     info_table = Table(
         [[from_block, to_block, details_block]],
         colWidths=[2.3 * inch, 2.3 * inch, 2.3 * inch],
@@ -419,14 +408,12 @@ def generate_pdf(quote_data: dict) -> bytes:
     story.append(info_table)
     story.append(Spacer(1, 0.25 * inch))
 
-    # ── Job Description ───────────────────────────────
     story.append(Paragraph(
         f"<b>Job Description:</b> {quote_data.get('job_description', '')}",
         ParagraphStyle("jobdesc", fontSize=10, leading=14, textColor=colors.HexColor("#333333"))
     ))
     story.append(Spacer(1, 0.2 * inch))
 
-    # ── Line Items Table ───────────────────────────────
     final_price = quote_data.get('final_price')
     is_client_facing = bool(final_price)
 
@@ -434,14 +421,12 @@ def generate_pdf(quote_data: dict) -> bytes:
     detail_style = ParagraphStyle("dt", fontSize=8, leading=12, textColor=MID_GRAY)
 
     if is_client_facing:
-        # Single-price client-facing layout
         col_headers = ["Description", "Detail", "Price"]
         table_data = [
             [Paragraph(f"<b>{h}</b>", ParagraphStyle(
                 "th", fontSize=9, textColor=WHITE, alignment=TA_RIGHT if i == 2 else TA_LEFT
             )) for i, h in enumerate(col_headers)]
         ]
-        # Scale line item prices proportionally to final_price
         base_total = quote_data.get('total_max') or quote_data.get('total_min') or 1
         scale = final_price / base_total if base_total else 1
         for item in quote_data["line_items"]:
@@ -451,14 +436,12 @@ def generate_pdf(quote_data: dict) -> bytes:
                 Paragraph(item["detail"], detail_style),
                 Paragraph(f"${item_price:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
             ])
-        # Custom line items
         for cli in quote_data.get('custom_line_items', []):
             table_data.append([
                 Paragraph(f"<b>{cli['description']}</b>", line_item_style),
                 Paragraph(f"{cli['markup_pct']}% markup" if cli.get('markup_pct') else "", detail_style),
                 Paragraph(f"${cli['total']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
             ])
-        # Discount row
         if quote_data.get('discount_amount') and quote_data['discount_amount'] > 0:
             table_data.append([
                 Paragraph("<b>Discount</b>", ParagraphStyle("disc", fontSize=9, leading=13, textColor=colors.HexColor("#2e7d32"))),
@@ -472,7 +455,6 @@ def generate_pdf(quote_data: dict) -> bytes:
         ])
         items_table = Table(table_data, colWidths=[2.5 * inch, 2.8 * inch, 1.5 * inch])
     else:
-        # Estimate range layout (contractor internal)
         col_headers = ["Description", "Detail", "Est. Low", "Est. High"]
         table_data = [
             [Paragraph(f"<b>{h}</b>", ParagraphStyle(
@@ -498,29 +480,25 @@ def generate_pdf(quote_data: dict) -> bytes:
     n_custom = len(quote_data.get('custom_line_items', []))
     has_discount = bool(quote_data.get('discount_amount') and quote_data['discount_amount'] > 0 and is_client_facing)
     n_items = n_base_items + n_custom + (1 if has_discount else 0)
-    total_row = 1 + n_items  # 0=header, 1..n=items, n+1=total
+    total_row = 1 + n_items
 
     items_table.setStyle(TableStyle([
-        # Header row
         ("BACKGROUND", (0, 0), (-1, 0), NAVY),
         ("TOPPADDING", (0, 0), (-1, 0), 10),
         ("BOTTOMPADDING", (0, 0), (-1, 0), 10),
         ("LEFTPADDING", (0, 0), (-1, 0), 8),
         ("RIGHTPADDING", (0, 0), (-1, 0), 8),
-        # Item rows
         ("BACKGROUND", (0, 1), (-1, n_items), WHITE),
         ("ROWBACKGROUNDS", (0, 1), (-1, n_items), [WHITE, LIGHT_GRAY]),
         ("TOPPADDING", (0, 1), (-1, n_items), 8),
         ("BOTTOMPADDING", (0, 1), (-1, n_items), 8),
         ("LEFTPADDING", (0, 1), (-1, n_items), 8),
         ("RIGHTPADDING", (0, 1), (-1, n_items), 8),
-        # Total row
         ("BACKGROUND", (0, total_row), (-1, total_row), ORANGE),
         ("TOPPADDING", (0, total_row), (-1, total_row), 10),
         ("BOTTOMPADDING", (0, total_row), (-1, total_row), 10),
         ("LEFTPADDING", (0, total_row), (-1, total_row), 8),
         ("RIGHTPADDING", (0, total_row), (-1, total_row), 8),
-        # Grid lines
         ("LINEBELOW", (0, 0), (-1, n_items), 0.5, colors.HexColor("#DDDDDD")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
@@ -528,7 +506,6 @@ def generate_pdf(quote_data: dict) -> bytes:
     story.append(items_table)
     story.append(Spacer(1, 0.3 * inch))
 
-    # ── Price Banner ─────────────────────────────
     final_price = quote_data.get('final_price')
     if final_price:
         total_display = f"${final_price:,.0f}"
@@ -546,7 +523,6 @@ def generate_pdf(quote_data: dict) -> bytes:
     story.append(HRFlowable(width="100%", thickness=2, color=ORANGE))
     story.append(Spacer(1, 0.25 * inch))
 
-    # ── Terms ─────────────────────────────────────────
     terms_text = quote_data.get("terms") or (
         "This quote is valid for 30 days from the issue date. "
         "Final pricing may vary based on site conditions discovered during work. "
@@ -554,14 +530,13 @@ def generate_pdf(quote_data: dict) -> bytes:
         "Payment in full due upon project completion. "
         "All work performed to local code standards."
     )
-    story.append(Paragraph("<b>Terms & Conditions</b>", ParagraphStyle("th2", fontSize=10, textColor=NAVY)))
+    story.append(Paragraph("<b>Terms and Conditions</b>", ParagraphStyle("th2", fontSize=10, textColor=NAVY)))
     story.append(Spacer(1, 0.05 * inch))
     story.append(Paragraph(terms_text, ParagraphStyle(
         "terms", fontSize=8, textColor=MID_GRAY, leading=13
     )))
     story.append(Spacer(1, 0.3 * inch))
 
-    # ── Signature Block ────────────────────────────────
     sig_data = [[
         Paragraph("Contractor Signature: ____________________________", meta_style),
         Paragraph("Client Acceptance: ____________________________", meta_style),
@@ -573,12 +548,11 @@ def generate_pdf(quote_data: dict) -> bytes:
     ]))
     story.append(sig_table)
 
-    # ── Footer ─────────────────────────────────────────
     def add_footer(canvas, doc):
         canvas.saveState()
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(MID_GRAY)
-        footer_text = "Powered by QuoteBoss  •  quoteboss.io  •  Fast. Professional. Accurate."
+        footer_text = "Powered by QuoteBoss  |  quoteboss.io  |  Fast. Professional. Accurate."
         canvas.drawCentredString(letter[0] / 2, 0.4 * inch, footer_text)
         canvas.restoreState()
 
@@ -596,7 +570,14 @@ def index():
     if not session.get('whop_user_id'):
         return redirect('/access')
     tier = session.get('plan_tier', 'basic')
-    return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier)
+    contractor = get_contractor(session['whop_user_id']) or {}
+    return render_template(
+        "index.html",
+        pricing=json.dumps(PRICING),
+        plan_tier=tier,
+        contractor=contractor,
+        primary_trade=contractor.get('primary_trade', '')
+    )
 
 
 @app.route("/access")
@@ -605,6 +586,46 @@ def access_page():
         return redirect('/')
     error = request.args.get('error', '')
     return render_template("access.html", error=error)
+
+
+@app.route("/onboarding", methods=["GET", "POST"])
+def onboarding():
+    if not session.get('whop_user_id'):
+        return redirect('/access')
+    contractor = get_contractor(session['whop_user_id']) or {}
+    if contractor.get('business_name'):
+        return redirect('/')
+
+    if request.method == 'POST':
+        logo_url = ''
+        if 'logo' in request.files:
+            logo_file = request.files['logo']
+            if logo_file and logo_file.filename:
+                uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
+                os.makedirs(uploads_dir, exist_ok=True)
+                ext = 'png'
+                if '.' in logo_file.filename:
+                    ext = logo_file.filename.rsplit('.', 1)[-1].lower()
+                filename = f"{session['whop_user_id']}_logo.{ext}"
+                logo_file.save(os.path.join(uploads_dir, filename))
+                logo_url = f"/static/uploads/{filename}"
+
+        update_fields = {
+            'business_name': request.form.get('business_name', '').strip(),
+            'owner_name': request.form.get('owner_name', '').strip(),
+            'phone': request.form.get('phone', '').strip(),
+            'email': request.form.get('email', '').strip(),
+            'city_state': request.form.get('city_state', '').strip(),
+            'primary_trade': request.form.get('primary_trade', '').strip(),
+            'team_size': request.form.get('team_size', '').strip(),
+        }
+        if logo_url:
+            update_fields['logo_url'] = logo_url
+
+        upsert_contractor(session['whop_user_id'], **update_fields)
+        return redirect('/')
+
+    return render_template('onboarding.html')
 
 
 @app.route("/auth/login")
@@ -708,13 +729,16 @@ def auth_callback():
     except Exception:
         return redirect('/access?error=membership_check_failed')
 
-    # Owner bypass -- always grant Pro access to the account owner
+    # Owner bypass
     OWNER_USER_ID = 'user_rYGUC3pFlNEz5'
     if user_id == OWNER_USER_ID:
         session['whop_user_id'] = user_id
         session['plan_tier'] = 'pro'
         session['access_token'] = access_token
         session.permanent = True
+        contractor = get_contractor(user_id) or {}
+        if not contractor.get('business_name'):
+            return redirect('/onboarding')
         return redirect('/')
 
     memberships = mem_data.get('data', [])
@@ -732,12 +756,16 @@ def auth_callback():
     session['access_token'] = access_token
     session.permanent = True
 
+    # Redirect to onboarding if no business name set
+    contractor = get_contractor(user_id) or {}
+    if not contractor.get('business_name'):
+        return redirect('/onboarding')
     return redirect('/')
 
 
 @app.route("/auth/owner-login")
 def owner_login():
-    """Direct owner bypass -- skips Whop OAuth, owner only."""
+    """Direct owner bypass."""
     secret = request.args.get('secret', '')
     expected = os.environ.get('OWNER_LOGIN_SECRET', '')
     if not expected or secret != expected:
@@ -745,6 +773,9 @@ def owner_login():
     session['whop_user_id'] = 'user_rYGUC3pFlNEz5'
     session['plan_tier'] = 'pro'
     session.permanent = True
+    contractor = get_contractor('user_rYGUC3pFlNEz5') or {}
+    if not contractor.get('business_name'):
+        return redirect('/onboarding')
     return redirect('/')
 
 
@@ -759,16 +790,49 @@ def api_labor_defaults():
     return jsonify(LABOR_DEFAULTS)
 
 
+def _apply_trade_multiplier(calc, multiplier):
+    """Apply a post-calculation multiplier to all line items and totals."""
+    if multiplier == 1.0:
+        return calc
+
+    def r50(v):
+        return round(v / 50) * 50
+
+    for item in calc['line_items']:
+        item['min'] = r50(item['min'] * multiplier)
+        item['max'] = r50(item['max'] * multiplier)
+
+    calc['total_min'] = r50(calc['total_min'] * multiplier)
+    calc['total_max'] = r50(calc['total_max'] * multiplier)
+    return calc
+
+
 @app.route("/api/quote", methods=["POST"])
 @limiter.limit("30 per minute")
 def api_quote():
     if not session.get('whop_user_id'):
         return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(force=True)
+
+    # Remap Painting trade to General for PRICING lookup
+    original_trade = data.get('trade', '')
+    if original_trade == 'Painting':
+        data['trade'] = 'General'
+
+    # Apply trade_multiplier after calculation (pitch, size, prep, etc.)
+    trade_multiplier = float(data.pop('trade_multiplier', 1.0) or 1.0)
+
     try:
         calc = calculate_quote(data)
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+    # Apply trade-specific multiplier
+    if trade_multiplier != 1.0:
+        calc = _apply_trade_multiplier(calc, trade_multiplier)
+
+    # Restore original trade label for display
+    data['trade'] = original_trade
 
     quote_id = str(uuid.uuid4())[:8].upper()
     quote_record = {
@@ -840,10 +904,9 @@ def api_quote():
     quote_record['total_min'] = max(0, quote_record['total_min'] - discount_amount)
     quote_record['total_max'] = max(0, quote_record['total_max'] - discount_amount)
 
-    # Default final price = midpoint of range
     final_price = round((quote_record['total_min'] + quote_record['total_max']) / 2)
     quote_record['final_price'] = final_price
-    quote_record['final_price_set'] = False  # contractor hasn't confirmed yet
+    quote_record['final_price_set'] = False
 
     save_quote(quote_id, session.get('whop_user_id', ''), json_module.dumps(quote_record))
     quote_store[quote_id] = quote_record
@@ -851,8 +914,8 @@ def api_quote():
     return jsonify({
         "quote_id": quote_id,
         "line_items": calc["line_items"],
-        "total_min": calc["total_min"],
-        "total_max": calc["total_max"],
+        "total_min": quote_record['total_min'],
+        "total_max": quote_record['total_max'],
         "final_price": final_price,
         "state": calc["state"],
         "multiplier": calc["multiplier"],
@@ -879,14 +942,19 @@ def set_quote_price():
     if not quote:
         return jsonify({"error": "Quote not found"}), 404
 
-    # Update final price
     quote['final_price'] = int(final_price)
     quote['final_price_set'] = True
     quote_store[quote_id] = quote
 
-    # Persist to DB
     save_quote(quote_id, session.get('whop_user_id', ''), json_module.dumps(quote))
 
+    return jsonify({"success": True})
+
+
+@app.route("/api/quote/accept/<quote_id>", methods=["POST"])
+def accept_quote_route(quote_id):
+    """Public endpoint: client accepts a quote."""
+    accept_quote(quote_id.upper())
     return jsonify({"success": True})
 
 
@@ -915,18 +983,33 @@ def api_pdf(quote_id):
 def view_quote(quote_id):
     quote = quote_store.get(quote_id.upper())
     whop_user_id = None
+    db_row = None
     if not quote:
-        db_quote = get_quote(quote_id.upper())
-        if db_quote:
-            quote = json_module.loads(db_quote['quote_data'])
+        db_row = get_quote(quote_id.upper())
+        if db_row:
+            quote = json_module.loads(db_row['quote_data'])
             quote_store[quote_id.upper()] = quote
-            whop_user_id = db_quote.get('whop_user_id')
+            whop_user_id = db_row.get('whop_user_id')
     else:
         whop_user_id = quote.get('whop_user_id')
+        db_row = get_quote(quote_id.upper())
 
     if not quote:
         tier = session.get('plan_tier', 'basic')
-        return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, error="Quote not found or expired.")
+        return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, contractor={}, error="Quote not found or expired.")
+
+    # Record the view
+    try:
+        record_quote_view(quote_id.upper(), request.remote_addr)
+    except Exception:
+        pass
+
+    # Set accepted status from DB
+    if db_row:
+        quote['accepted'] = bool(db_row.get('accepted', 0))
+        quote['accepted_at'] = db_row.get('accepted_at', '')
+    else:
+        quote['accepted'] = False
 
     contractor = get_contractor(whop_user_id) if whop_user_id else {}
     has_stripe = bool(contractor.get('stripe_account_id')) if contractor else False
@@ -1087,7 +1170,6 @@ def submit_feedback():
     )
     return jsonify({"success": True})
 
-# Admin only - view all feedback (protected by Whop owner user ID)
 OWNER_ID = 'user_rYGUC3pFlNEz5'
 
 @app.route("/admin/feedback")
@@ -1135,28 +1217,39 @@ def quote_history():
     c = conn.cursor()
     ph = _placeholder()
     c.execute(
-        f'SELECT quote_id, quote_data, created_at FROM quotes WHERE whop_user_id = {ph} ORDER BY created_at DESC LIMIT 50',
+        f'SELECT quote_id, quote_data, created_at, accepted, accepted_at FROM quotes WHERE whop_user_id = {ph} ORDER BY created_at DESC LIMIT 50',
         (session['whop_user_id'],)
     )
     rows = c.fetchall()
     conn.close()
     import json as json_lib
     quotes = []
+    quote_ids = []
     for row in rows:
         try:
-            qd = json_lib.loads(row['quote_data'])
+            qd = json_lib.loads(row['quote_data'] if not isinstance(row, dict) else row['quote_data'])
+            if not isinstance(row, dict):
+                row_dict = dict(row)
+            else:
+                row_dict = row
+            qid = row_dict['quote_id']
+            quote_ids.append(qid)
             quotes.append({
-                'quote_id': row['quote_id'],
-                'created_at': row['created_at'][:10],
+                'quote_id': qid,
+                'created_at': str(row_dict['created_at'])[:10],
                 'trade': qd.get('trade', ''),
                 'job_type': qd.get('job_type', ''),
                 'total_min': qd.get('total_min', 0),
                 'total_max': qd.get('total_max', 0),
                 'contractor_business': qd.get('contractor_business', ''),
+                'accepted': bool(row_dict.get('accepted', 0)),
+                'accepted_at': str(row_dict.get('accepted_at', '') or ''),
             })
         except Exception:
             pass
-    return render_template("history.html", quotes=quotes)
+
+    view_counts = get_quote_views_batch(quote_ids) if quote_ids else {}
+    return render_template("history.html", quotes=quotes, view_counts=view_counts)
 
 
 @app.route("/tutorials")

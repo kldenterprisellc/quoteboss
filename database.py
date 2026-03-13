@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime
 
 # Database configuration
 # If DATABASE_URL is set (Postgres), uses psycopg2
@@ -54,12 +55,46 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )''')
+        # Add new columns (onboarding fields)
+        new_contractor_cols = [
+            ('business_name', 'TEXT'),
+            ('owner_name', 'TEXT'),
+            ('phone', 'TEXT'),
+            ('email', 'TEXT'),
+            ('city_state', 'TEXT'),
+            ('primary_trade', 'TEXT'),
+            ('team_size', 'TEXT'),
+            ('logo_url', 'TEXT'),
+        ]
+        for col_name, col_type in new_contractor_cols:
+            try:
+                c.execute(f'ALTER TABLE contractors ADD COLUMN IF NOT EXISTS {col_name} {col_type}')
+            except Exception:
+                pass
+
         c.execute('''CREATE TABLE IF NOT EXISTS quotes (
             id SERIAL PRIMARY KEY,
             quote_id TEXT UNIQUE NOT NULL,
             whop_user_id TEXT,
             quote_data TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )''')
+        # Add accepted columns
+        try:
+            c.execute('ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted BOOLEAN DEFAULT FALSE')
+        except Exception:
+            pass
+        try:
+            c.execute('ALTER TABLE quotes ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMP')
+        except Exception:
+            pass
+
+        # Quote views table
+        c.execute('''CREATE TABLE IF NOT EXISTS quote_views (
+            id SERIAL PRIMARY KEY,
+            quote_id TEXT NOT NULL,
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ip_address TEXT
         )''')
     else:
         c.execute('''CREATE TABLE IF NOT EXISTS contractors (
@@ -72,12 +107,43 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )''')
+        # Add new columns (onboarding fields)
+        new_contractor_cols = [
+            ('business_name', 'TEXT'),
+            ('owner_name', 'TEXT'),
+            ('phone', 'TEXT'),
+            ('email', 'TEXT'),
+            ('city_state', 'TEXT'),
+            ('primary_trade', 'TEXT'),
+            ('team_size', 'TEXT'),
+            ('logo_url', 'TEXT'),
+        ]
+        for col_name, col_type in new_contractor_cols:
+            try:
+                c.execute(f'ALTER TABLE contractors ADD COLUMN {col_name} {col_type}')
+            except Exception:
+                pass
+
         c.execute('''CREATE TABLE IF NOT EXISTS quotes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             quote_id TEXT UNIQUE NOT NULL,
             whop_user_id TEXT,
             quote_data TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )''')
+        # Add accepted columns
+        for col_name, col_def in [('accepted', 'INTEGER DEFAULT 0'), ('accepted_at', 'TIMESTAMP')]:
+            try:
+                c.execute(f'ALTER TABLE quotes ADD COLUMN {col_name} {col_def}')
+            except Exception:
+                pass
+
+        # Quote views table
+        c.execute('''CREATE TABLE IF NOT EXISTS quote_views (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            quote_id TEXT NOT NULL,
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ip_address TEXT
         )''')
 
     conn.commit()
@@ -90,11 +156,12 @@ def get_contractor(whop_user_id):
     p = '%s' if USE_POSTGRES else '?'
     c.execute(f'SELECT * FROM contractors WHERE whop_user_id = {p}', (whop_user_id,))
     row = c.fetchone()
+    if USE_POSTGRES and row is not None:
+        cols = [desc[0] for desc in c.description]
     conn.close()
     if row is None:
         return None
     if USE_POSTGRES:
-        cols = [desc[0] for desc in c.description]
         return dict(zip(cols, row))
     return dict(row)
 
@@ -145,13 +212,89 @@ def get_quote(quote_id):
     p = '%s' if USE_POSTGRES else '?'
     c.execute(f'SELECT * FROM quotes WHERE quote_id = {p}', (quote_id,))
     row = c.fetchone()
+    if USE_POSTGRES and row is not None:
+        cols = [desc[0] for desc in c.description]
     conn.close()
     if row is None:
         return None
     if USE_POSTGRES:
-        cols = [desc[0] for desc in c.description]
         return dict(zip(cols, row))
     return dict(row)
+
+
+def accept_quote(quote_id):
+    """Mark a quote as accepted."""
+    conn = get_db()
+    c = conn.cursor()
+    p = '%s' if USE_POSTGRES else '?'
+    now = datetime.utcnow().isoformat()
+    if USE_POSTGRES:
+        c.execute(
+            f'UPDATE quotes SET accepted = TRUE, accepted_at = {p} WHERE quote_id = {p}',
+            (now, quote_id)
+        )
+    else:
+        c.execute(
+            f'UPDATE quotes SET accepted = 1, accepted_at = {p} WHERE quote_id = {p}',
+            (now, quote_id)
+        )
+    conn.commit()
+    conn.close()
+
+
+def record_quote_view(quote_id, ip_address=None):
+    """Record a client view of a quote."""
+    conn = get_db()
+    c = conn.cursor()
+    p = '%s' if USE_POSTGRES else '?'
+    c.execute(
+        f'INSERT INTO quote_views (quote_id, ip_address) VALUES ({p}, {p})',
+        (quote_id, ip_address)
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_quote_views(quote_id):
+    """Get view count and last viewed timestamp for a single quote."""
+    conn = get_db()
+    c = conn.cursor()
+    p = '%s' if USE_POSTGRES else '?'
+    c.execute(
+        f'SELECT COUNT(*) as cnt, MAX(viewed_at) as last_viewed FROM quote_views WHERE quote_id = {p}',
+        (quote_id,)
+    )
+    row = c.fetchone()
+    if USE_POSTGRES and row is not None:
+        cols = [desc[0] for desc in c.description]
+    conn.close()
+    if row is None:
+        return {'count': 0, 'last_viewed': None}
+    r = dict(zip(cols, row)) if USE_POSTGRES else dict(row)
+    return {'count': r.get('cnt', 0) or 0, 'last_viewed': r.get('last_viewed')}
+
+
+def get_quote_views_batch(quote_ids):
+    """Get view counts for a list of quote IDs (avoids N+1 queries)."""
+    if not quote_ids:
+        return {}
+    conn = get_db()
+    c = conn.cursor()
+    p = '%s' if USE_POSTGRES else '?'
+    placeholders = ', '.join([p] * len(quote_ids))
+    c.execute(
+        f'SELECT quote_id, COUNT(*) as cnt, MAX(viewed_at) as last_viewed FROM quote_views WHERE quote_id IN ({placeholders}) GROUP BY quote_id',
+        list(quote_ids)
+    )
+    rows = c.fetchall()
+    if USE_POSTGRES:
+        cols = [desc[0] for desc in c.description]
+    conn.close()
+    result = {}
+    for row in rows:
+        r = dict(zip(cols, row)) if USE_POSTGRES else dict(row)
+        result[r['quote_id']] = {'count': r.get('cnt', 0) or 0, 'last_viewed': r.get('last_viewed')}
+    return result
 
 
 def init_feedback_table():
@@ -194,10 +337,11 @@ def get_all_feedback():
     c = conn.cursor()
     c.execute('SELECT * FROM feedback ORDER BY created_at DESC')
     rows = c.fetchall()
+    if USE_POSTGRES:
+        cols = [desc[0] for desc in c.description]
     conn.close()
     if not rows:
         return []
     if USE_POSTGRES:
-        cols = [desc[0] for desc in c.description]
         return [dict(zip(cols, r)) for r in rows]
     return [dict(r) for r in rows]

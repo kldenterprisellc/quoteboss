@@ -1,36 +1,83 @@
 /* QuoteBoss — app.js */
 
-// ── Pricing data (injected from Flask) ──────────────
+// Pricing data (injected from Flask)
 const PRICING = window.__PRICING__ || {};
 
-// ── Labor hour defaults (loaded from API) ────────────
+// Labor hour defaults (loaded from API)
 const LABOR_DEFAULTS = {};
 
-// ── Trade metadata ───────────────────────────────────
+// Trade metadata
 const TRADES = [
   { id: "HVAC",             emoji: "❄️",  label: "HVAC" },
   { id: "Plumbing",         emoji: "🔧",  label: "Plumbing" },
   { id: "Electrical",       emoji: "⚡",  label: "Electrical" },
   { id: "Roofing",          emoji: "🏠",  label: "Roofing" },
-  { id: "Landscaping",      emoji: "🌿",  label: "Landscaping" },
-  { id: "General",          emoji: "🛠️",  label: "General" },
+  { id: "Painting",         emoji: "🎨",  label: "Painting" },
   { id: "Pressure Washing", emoji: "💦",  label: "Pressure Washing" },
+  { id: "General",          emoji: "🛠️",  label: "General Contractor" },
+  { id: "Landscaping",      emoji: "🌿",  label: "Landscaping" },
 ];
+
+// Custom job type labels for each trade (user-friendly, maps to PRICING keys in getTradeParams)
+const TRADE_JOB_TYPES = {
+  'Roofing': [
+    { label: 'Full Replacement', value: 'replacement' },
+    { label: 'Repair', value: 'repair' },
+    { label: 'Gutters', value: 'gutters' },
+  ],
+  'HVAC': [
+    { label: 'Install New System', value: 'install' },
+    { label: 'Replace Existing', value: 'replace' },
+    { label: 'Repair', value: 'repair' },
+    { label: 'Tune-Up', value: 'tuneup' },
+  ],
+  'Plumbing': [
+    { label: 'Water Heater', value: 'water_heater' },
+    { label: 'Drain Cleaning', value: 'drain_cleaning' },
+    { label: 'Pipe Repair', value: 'pipe_repair' },
+    { label: 'Bathroom Remodel', value: 'bathroom_remodel' },
+    { label: 'Full Repipe', value: 'full_repipe' },
+    { label: 'Fixture Install', value: 'fixture_install' },
+  ],
+  'Electrical': [
+    { label: 'Panel Upgrade', value: 'panel_upgrade' },
+    { label: 'Whole Home Rewire', value: 'whole_home_rewire' },
+    { label: 'EV Charger Install', value: 'ev_charger' },
+    { label: 'Circuit Add', value: 'circuit_add' },
+    { label: 'Fixture Install', value: 'fixture_install_elec' },
+    { label: 'Service Upgrade', value: 'service_upgrade' },
+  ],
+  'Painting': [
+    { label: 'Interior Painting', value: 'interior' },
+    { label: 'Exterior Painting', value: 'exterior' },
+    { label: 'Interior and Exterior', value: 'both' },
+  ],
+  'Pressure Washing': [
+    { label: 'House Exterior', value: 'house_exterior' },
+    { label: 'Driveway', value: 'driveway' },
+    { label: 'Deck or Patio', value: 'deck_patio' },
+    { label: 'Roof Soft Wash', value: 'roof_soft_wash' },
+    { label: 'Fence', value: 'fence' },
+    { label: 'Commercial Building', value: 'commercial' },
+  ],
+};
 
 const MATERIALS = {
   HVAC:               ["Refrigerant", "Filters", "Ductwork", "Thermostat", "Capacitors", "Copper Line"],
   Plumbing:           ["PVC Pipe", "Copper Pipe", "Fittings", "Sealant", "Fixtures", "Water Heater"],
   Electrical:         ["Wire", "Breakers", "Outlets", "Junction Box", "Conduit", "Panel"],
   Roofing:            ["Shingles", "Underlayment", "Flashing", "Gutters", "Ice Shield", "Nails/Fasteners"],
+  Painting:           ["Primer", "Interior Paint", "Exterior Paint", "Brushes/Rollers", "Tape/Drop Cloth", "Caulk"],
   Landscaping:        ["Sod", "Mulch", "Plants/Shrubs", "Irrigation Parts", "Soil", "Edging"],
   General:            ["Lumber", "Drywall", "Paint", "Fasteners", "Flooring", "Adhesives"],
   "Pressure Washing": ["Detergent", "Degreaser", "Soft Wash Solution", "Surface Cleaner", "Extension Wand"],
 };
 
-// ── Price confirmation ────────────────────────────────
+// Price confirmation state
 let currentQuoteData = null;
+let currentQuoteLink = null;
 
-// ── Custom Line Items ────────────────────────────────
+// Custom Line Items
 let lineItems = [];
 
 function addLineItem() {
@@ -78,7 +125,7 @@ function getLineItemsTotal() {
   }, 0);
 }
 
-// ── State ────────────────────────────────────────────
+// State
 let state = {
   step: 1,
   trade: null,
@@ -90,7 +137,7 @@ let state = {
   customPricingOpen: false,
 };
 
-// ── localStorage helpers ─────────────────────────────
+// localStorage helpers
 const STORAGE_KEY = "quoteboss_contractor";
 
 function saveContractorInfo() {
@@ -115,10 +162,10 @@ function loadContractorInfo() {
   } catch(e) {}
 }
 
-// ── DOM refs ─────────────────────────────────────────
+// DOM refs
 const $ = id => document.getElementById(id);
 
-// ── Init ─────────────────────────────────────────────
+// Init
 document.addEventListener("DOMContentLoaded", () => {
   buildTradeGrid();
   setupStepIndicators();
@@ -129,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load labor defaults from API
   fetch('/api/labor-defaults').then(r => r.json()).then(d => Object.assign(LABOR_DEFAULTS, d));
 
-  // Also load saved contractor info from qb_contractor key (task-spec format)
+  // Also load saved contractor info from qb_contractor key
   const saved = JSON.parse(localStorage.getItem('qb_contractor') || 'null');
   if (saved) {
     ['contractor-name','contractor-business','contractor-phone','contractor-email'].forEach(id => {
@@ -137,9 +184,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (el && saved[id]) el.value = saved[id];
     });
   }
+
+  // Pre-select primary trade if set by Flask
+  if (window.primaryTrade && window.primaryTrade.length > 0) {
+    setTimeout(() => {
+      const tradeCard = document.querySelector(`[data-trade="${window.primaryTrade}"]`);
+      if (tradeCard) {
+        selectTrade(window.primaryTrade);
+      }
+    }, 50);
+  }
 });
 
-// ── Shared quote load ────────────────────────────────
+// Shared quote load
 function loadSharedQuote() {
   if (!window.__SHARED_QUOTE__) return;
   try {
@@ -153,7 +210,7 @@ function loadSharedQuote() {
   } catch(e) { console.error("Failed to load shared quote", e); }
 }
 
-// ── Build Trade Grid ─────────────────────────────────
+// Build Trade Grid
 function buildTradeGrid() {
   const grid = $("trade-grid");
   grid.innerHTML = "";
@@ -167,28 +224,59 @@ function buildTradeGrid() {
   });
 }
 
-// ── Trade Selection ──────────────────────────────────
+// Trade Selection
 function selectTrade(tradeId) {
   state.trade = tradeId;
   state.jobType = null;
   document.querySelectorAll(".trade-card").forEach(c => c.classList.remove("selected"));
-  document.querySelector(`[data-trade="${tradeId}"]`).classList.add("selected");
+  const card = document.querySelector(`[data-trade="${tradeId}"]`);
+  if (card) card.classList.add("selected");
   buildJobGrid(tradeId);
   buildMaterialsGrid(tradeId);
+  updateTradeInputs(tradeId);
 }
 
-// ── Job Type Grid ────────────────────────────────────
+// Show/hide trade-specific input groups in Step 2
+function updateTradeInputs(tradeId) {
+  document.querySelectorAll('.trade-input-group').forEach(el => el.classList.add('hidden'));
+  const inputEl = document.getElementById('trade-inputs-' + tradeId);
+  if (inputEl) {
+    inputEl.classList.remove('hidden');
+  } else {
+    // Fall back to General inputs
+    const genEl = document.getElementById('trade-inputs-General');
+    if (genEl) genEl.classList.remove('hidden');
+  }
+}
+
+// Job Type Grid
 function buildJobGrid(tradeId) {
-  const jobs = Object.keys(PRICING[tradeId] || {});
+  const jobs = TRADE_JOB_TYPES[tradeId];
   const grid = $("job-grid");
   grid.innerHTML = "";
-  jobs.forEach(job => {
-    const btn = document.createElement("button");
-    btn.className = "job-btn";
-    btn.textContent = job;
-    btn.addEventListener("click", () => selectJob(job, btn));
-    grid.appendChild(btn);
-  });
+
+  if (jobs) {
+    // Use trade-specific user-friendly labels
+    jobs.forEach(jt => {
+      const btn = document.createElement("button");
+      btn.className = "job-btn";
+      btn.textContent = jt.label;
+      btn.dataset.value = jt.value;
+      btn.addEventListener("click", () => selectJob(jt.value, btn));
+      grid.appendChild(btn);
+    });
+  } else {
+    // Fall back to PRICING keys for General, Landscaping
+    const pricingJobs = Object.keys(PRICING[tradeId] || {});
+    pricingJobs.forEach(job => {
+      const btn = document.createElement("button");
+      btn.className = "job-btn";
+      btn.textContent = job;
+      btn.addEventListener("click", () => selectJob(job, btn));
+      grid.appendChild(btn);
+    });
+  }
+
   $("job-section").classList.remove("hidden");
 }
 
@@ -196,33 +284,47 @@ function selectJob(job, btn) {
   state.jobType = job;
   document.querySelectorAll(".job-btn").forEach(b => b.classList.remove("selected"));
   btn.classList.add("selected");
-  // Update custom pricing hint with national average for this job
-  updateCustomPricingHint();
 
-  // Apply labor hour default if available
-  const laborInput = $("labor-hours");
-  const laborRow = laborInput ? laborInput.closest("div") : null;
-  const defaultHours = LABOR_DEFAULTS[state.trade]?.[job];
-  if (defaultHours !== undefined) {
-    laborInput.value = defaultHours;
-    if (defaultHours === 0) {
-      // Hide labor hours row for jobs where labor is baked into pricing (roofing sqft, sod, flooring)
-      if (laborRow) laborRow.style.display = "none";
-    } else {
-      if (laborRow) laborRow.style.display = "";
+  // Update conditional inputs based on job type
+  updateConditionalInputs(state.trade, job);
+
+  // Update custom pricing hint
+  updateCustomPricingHint();
+}
+
+// Show/hide conditional inputs based on job type
+function updateConditionalInputs(trade, jobType) {
+  if (trade === 'Plumbing') {
+    const homeWrap = document.getElementById('plumbing-home-size-wrap');
+    if (homeWrap) homeWrap.style.display = jobType === 'full_repipe' ? '' : 'none';
+  }
+
+  if (trade === 'Electrical') {
+    const panelWrap = document.getElementById('elec-panel-size-wrap');
+    if (panelWrap) {
+      const showPanel = (jobType === 'panel_upgrade' || jobType === 'service_upgrade');
+      panelWrap.style.display = showPanel ? '' : 'none';
     }
-  } else {
-    if (laborRow) laborRow.style.display = "";
+  }
+
+  if (trade === 'Pressure Washing') {
+    const sqftWrap = document.getElementById('pw-sqft-wrap');
+    const flatNote = document.getElementById('pw-flat-note');
+    const flatJobs = ['driveway', 'roof_soft_wash', 'fence'];
+    if (sqftWrap) sqftWrap.style.display = flatJobs.includes(jobType) ? 'none' : '';
+    if (flatNote) flatNote.style.display = flatJobs.includes(jobType) ? '' : 'none';
   }
 }
 
 function updateCustomPricingHint() {
   const note = $("custom-pricing-note");
   if (!note || !state.trade || !state.jobType) return;
-  const p = (PRICING[state.trade] || {})[state.jobType];
+  // For trades with custom job type mapping, look up by PRICING key
+  const pricingTrade = state.trade === 'Painting' ? 'General' : state.trade;
+  const p = (PRICING[pricingTrade] || {})[state.jobType];
   if (!p) return;
   const unit = p.unit === "job" ? "flat job" : p.unit;
-  note.textContent = `National avg for ${state.jobType}: $${p.min.toLocaleString()}–$${p.max.toLocaleString()} (${unit})`;
+  note.textContent = `National avg for this job: $${p.min.toLocaleString()}-$${p.max.toLocaleString()} (${unit})`;
 }
 
 function toggleCustomPricing() {
@@ -241,7 +343,7 @@ function toggleCustomPricing() {
   }
 }
 
-// ── Materials Grid ───────────────────────────────────
+// Materials Grid
 function buildMaterialsGrid(tradeId) {
   const mats = MATERIALS[tradeId] || [];
   const grid = $("materials-grid");
@@ -258,7 +360,7 @@ function getCheckedMaterials() {
   return Array.from(document.querySelectorAll("#materials-grid input:checked")).map(i => i.value);
 }
 
-// ── Step Navigation ──────────────────────────────────
+// Step Navigation
 function setupStepIndicators() {
   document.querySelectorAll(".step-indicator").forEach(el => {
     el.addEventListener("click", () => {
@@ -292,21 +394,194 @@ function updateProgress(n) {
   });
 }
 
-// ── Step 1 → 2 ───────────────────────────────────────
+// Step 1 to 2
 function goToStep2() {
   if (!state.trade) { showToast("⚠️ Please select a trade first"); return; }
   if (!state.jobType) { showToast("⚠️ Please select a job type"); return; }
   showStep(2);
 }
 
-// ── Step 2 → 3 ───────────────────────────────────────
+// Step 2 to 3
 function goToStep3() {
   showStep(3);
 }
 
-// ── Step 3 → generate ────────────────────────────────
+// Collect trade-specific params for the API call
+function getTradeParams() {
+  const trade = state.trade;
+  const jobType = state.jobType;
+  const params = { trade_multiplier: 1.0 };
+
+  if (trade === 'Roofing') {
+    const squares = parseFloat(document.getElementById('roofing-squares')?.value) || 25;
+    const pitch = document.getElementById('roofing-pitch')?.value || 'medium';
+    const material = document.getElementById('roofing-material')?.value || 'asphalt';
+    const loc = document.getElementById('location')?.value || '';
+
+    let pricingJobType;
+    if (jobType === 'replacement') {
+      pricingJobType = material === 'metal' ? 'Full Replacement (Metal)' : 'Full Replacement (Asphalt)';
+    } else if (jobType === 'repair') {
+      pricingJobType = 'Repair (Minor)';
+    } else {
+      pricingJobType = 'Gutter Install/Replace';
+    }
+
+    const pitchMult = { low: 0.9, medium: 1.0, steep: 1.2 }[pitch] || 1.0;
+    params.job_type = pricingJobType;
+    params.property_size = squares * 100;
+    params.labor_hours = (jobType === 'replacement') ? 0 : 4;
+    params.trade_multiplier = pitchMult;
+    params.location = loc;
+
+  } else if (trade === 'HVAC') {
+    const tons = parseFloat(document.getElementById('hvac-tons')?.value) || 2.5;
+    const systemType = document.getElementById('hvac-system-type')?.value || 'central_ac';
+    const loc = document.getElementById('location-hvac')?.value || '';
+
+    let pricingJobType;
+    if (jobType === 'repair' || jobType === 'tuneup') {
+      pricingJobType = systemType === 'furnace' ? 'Furnace Repair' : 'AC Repair';
+    } else if (systemType === 'furnace') {
+      pricingJobType = (jobType === 'replace') ? 'Full HVAC System' : 'Furnace Install';
+    } else if (systemType === 'mini_split') {
+      pricingJobType = 'Mini Split Install';
+    } else if (jobType === 'replace') {
+      pricingJobType = 'Full HVAC System';
+    } else {
+      pricingJobType = 'AC Install (Central)';
+    }
+
+    const laborMap = { install: 7, replace: 10, repair: 2, tuneup: 2 };
+    params.job_type = pricingJobType;
+    params.property_size = 1500;
+    params.labor_hours = laborMap[jobType] || 5;
+    params.trade_multiplier = tons / 2.5;
+    params.location = loc;
+
+  } else if (trade === 'Plumbing') {
+    const fixtures = parseInt(document.getElementById('plumbing-fixtures')?.value) || 1;
+    const homeSize = document.getElementById('plumbing-home-size')?.value || '1000_2000';
+    const loc = document.getElementById('location-plumbing')?.value || '';
+
+    const jobMap = {
+      water_heater: 'Water Heater (Tank)',
+      drain_cleaning: 'Drain Cleaning',
+      pipe_repair: 'Pipe Repair',
+      bathroom_remodel: 'Bathroom Remodel (Plumbing)',
+      full_repipe: 'Sewer Line Repair',
+      fixture_install: 'Faucet/Fixture Install',
+    };
+    const laborMap = {
+      water_heater: 4, drain_cleaning: 1.5, pipe_repair: 2,
+      bathroom_remodel: 24, full_repipe: 16, fixture_install: 1.5
+    };
+
+    params.job_type = jobMap[jobType] || 'Faucet/Fixture Install';
+    params.property_size = 1500;
+    params.labor_hours = laborMap[jobType] || 3;
+    params.location = loc;
+
+    if (['fixture_install', 'bathroom_remodel'].includes(jobType)) {
+      params.trade_multiplier = Math.max(1, fixtures);
+    } else if (jobType === 'full_repipe') {
+      const homeMults = { under_1000: 0.7, '1000_2000': 1.0, '2000_3500': 1.5, '3500_plus': 2.2 };
+      params.trade_multiplier = homeMults[homeSize] || 1.0;
+    }
+
+  } else if (trade === 'Electrical') {
+    const panelSize = document.getElementById('elec-panel-size')?.value || '200';
+    const circuits = parseInt(document.getElementById('elec-circuits')?.value) || 1;
+    const loc = document.getElementById('location-electrical')?.value || '';
+
+    const jobMap = {
+      panel_upgrade: 'Panel Upgrade',
+      whole_home_rewire: 'Whole Home Rewire',
+      ev_charger: 'EV Charger (Level 2)',
+      circuit_add: 'Outlet Install',
+      fixture_install_elec: 'Lighting Install',
+      service_upgrade: 'Panel Upgrade',
+    };
+    const laborMap = {
+      panel_upgrade: 8, whole_home_rewire: 60, ev_charger: 3,
+      circuit_add: 1.5, fixture_install_elec: 2, service_upgrade: 8
+    };
+
+    params.job_type = jobMap[jobType] || 'Panel Upgrade';
+    params.property_size = 1500;
+    params.labor_hours = laborMap[jobType] || 4;
+    params.location = loc;
+
+    if (['circuit_add', 'fixture_install_elec'].includes(jobType)) {
+      params.trade_multiplier = Math.max(1, circuits);
+    } else if (['panel_upgrade', 'service_upgrade'].includes(jobType)) {
+      const panelMults = { '100': 0.8, '200': 1.0, '400': 1.4 };
+      params.trade_multiplier = panelMults[panelSize] || 1.0;
+    }
+
+  } else if (trade === 'Painting') {
+    const sqft = parseFloat(document.getElementById('painting-sqft')?.value) || 1500;
+    const stories = parseInt(document.getElementById('painting-stories')?.value) || 1;
+    const prep = document.getElementById('painting-prep')?.value || 'moderate';
+    const loc = document.getElementById('location-painting')?.value || '';
+
+    const jobMap = { interior: 'Interior Painting', exterior: 'Exterior Painting', both: 'Exterior Painting' };
+    params.job_type = jobMap[jobType] || 'Interior Painting';
+    params.trade = 'General'; // remap Painting to General PRICING
+    params.property_size = sqft;
+    params.labor_hours = Math.round(sqft / 100);
+    params.location = loc;
+
+    const storiesMults = { 1: 1.0, 2: 1.15, 3: 1.30 };
+    const prepMults = { minimal: 0.85, moderate: 1.0, heavy: 1.25 };
+    let mult = (storiesMults[stories] || 1.0) * (prepMults[prep] || 1.0);
+    if (jobType === 'both') mult *= 1.6;
+    params.trade_multiplier = mult;
+
+  } else if (trade === 'Pressure Washing') {
+    const sqft = parseFloat(document.getElementById('pw-sqft')?.value) || 1500;
+    const loc = document.getElementById('location-pw')?.value || '';
+
+    const jobMap = {
+      house_exterior: 'House Exterior Wash',
+      driveway: 'Driveway Cleaning',
+      deck_patio: 'Deck or Patio',
+      roof_soft_wash: 'Roof Soft Wash',
+      fence: 'Fence Cleaning',
+      commercial: 'Commercial Building',
+    };
+
+    params.job_type = jobMap[jobType] || 'House Exterior Wash';
+    params.property_size = sqft;
+    params.labor_hours = 2;
+    params.trade_multiplier = 1.0;
+    params.location = loc;
+
+  } else if (trade === 'Landscaping') {
+    const sqft = parseFloat(document.getElementById('landscaping-sqft')?.value) || 1500;
+    const labor = parseFloat(document.getElementById('landscaping-labor')?.value) || 4;
+    const loc = document.getElementById('location-landscaping')?.value || '';
+    params.job_type = jobType;
+    params.property_size = sqft;
+    params.labor_hours = labor;
+    params.location = loc;
+
+  } else {
+    // General Contractor
+    const sqft = parseFloat(document.getElementById('property-size')?.value) || 1500;
+    const labor = parseFloat(document.getElementById('labor-hours')?.value) || 4;
+    const loc = document.getElementById('location-general')?.value || '';
+    params.job_type = jobType;
+    params.property_size = sqft;
+    params.labor_hours = labor;
+    params.location = loc;
+  }
+
+  return params;
+}
+
+// Step 3 to generate
 async function generateQuote() {
-  // Collect contractor info
   const contractorName = $("contractor-name").value.trim();
   const contractorBusiness = $("contractor-business").value.trim();
   if (!contractorName || !contractorBusiness) {
@@ -314,10 +589,8 @@ async function generateQuote() {
     return;
   }
 
-  // Save contractor info for next time (always via existing helper)
   saveContractorInfo();
 
-  // Also save using task-spec key if save-contractor-info checkbox is checked
   if (document.getElementById('save-contractor-info')?.checked) {
     const info = {};
     ['contractor-name','contractor-business','contractor-phone','contractor-email'].forEach(id => {
@@ -326,7 +599,10 @@ async function generateQuote() {
     localStorage.setItem('qb_contractor', JSON.stringify(info));
   }
 
-  // Custom pricing (existing toggle-based fields)
+  // Collect trade-specific params
+  const tradeParams = getTradeParams();
+
+  // Custom pricing (toggle-based fields)
   const customMinToggle = $("custom-price-min")?.value;
   const customMaxToggle = $("custom-price-max")?.value;
   const hasCustomToggle = state.customPricingOpen && customMinToggle && customMaxToggle &&
@@ -338,11 +614,12 @@ async function generateQuote() {
   const hasCustomDirect = !isNaN(customMin) && !isNaN(customMax) && customMin > 0 && customMax > 0;
 
   const payload = {
-    trade: state.trade,
-    job_type: state.jobType,
-    property_size: parseFloat($("property-size").value) || 1500,
-    location: $("location").value.trim(),
-    labor_hours: parseFloat($("labor-hours").value) || 4,
+    trade: tradeParams.trade || state.trade,
+    job_type: tradeParams.job_type || state.jobType,
+    property_size: tradeParams.property_size || 1500,
+    location: tradeParams.location || '',
+    labor_hours: tradeParams.labor_hours !== undefined ? tradeParams.labor_hours : 4,
+    trade_multiplier: tradeParams.trade_multiplier || 1.0,
     materials: getCheckedMaterials(),
     contractor_name: contractorName,
     contractor_business: contractorBusiness,
@@ -402,15 +679,13 @@ async function generateQuote() {
   }
 }
 
-// ── Render Result ────────────────────────────────────
+// Render Result
 function renderResult() {
   $("result-quote-id").textContent = "Quote #" + state.quoteId;
 
-  // Range
   $("result-min").textContent = "$" + state.totalMin.toLocaleString();
   $("result-max").textContent = "$" + state.totalMax.toLocaleString();
 
-  // Line items
   const container = $("result-line-items");
   container.innerHTML = "";
   state.lineItems.forEach(item => {
@@ -426,45 +701,66 @@ function renderResult() {
     container.appendChild(div);
   });
 
-  // Share URL
   const shareUrl = `${location.origin}/q/${state.quoteId}`;
-  $("share-url").value = shareUrl;
+  const shareUrlEl = $("share-url");
+  if (shareUrlEl) shareUrlEl.value = shareUrl;
 }
 
-// ── PDF Download ──────────────────────────────────────
+// PDF Download
 function downloadPDF() {
   if (!state.quoteId) return;
   window.location.href = `/api/pdf/${state.quoteId}`;
 }
 
-// ── Copy Share Link ───────────────────────────────────
+// Copy Share Link
 function copyShareLink() {
-  const url = $("share-url").value;
+  const url = $("share-url")?.value || currentQuoteLink;
+  if (!url) return;
   navigator.clipboard.writeText(url).then(() => {
     showToast("✅ Link copied to clipboard!");
   }).catch(() => {
-    $("share-url").select();
-    document.execCommand("copy");
+    if ($("share-url")) { $("share-url").select(); document.execCommand("copy"); }
     showToast("✅ Link copied!");
   });
 }
 
-// ── New Quote ─────────────────────────────────────────
+// SMS share
+function openSMS(e) {
+  e.preventDefault();
+  const link = $('share-url')?.value || currentQuoteLink || '';
+  const biz = window.contractorBusiness || 'Your Contractor';
+  window.location.href = `sms:?body=Hi, here is your quote from ${biz}: ${link}`;
+}
+
+// Email share
+function openEmail(e) {
+  e.preventDefault();
+  const link = $('share-url')?.value || currentQuoteLink || '';
+  const biz = window.contractorBusiness || 'Your Contractor';
+  const subject = encodeURIComponent(`Your Quote from ${biz}`);
+  const body = encodeURIComponent(`Hi,\n\nPlease find your quote here:\n${link}\n\nThis quote is valid for 30 days.\n\nThank you,\n${biz}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+// New Quote
 function newQuote() {
   state = { step: 1, trade: null, jobType: null, quoteId: null, lineItems: [], totalMin: 0, totalMax: 0, customPricingOpen: false };
   document.querySelectorAll(".trade-card").forEach(c => c.classList.remove("selected"));
   document.querySelectorAll(".job-btn").forEach(b => b.classList.remove("selected"));
   document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
-  // Re-check save-contractor-info (default on)
   const saveInfo = $("save-contractor-info"); if (saveInfo) saveInfo.checked = true;
   $("job-section").classList.add("hidden");
-  // Clear job-specific fields but preserve contractor info
-  ["client-name","client-address","location","job-description"].forEach(id => {
+  // Hide all trade input groups
+  document.querySelectorAll('.trade-input-group').forEach(el => el.classList.add('hidden'));
+  ["client-name","client-address","job-description"].forEach(id => {
     const el = $(id); if (el) el.value = "";
   });
-  $("property-size").value = "1500";
-  $("labor-hours").value = "4";
-  // Reset custom pricing
+  ["property-size"].forEach(id => {
+    const el = $(id); if (el) el.value = "1500";
+  });
+  ["labor-hours", "landscaping-labor"].forEach(id => {
+    const el = $(id); if (el) el.value = "4";
+  });
   const panel = $("custom-pricing-panel");
   if (panel) panel.classList.add("hidden");
   const chevron = $("custom-pricing-chevron");
@@ -473,13 +769,12 @@ function newQuote() {
   const cpMax = $("custom-price-max"); if (cpMax) cpMax.value = "";
   const cmn = $("custom-min"); if (cmn) cmn.value = "";
   const cmx = $("custom-max"); if (cmx) cmx.value = "";
-  // Reset price confirm and share sections
   const priceConfirm = document.getElementById('price-confirm-section');
   if (priceConfirm) priceConfirm.style.display = 'none';
   const shareSection = document.getElementById('share-section');
   if (shareSection) shareSection.style.display = 'none';
   currentQuoteData = null;
-  // Reset line items and discount
+  currentQuoteLink = null;
   lineItems = [];
   renderLineItems();
   const dfFlat = document.getElementById('discount-flat'); if (dfFlat) dfFlat.value = '';
@@ -487,7 +782,7 @@ function newQuote() {
   showStep(1);
 }
 
-// ── Price Confirmation ────────────────────────────────
+// Price Confirmation
 function showPriceConfirm(quoteData) {
   currentQuoteData = quoteData;
   const min = quoteData.total_min;
@@ -531,6 +826,9 @@ async function confirmPrice() {
 }
 
 function showShareSection(quoteId, finalPrice) {
+  currentQuoteLink = `${location.origin}/q/${quoteId}`;
+  const shareUrlEl = $('share-url');
+  if (shareUrlEl) shareUrlEl.value = currentQuoteLink;
   const shareSection = document.getElementById('share-section');
   if (shareSection) {
     shareSection.style.display = 'block';
@@ -538,7 +836,7 @@ function showShareSection(quoteId, finalPrice) {
   }
 }
 
-// ── Toast ─────────────────────────────────────────────
+// Toast
 function showToast(msg, duration = 2800) {
   let toast = document.querySelector(".toast");
   if (!toast) {
