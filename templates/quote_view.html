@@ -51,12 +51,17 @@
     <div class="biz-name">{{ quote.contractor_business or 'Your Contractor' }}</div>
     <div class="quote-meta">Quote #{{ quote.quote_id }} - {{ quote.contractor_name }} - {{ quote.contractor_phone }}</div>
 
+    {% set fp = quote.get('final_price') %}
+    {% set base_total = quote.total_max or quote.total_min or 1 %}
+    {% set scale = (fp / base_total) if fp and base_total else 1 %}
+
     <div class="range">
-      <div class="range-label">Estimated Project Cost</div>
-      {% if quote.get('final_price') %}
-      <div class="range-value">${{ "{:,.0f}".format(quote.final_price) }}</div>
-      <div style="font-size:0.8rem;opacity:0.6;margin-top:0.25rem;">Project Quote</div>
+      {% if fp %}
+      <div class="range-label">Your Quote</div>
+      <div class="range-value">${{ "{:,.0f}".format(fp) }}</div>
+      <div style="font-size:0.8rem;opacity:0.6;margin-top:0.25rem;">Valid for 30 days</div>
       {% else %}
+      <div class="range-label">Estimated Project Cost</div>
       <div class="range-value">${{ "{:,.0f}".format(quote.total_min) }} - ${{ "{:,.0f}".format(quote.total_max) }}</div>
       <div style="font-size:0.8rem;opacity:0.6;margin-top:0.25rem;">Estimated Range</div>
       {% endif %}
@@ -68,7 +73,11 @@
         <div class="li-name">{{ item.description }}</div>
         <div class="li-detail">{{ item.detail }}</div>
       </div>
+      {% if fp %}
+      <div class="li-price">${{ "{:,.0f}".format((item.max * scale)|round) }}</div>
+      {% else %}
       <div class="li-price">${{ "{:,.0f}".format(item.min) }} - ${{ "{:,.0f}".format(item.max) }}</div>
+      {% endif %}
     </div>
     {% endfor %}
 
