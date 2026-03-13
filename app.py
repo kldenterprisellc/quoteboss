@@ -653,7 +653,12 @@ def auth_callback():
         )
         with urllib.request.urlopen(token_req, timeout=10) as r:
             tokens = json.loads(r.read())
-    except Exception:
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='ignore')
+        print(f"[OAuth] token exchange HTTPError {e.code}: {body}", flush=True)
+        return redirect('/access?error=token_failed')
+    except Exception as e:
+        print(f"[OAuth] token exchange error: {e}", flush=True)
         return redirect('/access?error=token_failed')
 
     access_token = tokens.get('access_token')
@@ -706,6 +711,19 @@ def auth_callback():
     session['access_token'] = access_token
     session.permanent = True
 
+    return redirect('/')
+
+
+@app.route("/auth/owner-login")
+def owner_login():
+    """Direct owner bypass -- skips Whop OAuth, owner only."""
+    secret = request.args.get('secret', '')
+    expected = os.environ.get('OWNER_LOGIN_SECRET', '')
+    if not expected or secret != expected:
+        return redirect('/access?error=unauthorized')
+    session['whop_user_id'] = 'user_rYGUC3pFlNEz5'
+    session['plan_tier'] = 'pro'
+    session.permanent = True
     return redirect('/')
 
 
