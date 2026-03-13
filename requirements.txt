@@ -2,3 +2,5 @@ flask==3.0.3
 reportlab==4.2.2
 gunicorn==22.0.0
 stripe==10.4.0
+Flask-Limiter==3.5.0
+psycopg2-binary==2.9.9
