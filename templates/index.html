@@ -116,6 +116,18 @@
         </div>
       </div>
 
+      <!-- Custom Rate Override -->
+      <div id="custom-rate-section" class="form-row cols-2" style="margin-top:1rem;">
+        <div>
+          <label for="custom-min">Your Low Estimate ($) <span style="font-size:11px;color:#888;">Overrides national average</span></label>
+          <input type="number" id="custom-min" placeholder="Leave blank to use national avg" min="0">
+        </div>
+        <div>
+          <label for="custom-max">Your High Estimate ($)</label>
+          <input type="number" id="custom-max" placeholder="Leave blank to use national avg" min="0">
+        </div>
+      </div>
+
       <div class="form-row">
         <div>
           <label for="job-description">Job Description (optional)</label>
@@ -184,6 +196,11 @@
           <label for="contractor-email">Email</label>
           <input type="email" id="contractor-email" placeholder="john@smithhvac.com">
         </div>
+      </div>
+      <div class="form-row" style="margin-top:0.5rem;">
+        <label class="check-item" style="font-size:0.85rem;">
+          <input type="checkbox" id="save-contractor-info" checked> Remember my business info for next time
+        </label>
       </div>
     </div>
 

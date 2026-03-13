@@ -95,6 +95,60 @@ REGION_MULTIPLIERS = {
     "ND": 0.90, "SD": 0.90, "HI": 1.40, "AK": 1.30,
 }
 
+LABOR_DEFAULTS = {
+    "HVAC": {
+        "AC Install (Central)": 7,
+        "Full HVAC System": 10,
+        "AC Repair": 2,
+        "Furnace Install": 6,
+        "Furnace Repair": 2,
+        "Duct Cleaning": 4,
+        "Mini Split Install": 5,
+    },
+    "Plumbing": {
+        "Water Heater (Tank)": 4,
+        "Water Heater (Tankless)": 6,
+        "Pipe Repair": 2,
+        "Drain Cleaning": 1.5,
+        "Bathroom Remodel (Plumbing)": 24,
+        "Sewer Line Repair": 6,
+        "Faucet/Fixture Install": 1.5,
+    },
+    "Electrical": {
+        "Panel Upgrade": 8,
+        "Outlet Install": 1.5,
+        "Lighting Install": 2,
+        "Ceiling Fan Install": 1.5,
+        "EV Charger (Level 2)": 3,
+        "Whole Home Rewire": 60,
+        "Generator Install": 10,
+    },
+    "Roofing": {
+        "Full Replacement (Asphalt)": 0,
+        "Full Replacement (Metal)": 0,
+        "Repair (Minor)": 2,
+        "Repair (Major)": 4,
+        "Gutter Install/Replace": 4,
+        "Skylight Install": 4,
+    },
+    "Landscaping": {
+        "Lawn Maintenance (Monthly)": 3,
+        "Sod Installation": 0,
+        "Tree Removal (Small)": 3,
+        "Tree Removal (Large)": 6,
+        "Sprinkler System Install": 8,
+        "Full Landscape Design": 16,
+    },
+    "General": {
+        "Handyman (Per Hour)": 4,
+        "Interior Painting": 16,
+        "Exterior Painting": 24,
+        "Flooring Install": 0,
+        "Drywall Repair": 4,
+        "Deck Build": 40,
+    },
+}
+
 LABOR_RATE = 85  # $ per hour base
 
 
@@ -123,8 +177,9 @@ def calculate_quote(data: dict) -> dict:
     multiplier = REGION_MULTIPLIERS.get(state, 1.0)
 
     # Custom pricing override — contractor can supply their own min/max
-    custom_min = data.get("custom_price_min")
-    custom_max = data.get("custom_price_max")
+    # Accept both custom_min/custom_max (new) and custom_price_min/custom_price_max (legacy)
+    custom_min = data.get("custom_min") if data.get("custom_min") is not None else data.get("custom_price_min")
+    custom_max = data.get("custom_max") if data.get("custom_max") is not None else data.get("custom_price_max")
     using_custom = False
     if custom_min is not None and custom_max is not None:
         try:
@@ -169,7 +224,7 @@ def calculate_quote(data: dict) -> dict:
 
     # Per-sq and per-sqft jobs already include materials in the base rate.
     # Only add separate materials line for flat "job" type pricing.
-    include_materials = unit == "job" and materials_count > 0
+    include_materials = (unit == "job" or using_custom) and materials_count > 0
     mat_factor = 0.25  # materials as % of base mid for job-based pricing
     if include_materials:
         mat_base = (base_min + base_max) / 2 * mat_factor
@@ -189,10 +244,12 @@ def calculate_quote(data: dict) -> dict:
     def r50(v):
         return round(v / 50) * 50
 
+    base_detail = "Your custom rate" if using_custom else f"Base estimate ({unit})"
+
     line_items = [
         {
             "description": f"{job_type} - {trade} Service",
-            "detail": f"Base estimate ({unit})",
+            "detail": base_detail,
             "min": r50(base_min),
             "max": r50(base_max),
         },
@@ -462,6 +519,11 @@ def generate_pdf(quote_data: dict) -> bytes:
 @app.route("/")
 def index():
     return render_template("index.html", pricing=json.dumps(PRICING))
+
+
+@app.route("/api/labor-defaults", methods=["GET"])
+def api_labor_defaults():
+    return jsonify(LABOR_DEFAULTS)
 
 
 @app.route("/api/quote", methods=["POST"])

@@ -3,6 +3,9 @@
 // ── Pricing data (injected from Flask) ──────────────
 const PRICING = window.__PRICING__ || {};
 
+// ── Labor hour defaults (loaded from API) ────────────
+const LABOR_DEFAULTS = {};
+
 // ── Trade metadata ───────────────────────────────────
 const TRADES = [
   { id: "HVAC",        emoji: "❄️",  label: "HVAC" },
@@ -69,6 +72,18 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSharedQuote();
   loadContractorInfo();
   showStep(1);
+
+  // Load labor defaults from API
+  fetch('/api/labor-defaults').then(r => r.json()).then(d => Object.assign(LABOR_DEFAULTS, d));
+
+  // Also load saved contractor info from qb_contractor key (task-spec format)
+  const saved = JSON.parse(localStorage.getItem('qb_contractor') || 'null');
+  if (saved) {
+    ['contractor-name','contractor-business','contractor-phone','contractor-email'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && saved[id]) el.value = saved[id];
+    });
+  }
 });
 
 // ── Shared quote load ────────────────────────────────
@@ -130,6 +145,22 @@ function selectJob(job, btn) {
   btn.classList.add("selected");
   // Update custom pricing hint with national average for this job
   updateCustomPricingHint();
+
+  // Apply labor hour default if available
+  const laborInput = $("labor-hours");
+  const laborRow = laborInput ? laborInput.closest("div") : null;
+  const defaultHours = LABOR_DEFAULTS[state.trade]?.[job];
+  if (defaultHours !== undefined) {
+    laborInput.value = defaultHours;
+    if (defaultHours === 0) {
+      // Hide labor hours row for jobs where labor is baked into pricing (roofing sqft, sod, flooring)
+      if (laborRow) laborRow.style.display = "none";
+    } else {
+      if (laborRow) laborRow.style.display = "";
+    }
+  } else {
+    if (laborRow) laborRow.style.display = "";
+  }
 }
 
 function updateCustomPricingHint() {
@@ -230,14 +261,28 @@ async function generateQuote() {
     return;
   }
 
-  // Save contractor info for next time
+  // Save contractor info for next time (always via existing helper)
   saveContractorInfo();
 
-  // Custom pricing
-  const customMin = $("custom-price-min")?.value;
-  const customMax = $("custom-price-max")?.value;
-  const hasCustom = state.customPricingOpen && customMin && customMax &&
-                    parseFloat(customMin) > 0 && parseFloat(customMax) >= parseFloat(customMin);
+  // Also save using task-spec key if save-contractor-info checkbox is checked
+  if (document.getElementById('save-contractor-info')?.checked) {
+    const info = {};
+    ['contractor-name','contractor-business','contractor-phone','contractor-email'].forEach(id => {
+      info[id] = document.getElementById(id)?.value || '';
+    });
+    localStorage.setItem('qb_contractor', JSON.stringify(info));
+  }
+
+  // Custom pricing (existing toggle-based fields)
+  const customMinToggle = $("custom-price-min")?.value;
+  const customMaxToggle = $("custom-price-max")?.value;
+  const hasCustomToggle = state.customPricingOpen && customMinToggle && customMaxToggle &&
+                    parseFloat(customMinToggle) > 0 && parseFloat(customMaxToggle) >= parseFloat(customMinToggle);
+
+  // Custom pricing (always-visible fields)
+  const customMin = parseFloat(document.getElementById('custom-min')?.value);
+  const customMax = parseFloat(document.getElementById('custom-max')?.value);
+  const hasCustomDirect = !isNaN(customMin) && !isNaN(customMax) && customMin > 0 && customMax > 0;
 
   const payload = {
     trade: state.trade,
@@ -254,9 +299,13 @@ async function generateQuote() {
     client_address: $("client-address").value.trim(),
     job_description: $("job-description").value.trim(),
     terms: "",
-    ...(hasCustom && {
-      custom_price_min: parseFloat(customMin),
-      custom_price_max: parseFloat(customMax),
+    ...(hasCustomToggle && {
+      custom_price_min: parseFloat(customMinToggle),
+      custom_price_max: parseFloat(customMaxToggle),
+    }),
+    ...(hasCustomDirect && {
+      custom_min: customMin,
+      custom_max: customMax,
     }),
   };
 
@@ -345,6 +394,8 @@ function newQuote() {
   document.querySelectorAll(".trade-card").forEach(c => c.classList.remove("selected"));
   document.querySelectorAll(".job-btn").forEach(b => b.classList.remove("selected"));
   document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
+  // Re-check save-contractor-info (default on)
+  const saveInfo = $("save-contractor-info"); if (saveInfo) saveInfo.checked = true;
   $("job-section").classList.add("hidden");
   // Clear job-specific fields but preserve contractor info
   ["client-name","client-address","location","job-description"].forEach(id => {
@@ -359,6 +410,8 @@ function newQuote() {
   if (chevron) chevron.textContent = "▼";
   const cpMin = $("custom-price-min"); if (cpMin) cpMin.value = "";
   const cpMax = $("custom-price-max"); if (cpMax) cpMax.value = "";
+  const cmn = $("custom-min"); if (cmn) cmn.value = "";
+  const cmx = $("custom-max"); if (cmx) cmx.value = "";
   showStep(1);
 }
 
