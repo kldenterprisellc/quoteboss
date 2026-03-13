@@ -625,7 +625,7 @@ def auth_login():
 
     params = urllib.parse.urlencode({
         'response_type': 'code',
-        'client_id': 'app_RHexXJ7z2jx64T',
+        'client_id': 'app_VOH7DioBCcAGsp',
         'redirect_uri': redirect_uri,
         'scope': 'openid profile email',
         'state': state,
@@ -662,7 +662,7 @@ def auth_callback():
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': redirect_uri,
-            'client_id': 'app_RHexXJ7z2jx64T',
+            'client_id': 'app_VOH7DioBCcAGsp',
             'code_verifier': code_verifier,
         }).encode()
 
