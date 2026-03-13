@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QuoteBoss - Enter License Key</title>
+  <title>QuoteBoss - Sign In</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -20,47 +20,57 @@
       border-radius: 16px;
       padding: 2.5rem 2rem;
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
       text-align: center;
     }
-    .logo { font-size: 2rem; font-weight: 800; color: #0B1F3A; margin-bottom: 0.25rem; }
+    .logo { font-size: 2.2rem; font-weight: 800; color: #0B1F3A; margin-bottom: 0.25rem; }
     .logo span { color: #FF6B00; }
-    .tagline { color: #888; font-size: 0.9rem; margin-bottom: 2rem; }
-    h2 { font-size: 1.3rem; color: #0B1F3A; margin-bottom: 0.5rem; }
-    p { color: #555; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; }
-    input {
-      width: 100%;
-      padding: 0.85rem 1rem;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      outline: none;
-      transition: border-color 0.2s;
+    .tagline { color: #888; font-size: 0.9rem; margin-bottom: 2.5rem; }
+    .benefits {
+      text-align: left;
+      margin-bottom: 2rem;
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
     }
-    input:focus { border-color: #FF6B00; }
-    button {
+    .benefit {
+      font-size: 0.88rem;
+      color: #333;
+      padding: 0.3rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .whop-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
       width: 100%;
-      padding: 0.9rem;
+      padding: 0.9rem 1.5rem;
       background: #FF6B00;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
+      text-decoration: none;
       transition: opacity 0.2s;
+      margin-bottom: 1rem;
     }
-    button:hover { opacity: 0.9; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .error { color: #e53935; font-size: 0.85rem; margin-top: 0.75rem; display: none; }
-    .buy-link {
-      margin-top: 1.5rem;
+    .whop-btn:hover { opacity: 0.9; }
+    .error-box {
+      background: #fff3f3;
+      border: 1px solid #ffcdd2;
+      border-radius: 8px;
+      padding: 0.75rem;
+      color: #c62828;
       font-size: 0.85rem;
-      color: #888;
+      margin-bottom: 1rem;
     }
+    .buy-link { font-size: 0.82rem; color: #888; }
     .buy-link a { color: #FF6B00; text-decoration: none; font-weight: 600; }
-    .buy-link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -68,62 +78,32 @@
     <div class="logo">Quote<span>Boss</span></div>
     <div class="tagline">Professional quotes for contractors</div>
 
-    <h2>Enter Your License Key</h2>
-    <p>You can find your license key in your Whop account after purchase.</p>
+    {% if error %}
+    <div class="error-box">
+      {% if error == 'no_membership' %}
+        No active QuoteBoss subscription found. Please purchase a plan below.
+      {% elif error == 'no_token' or error == 'token_failed' %}
+        Sign-in failed. Please try again.
+      {% else %}
+        Something went wrong. Please try again.
+      {% endif %}
+    </div>
+    {% endif %}
 
-    <input type="text" id="license-input" placeholder="Paste your license key here..." autocomplete="off" autocorrect="off" spellcheck="false">
-    <button id="access-btn" onclick="verifyKey()">Access QuoteBoss</button>
-    <div class="error" id="error-msg"></div>
+    <div class="benefits">
+      <div class="benefit">&#x2705; Generate professional PDF quotes in minutes</div>
+      <div class="benefit">&#x2705; All 6 trades covered</div>
+      <div class="benefit">&#x2705; Pricing adjusted for your state</div>
+      <div class="benefit">&#x2705; Send shareable quote links to clients</div>
+    </div>
+
+    <a href="/auth/login" class="whop-btn">
+      Sign in with Whop
+    </a>
 
     <div class="buy-link">
-      Don't have a license? <a href="https://whop.com/web-growth-systems" target="_blank">Get QuoteBoss</a>
+      Don't have a subscription? <a href="https://whop.com/web-growth-systems" target="_blank">Get QuoteBoss</a>
     </div>
   </div>
-
-  <script>
-    async function verifyKey() {
-      const key = document.getElementById('license-input').value.trim();
-      const btn = document.getElementById('access-btn');
-      const err = document.getElementById('error-msg');
-
-      if (!key) { showError('Please enter your license key'); return; }
-
-      btn.disabled = true;
-      btn.textContent = 'Verifying...';
-      err.style.display = 'none';
-
-      try {
-        const res = await fetch('/api/verify-license', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ license_key: key })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-          btn.textContent = 'Access Granted!';
-          window.location.href = '/';
-        } else {
-          showError(data.error || 'Invalid license key');
-          btn.disabled = false;
-          btn.textContent = 'Access QuoteBoss';
-        }
-      } catch(e) {
-        showError('Connection error. Please try again.');
-        btn.disabled = false;
-        btn.textContent = 'Access QuoteBoss';
-      }
-    }
-
-    function showError(msg) {
-      const err = document.getElementById('error-msg');
-      err.textContent = msg;
-      err.style.display = 'block';
-    }
-
-    document.getElementById('license-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') verifyKey();
-    });
-  </script>
 </body>
 </html>

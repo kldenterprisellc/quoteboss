@@ -3,10 +3,13 @@ import io
 import json
 import uuid
 import base64
+import hashlib
+import secrets
+import urllib.parse
 import urllib.request
 import urllib.error
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, render_template, send_file, abort, session, redirect
+from flask import Flask, request, jsonify, render_template, send_file, abort, redirect, session
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -521,7 +524,7 @@ def generate_pdf(quote_data: dict) -> bytes:
 
 @app.route("/")
 def index():
-    if not session.get('verified_license'):
+    if not session.get('whop_user_id'):
         return redirect('/access')
     tier = session.get('plan_tier', 'basic')
     return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier)
@@ -529,46 +532,119 @@ def index():
 
 @app.route("/access")
 def access_page():
-    if session.get('verified_license'):
+    if session.get('whop_user_id'):
         return redirect('/')
-    return render_template("access.html")
+    error = request.args.get('error', '')
+    return render_template("access.html", error=error)
 
 
-@app.route("/api/verify-license", methods=["POST"])
-def verify_license():
-    data = request.get_json(force=True)
-    license_key = data.get("license_key", "").strip()
-    if not license_key:
-        return jsonify({"error": "License key required"}), 400
+@app.route("/auth/login")
+def auth_login():
+    code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b'=').decode()
+    code_challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode()).digest()
+    ).rstrip(b'=').decode()
+    state = secrets.token_urlsafe(16)
+
+    session['pkce_verifier'] = code_verifier
+    session['oauth_state'] = state
+
+    redirect_uri = "https://quoteboss.io/auth/callback"
+
+    params = urllib.parse.urlencode({
+        'response_type': 'code',
+        'client_id': 'app_RHexXJ7z2jx64T',
+        'redirect_uri': redirect_uri,
+        'scope': 'openid profile email',
+        'state': state,
+        'code_challenge': code_challenge,
+        'code_challenge_method': 'S256',
+    })
+    return redirect(f'https://api.whop.com/oauth/authorize?{params}')
+
+
+@app.route("/auth/callback")
+def auth_callback():
+    error = request.args.get('error')
+    if error:
+        return redirect('/access?error=' + urllib.parse.quote(error))
+
+    code = request.args.get('code')
+    state = request.args.get('state')
+
+    if state != session.get('oauth_state'):
+        return redirect('/access?error=invalid_state')
+
+    code_verifier = session.pop('pkce_verifier', None)
+    session.pop('oauth_state', None)
+
+    if not code_verifier:
+        return redirect('/access?error=missing_verifier')
+
+    redirect_uri = "https://quoteboss.io/auth/callback"
 
     try:
-        req = urllib.request.Request(
-            f"https://api.whop.com/api/v2/memberships/{license_key}",
-            headers={"Authorization": "Bearer REDACTED_ROTATED_KEY"}
+        token_data = urllib.parse.urlencode({
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': redirect_uri,
+            'client_id': 'app_RHexXJ7z2jx64T',
+            'code_verifier': code_verifier,
+        }).encode()
+
+        token_req = urllib.request.Request(
+            'https://api.whop.com/oauth/token',
+            data=token_data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            method='POST'
         )
-        with urllib.request.urlopen(req, timeout=10) as r:
-            membership = json.loads(r.read())
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return jsonify({"error": "Invalid license key"}), 400
-        return jsonify({"error": "Verification failed, try again"}), 500
+        with urllib.request.urlopen(token_req, timeout=10) as r:
+            tokens = json.loads(r.read())
     except Exception:
-        return jsonify({"error": "Verification failed, try again"}), 500
+        return redirect('/access?error=token_failed')
 
-    if membership.get("status") != "active":
-        return jsonify({"error": "This license is not active. Please check your Whop account."}), 400
+    access_token = tokens.get('access_token')
+    if not access_token:
+        return redirect('/access?error=no_token')
 
-    if membership.get("product_id") != "prod_Bunxdbxo96qpc":
-        return jsonify({"error": "This key is not valid for QuoteBoss"}), 400
+    try:
+        user_req = urllib.request.Request(
+            'https://api.whop.com/api/v2/me',
+            headers={'Authorization': f'Bearer {access_token}'}
+        )
+        with urllib.request.urlopen(user_req, timeout=10) as r:
+            user_info = json.loads(r.read())
+        user_id = user_info.get('id') or user_info.get('user', {}).get('id')
+    except Exception:
+        return redirect('/access?error=user_fetch_failed')
 
-    plan_id = membership.get("plan_id", "")
-    tier = "pro" if plan_id == "plan_v5y4UTJONBPVB" else "basic"
+    WHOP_API_KEY = 'REDACTED_ROTATED_KEY'
+    try:
+        mem_req = urllib.request.Request(
+            f'https://api.whop.com/api/v2/memberships?product_id=prod_Bunxdbxo96qpc&valid=true&user_id={user_id}',
+            headers={'Authorization': f'Bearer {WHOP_API_KEY}'}
+        )
+        with urllib.request.urlopen(mem_req, timeout=10) as r:
+            mem_data = json.loads(r.read())
+    except Exception:
+        return redirect('/access?error=membership_check_failed')
 
-    session['verified_license'] = license_key
+    memberships = mem_data.get('data', [])
+    active = [m for m in memberships if m.get('status') == 'active']
+
+    if not active:
+        return redirect('/access?error=no_membership')
+
+    membership = active[0]
+    plan_id = membership.get('plan_id', '')
+    tier = 'pro' if plan_id == 'plan_v5y4UTJONBPVB' else 'basic'
+
+    session['whop_user_id'] = user_id
     session['plan_tier'] = tier
+    session['access_token'] = access_token
     session.permanent = True
 
-    return jsonify({"success": True, "tier": tier})
+    return redirect('/')
 
 
 @app.route("/logout")
@@ -584,7 +660,7 @@ def api_labor_defaults():
 
 @app.route("/api/quote", methods=["POST"])
 def api_quote():
-    if not session.get('verified_license'):
+    if not session.get('whop_user_id'):
         return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(force=True)
     try:
@@ -634,7 +710,7 @@ def api_quote():
 
 @app.route("/api/pdf/<quote_id>", methods=["GET"])
 def api_pdf(quote_id):
-    if not session.get('verified_license'):
+    if not session.get('whop_user_id'):
         return jsonify({"error": "Unauthorized"}), 401
     quote = quote_store.get(quote_id.upper())
     if not quote:
