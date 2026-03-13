@@ -86,3 +86,33 @@ def get_quote(quote_id):
     row = c.execute('SELECT * FROM quotes WHERE quote_id = ?', (quote_id,)).fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+def init_feedback_table():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        whop_user_id TEXT,
+        rating INTEGER,
+        category TEXT,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    conn.commit()
+    conn.close()
+
+def save_feedback(whop_user_id, rating, category, message):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('INSERT INTO feedback (whop_user_id, rating, category, message) VALUES (?, ?, ?, ?)',
+              (whop_user_id, rating, category, message))
+    conn.commit()
+    conn.close()
+
+def get_all_feedback():
+    conn = get_db()
+    c = conn.cursor()
+    rows = c.execute('SELECT * FROM feedback ORDER BY created_at DESC').fetchall()
+    conn.close()
+    return [dict(r) for r in rows]

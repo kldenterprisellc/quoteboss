@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuoteBoss - Share Feedback</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .stars { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
+    .star {
+      font-size: 2rem;
+      cursor: pointer;
+      color: #ddd;
+      transition: color 0.15s;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+    }
+    .star.active, .star:hover { color: #FF6B00; }
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+    .cat-btn {
+      padding: 0.6rem 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #555;
+      text-align: left;
+      transition: all 0.15s;
+    }
+    .cat-btn.selected {
+      border-color: #FF6B00;
+      background: #fff5ef;
+      color: #FF6B00;
+    }
+    .success-state { text-align: center; padding: 2rem 1rem; }
+    .success-icon { font-size: 3rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="logo" href="/">
+    <div class="logo-icon">💼</div>
+    <span class="logo-text">Quote<span>Boss</span></span>
+  </a>
+  <a href="/logout" style="font-size:0.85rem;color:#aaa;text-decoration:none;">Sign out</a>
+</nav>
+
+<div class="container" style="max-width:560px;padding-top:2rem;">
+
+  <div class="card" id="feedback-form">
+    <div class="card-header">
+      <div class="card-icon">💬</div>
+      <div>
+        <div class="card-title">Share Your Feedback</div>
+        <div class="card-subtitle">You're an early tester. Your input shapes what gets built next.</div>
+      </div>
+    </div>
+
+    <!-- Star rating -->
+    <div style="margin-bottom:1.25rem;">
+      <label style="font-size:0.85rem;font-weight:700;color:#333;display:block;margin-bottom:0.25rem;">
+        Overall, how would you rate QuoteBoss?
+      </label>
+      <div class="stars" id="stars">
+        <button class="star" data-val="1" onclick="setRating(1)">★</button>
+        <button class="star" data-val="2" onclick="setRating(2)">★</button>
+        <button class="star" data-val="3" onclick="setRating(3)">★</button>
+        <button class="star" data-val="4" onclick="setRating(4)">★</button>
+        <button class="star" data-val="5" onclick="setRating(5)">★</button>
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div style="margin-bottom:1.25rem;">
+      <label style="font-size:0.85rem;font-weight:700;color:#333;display:block;margin-bottom:0.5rem;">
+        What is your feedback about?
+      </label>
+      <div class="category-grid">
+        <button class="cat-btn" onclick="setCategory(this, 'pricing')">💰 Pricing accuracy</button>
+        <button class="cat-btn" onclick="setCategory(this, 'usability')">🖥️ Ease of use</button>
+        <button class="cat-btn" onclick="setCategory(this, 'quotes')">📄 Quote quality</button>
+        <button class="cat-btn" onclick="setCategory(this, 'payments')">💳 Payment features</button>
+        <button class="cat-btn" onclick="setCategory(this, 'feature_request')">✨ Feature request</button>
+        <button class="cat-btn" onclick="setCategory(this, 'bug')">🐛 Something broken</button>
+      </div>
+    </div>
+
+    <!-- Message -->
+    <div style="margin-bottom:1.5rem;">
+      <label style="font-size:0.85rem;font-weight:700;color:#333;display:block;margin-bottom:0.5rem;">
+        Tell us more
+      </label>
+      <textarea id="feedback-msg" rows="5"
+        placeholder="What's working well? What's confusing? What would make this a must-have tool for your business?"
+        style="width:100%;padding:0.85rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.9rem;resize:vertical;font-family:inherit;line-height:1.5;"></textarea>
+    </div>
+
+    <button class="btn btn-primary btn-lg btn-full" onclick="submitFeedback()">Submit Feedback</button>
+    <div id="error-msg" style="color:#c62828;font-size:0.85rem;text-align:center;margin-top:0.75rem;display:none;"></div>
+  </div>
+
+  <div id="success-state" class="card success-state" style="display:none;">
+    <div class="success-icon">🙌</div>
+    <div style="font-size:1.2rem;font-weight:800;color:#0B1F3A;margin-bottom:0.5rem;">Thank you!</div>
+    <div style="color:#555;font-size:0.9rem;margin-bottom:1.5rem;">
+      We read every piece of feedback and act on it fast. You're helping build something great.
+    </div>
+    <a href="/" class="btn btn-primary">Back to QuoteBoss</a>
+  </div>
+
+</div>
+
+<script>
+let selectedRating = 0;
+let selectedCategory = '';
+
+function setRating(val) {
+  selectedRating = val;
+  document.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+  });
+}
+
+function setCategory(btn, val) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedCategory = val;
+}
+
+async function submitFeedback() {
+  const msg = document.getElementById('feedback-msg').value.trim();
+  const errEl = document.getElementById('error-msg');
+
+  if (!msg) {
+    errEl.textContent = 'Please write something before submitting.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+
+  const res = await fetch('/api/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rating: selectedRating, category: selectedCategory, message: msg })
+  });
+
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('feedback-form').style.display = 'none';
+    document.getElementById('success-state').style.display = 'block';
+  } else {
+    errEl.textContent = data.error || 'Something went wrong. Try again.';
+    errEl.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>

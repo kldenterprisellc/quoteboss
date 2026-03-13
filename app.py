@@ -23,11 +23,12 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
-from database import init_db, get_contractor, upsert_contractor, save_quote, get_quote
+from database import init_db, get_contractor, upsert_contractor, save_quote, get_quote, init_feedback_table, save_feedback, get_all_feedback
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'qb-dev-secret-2026')
 init_db()
+init_feedback_table()
 
 # In-memory quote store (backed by SQLite for persistence across restarts)
 quote_store = {}
@@ -886,6 +887,50 @@ def create_checkout(quote_id):
         return jsonify({"checkout_url": checkout_session.url})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/feedback")
+def feedback_page():
+    if not session.get('whop_user_id'):
+        return redirect('/access')
+    return render_template("feedback.html")
+
+@app.route("/api/feedback", methods=["POST"])
+def submit_feedback():
+    if not session.get('whop_user_id'):
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json(force=True)
+    msg = data.get('message', '').strip()
+    if not msg:
+        return jsonify({"error": "Message required"}), 400
+    save_feedback(
+        session['whop_user_id'],
+        data.get('rating', 0),
+        data.get('category', ''),
+        msg
+    )
+    return jsonify({"success": True})
+
+# Admin only - view all feedback (protected by Whop owner user ID)
+OWNER_ID = 'user_rYGUC3pFlNEz5'
+
+@app.route("/admin/feedback")
+def admin_feedback():
+    if session.get('whop_user_id') != OWNER_ID:
+        return "Unauthorized", 403
+    rows = get_all_feedback()
+    stars = {1: "1/5", 2: "2/5", 3: "3/5", 4: "4/5", 5: "5/5", 0: "No rating"}
+    html = "<style>body{font-family:sans-serif;padding:2rem;max-width:800px;margin:0 auto} .entry{border:1px solid #ddd;border-radius:8px;padding:1rem;margin-bottom:1rem;} .meta{font-size:0.8rem;color:#888;margin-bottom:0.5rem;} .msg{font-size:0.95rem;}</style>"
+    html += f"<h2>Feedback ({len(rows)} total)</h2>"
+    for r in rows:
+        rating_str = stars.get(r.get('rating', 0), '')
+        html += f"""<div class='entry'>
+          <div class='meta'>{r['created_at'][:16]} &nbsp;|&nbsp; {r['whop_user_id']} &nbsp;|&nbsp; {r.get('category','uncategorized')} &nbsp;|&nbsp; {rating_str}</div>
+          <div class='msg'>{r['message']}</div>
+        </div>"""
+    if not rows:
+        html += "<p>No feedback yet.</p>"
+    return html
 
 
 @app.route("/faq")
