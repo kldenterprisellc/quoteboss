@@ -553,8 +553,10 @@ def auth_login():
     ).rstrip(b'=').decode()
     state = secrets.token_urlsafe(16)
 
+    nonce = secrets.token_urlsafe(16)
     session['pkce_verifier'] = code_verifier
     session['oauth_state'] = state
+    session['oauth_nonce'] = nonce
 
     redirect_uri = "https://quoteboss.io/auth/callback"
 
@@ -564,6 +566,7 @@ def auth_login():
         'redirect_uri': redirect_uri,
         'scope': 'openid profile email',
         'state': state,
+        'nonce': nonce,
         'code_challenge': code_challenge,
         'code_challenge_method': 'S256',
     })
