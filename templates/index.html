@@ -275,8 +275,37 @@
       </div>
     </div>
 
+    <!-- Price confirmation step -->
+    <div id="price-confirm-section" class="card" style="margin-top:1rem;display:none;">
+      <div class="card-header">
+        <div class="card-icon">💰</div>
+        <div>
+          <div class="card-title">Set Your Quote Price</div>
+          <div class="card-subtitle">Market range: <span id="range-display"></span></div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin:1.5rem 0;">
+        <div style="font-size:0.85rem;color:#888;margin-bottom:0.5rem;">Your quote price</div>
+        <div id="final-price-display" style="font-size:3rem;font-weight:900;color:#FF6B00;line-height:1;">$0</div>
+      </div>
+
+      <input type="range" id="price-slider"
+        style="width:100%;accent-color:#FF6B00;height:6px;margin:0.5rem 0 1.5rem 0;"
+        step="50">
+
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#aaa;margin-top:-1rem;margin-bottom:1rem;">
+        <span id="slider-min-label"></span>
+        <span id="slider-max-label"></span>
+      </div>
+
+      <button class="btn btn-primary btn-lg btn-full" onclick="confirmPrice()">
+        Confirm Price and Get Quote Link
+      </button>
+    </div>
+
     <!-- Share Box -->
-    <div class="share-box">
+    <div id="share-section" class="share-box" style="display:none;">
       <label style="margin-bottom: 0.5rem; display: block; font-size: 0.8rem; font-weight: 600; color: var(--navy);">
         🔗 Shareable Link
       </label>

@@ -434,17 +434,29 @@ def generate_pdf(quote_data: dict) -> bytes:
         ])
 
     # Total row
-    table_data.append([
-        Paragraph("<b>ESTIMATED TOTAL</b>", ParagraphStyle("tot", fontSize=10, textColor=WHITE)),
-        Paragraph("", detail_style),
-        Paragraph(
+    _fp = quote_data.get('final_price')
+    if _fp:
+        total_col3 = Paragraph(
+            f"<b>${_fp:,.0f}</b>",
+            ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)
+        )
+        total_col4 = Paragraph("", ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT))
+        total_label = "QUOTE TOTAL"
+    else:
+        total_col3 = Paragraph(
             f"<b>${quote_data['total_min']:,.0f}</b>",
             ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)
-        ),
-        Paragraph(
+        )
+        total_col4 = Paragraph(
             f"<b>${quote_data['total_max']:,.0f}</b>",
             ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)
-        ),
+        )
+        total_label = "ESTIMATED TOTAL"
+    table_data.append([
+        Paragraph(f"<b>{total_label}</b>", ParagraphStyle("tot", fontSize=10, textColor=WHITE)),
+        Paragraph("", detail_style),
+        total_col3,
+        total_col4,
     ])
 
     items_table = Table(
@@ -483,11 +495,18 @@ def generate_pdf(quote_data: dict) -> bytes:
     story.append(items_table)
     story.append(Spacer(1, 0.3 * inch))
 
-    # ── Price Range Banner ─────────────────────────────
+    # ── Price Banner ─────────────────────────────
+    final_price = quote_data.get('final_price')
+    if final_price:
+        total_display = f"${final_price:,.0f}"
+        price_label = "Project Quote"
+    else:
+        total_display = f"${quote_data['total_min']:,.0f} - ${quote_data['total_max']:,.0f}"
+        price_label = "Estimated Project Range"
     story.append(HRFlowable(width="100%", thickness=2, color=ORANGE))
     story.append(Spacer(1, 0.1 * inch))
     story.append(Paragraph(
-        f"Estimated Project Range: <b><font color='#FF6B00'>${quote_data['total_min']:,.0f} – ${quote_data['total_max']:,.0f}</font></b>",
+        f"{price_label}: <b><font color='#FF6B00'>{total_display}</font></b>",
         ParagraphStyle("range", fontSize=13, textColor=NAVY, alignment=TA_CENTER)
     ))
     story.append(Spacer(1, 0.1 * inch))
@@ -719,6 +738,11 @@ def api_quote():
         "state": calc["state"],
     }
 
+    # Default final price = midpoint of range
+    final_price = round((quote_record['total_min'] + quote_record['total_max']) / 2)
+    quote_record['final_price'] = final_price
+    quote_record['final_price_set'] = False  # contractor hasn't confirmed yet
+
     save_quote(quote_id, session.get('whop_user_id', ''), json_module.dumps(quote_record))
     quote_store[quote_id] = quote_record
 
@@ -727,10 +751,41 @@ def api_quote():
         "line_items": calc["line_items"],
         "total_min": calc["total_min"],
         "total_max": calc["total_max"],
+        "final_price": final_price,
         "state": calc["state"],
         "multiplier": calc["multiplier"],
         "using_custom_pricing": calc["using_custom_pricing"],
     })
+
+
+@app.route("/api/quote/set-price", methods=["POST"])
+def set_quote_price():
+    if not session.get('whop_user_id'):
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json(force=True)
+    quote_id = data.get('quote_id', '').upper()
+    final_price = data.get('final_price')
+
+    if not quote_id or not final_price:
+        return jsonify({"error": "Missing quote_id or final_price"}), 400
+
+    quote = quote_store.get(quote_id)
+    if not quote:
+        db_quote = get_quote(quote_id)
+        if db_quote:
+            quote = json_module.loads(db_quote['quote_data'])
+    if not quote:
+        return jsonify({"error": "Quote not found"}), 404
+
+    # Update final price
+    quote['final_price'] = int(final_price)
+    quote['final_price_set'] = True
+    quote_store[quote_id] = quote
+
+    # Persist to DB
+    save_quote(quote_id, session.get('whop_user_id', ''), json_module.dumps(quote))
+
+    return jsonify({"success": True})
 
 
 @app.route("/api/pdf/<quote_id>", methods=["GET"])
@@ -858,10 +913,14 @@ def create_checkout(quote_id):
     data = request.get_json(force=True)
     payment_type = data.get('payment_type', 'deposit')
 
+    quote_price = quote.get('final_price') or quote['total_max']
+
     if payment_type == 'full':
-        total = quote['total_max']
+        total = quote_price
+    elif payment_type == 'deposit':
+        total = round(quote_price * 0.5)
     else:
-        total = round(quote['total_min'] * 0.5)
+        total = quote_price
 
     fee_mode = contractor.get('fee_mode', 'pass_to_client')
 

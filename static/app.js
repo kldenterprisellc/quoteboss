@@ -25,6 +25,9 @@ const MATERIALS = {
   General:     ["Lumber", "Drywall", "Paint", "Fasteners", "Flooring", "Adhesives"],
 };
 
+// ── Price confirmation ────────────────────────────────
+let currentQuoteData = null;
+
 // ── State ────────────────────────────────────────────
 let state = {
   step: 1,
@@ -332,6 +335,7 @@ async function generateQuote() {
 
     renderResult();
     showStep(4);
+    showPriceConfirm(data);
   } catch (err) {
     $("error-banner").textContent = "❌ " + err.message;
     $("error-banner").classList.add("show");
@@ -412,7 +416,64 @@ function newQuote() {
   const cpMax = $("custom-price-max"); if (cpMax) cpMax.value = "";
   const cmn = $("custom-min"); if (cmn) cmn.value = "";
   const cmx = $("custom-max"); if (cmx) cmx.value = "";
+  // Reset price confirm and share sections
+  const priceConfirm = document.getElementById('price-confirm-section');
+  if (priceConfirm) priceConfirm.style.display = 'none';
+  const shareSection = document.getElementById('share-section');
+  if (shareSection) shareSection.style.display = 'none';
+  currentQuoteData = null;
   showStep(1);
+}
+
+// ── Price Confirmation ────────────────────────────────
+function showPriceConfirm(quoteData) {
+  currentQuoteData = quoteData;
+  const min = quoteData.total_min;
+  const max = Math.round(quoteData.total_max * 1.1);
+  const mid = Math.round((quoteData.total_min + quoteData.total_max) / 2);
+
+  const slider = document.getElementById('price-slider');
+  slider.min = min;
+  slider.max = max;
+  slider.value = mid;
+
+  document.getElementById('range-display').textContent =
+    '$' + min.toLocaleString() + ' - $' + quoteData.total_max.toLocaleString();
+  document.getElementById('slider-min-label').textContent = '$' + min.toLocaleString();
+  document.getElementById('slider-max-label').textContent = '$' + max.toLocaleString();
+  document.getElementById('final-price-display').textContent = '$' + mid.toLocaleString();
+
+  slider.oninput = function() {
+    document.getElementById('final-price-display').textContent =
+      '$' + parseInt(this.value).toLocaleString();
+  };
+
+  document.getElementById('price-confirm-section').style.display = 'block';
+  document.getElementById('price-confirm-section').scrollIntoView({behavior: 'smooth'});
+}
+
+async function confirmPrice() {
+  const price = parseInt(document.getElementById('price-slider').value);
+  const quoteId = currentQuoteData.quote_id;
+
+  const res = await fetch('/api/quote/set-price', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({quote_id: quoteId, final_price: price})
+  });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('price-confirm-section').style.display = 'none';
+    showShareSection(quoteId, price);
+  }
+}
+
+function showShareSection(quoteId, finalPrice) {
+  const shareSection = document.getElementById('share-section');
+  if (shareSection) {
+    shareSection.style.display = 'block';
+    shareSection.scrollIntoView({behavior: 'smooth'});
+  }
 }
 
 // ── Toast ─────────────────────────────────────────────

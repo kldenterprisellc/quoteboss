@@ -53,8 +53,13 @@
 
     <div class="range">
       <div class="range-label">Estimated Project Cost</div>
+      {% if quote.get('final_price') %}
+      <div class="range-value">${{ "{:,.0f}".format(quote.final_price) }}</div>
+      <div style="font-size:0.8rem;opacity:0.6;margin-top:0.25rem;">Project Quote</div>
+      {% else %}
       <div class="range-value">${{ "{:,.0f}".format(quote.total_min) }} - ${{ "{:,.0f}".format(quote.total_max) }}</div>
-      <div style="font-size:0.8rem;opacity:0.6;margin-top:0.25rem;">Valid for 30 days</div>
+      <div style="font-size:0.8rem;opacity:0.6;margin-top:0.25rem;">Estimated Range</div>
+      {% endif %}
     </div>
 
     {% for item in quote.line_items %}
@@ -72,12 +77,13 @@
   <div class="card pay-section">
     <div class="pay-title">Ready to move forward?</div>
 
+    {% set quote_price = quote.get('final_price') or quote.total_max %}
     {% if has_stripe %}
     <button class="pay-btn pay-deposit" onclick="startPayment('deposit')">
-      Pay 50% Deposit - ${{ "{:,.0f}".format((quote.total_min * 0.5 * 1.01) if fee_mode == 'pass_to_client' else (quote.total_min * 0.5)) }}
+      Pay 50% Deposit - ${{ "{:,.0f}".format((quote_price * 0.5 * 1.01) if fee_mode == 'pass_to_client' else (quote_price * 0.5)) }}
     </button>
     <button class="pay-btn pay-full" onclick="startPayment('full')">
-      Pay in Full - ${{ "{:,.0f}".format((quote.total_max * 1.01) if fee_mode == 'pass_to_client' else quote.total_max) }}
+      Pay in Full - ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
     </button>
     {% if fee_mode == 'pass_to_client' %}
     <div style="text-align:center;font-size:0.75rem;color:#aaa;margin-bottom:0.75rem;">Includes 1% processing fee</div>
@@ -88,7 +94,7 @@
     <div class="zelle-info">
       <div style="font-size:0.85rem;color:#555;margin-bottom:0.4rem;">Pay via Zelle</div>
       <div class="zelle-handle">{{ zelle_handle }}</div>
-      <div style="font-size:0.78rem;color:#888;margin-top:0.4rem;">Send ${{ "{:,.0f}".format(quote.total_min * 0.5) }} deposit or ${{ "{:,.0f}".format(quote.total_max) }} in full</div>
+      <div style="font-size:0.78rem;color:#888;margin-top:0.4rem;">Send ${{ "{:,.0f}".format(quote_price * 0.5) }} deposit or ${{ "{:,.0f}".format(quote_price) }} in full</div>
     </div>
     {% endif %}
   </div>
