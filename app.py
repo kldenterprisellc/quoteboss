@@ -1,6 +1,7 @@
 import os
 import io
 import json
+import json as json_module
 import uuid
 import base64
 import hashlib
@@ -18,11 +19,13 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from database import init_db, get_contractor, upsert_contractor, save_quote, get_quote
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'qb-dev-secret-2026')
+init_db()
 
-# In-memory quote store (stateless MVP — quotes expire on restart)
+# In-memory quote store (backed by SQLite for persistence across restarts)
 quote_store = {}
 
 # ─────────────────────────────────────────────
@@ -695,6 +698,7 @@ def api_quote():
         "state": calc["state"],
     }
 
+    save_quote(quote_id, session.get('whop_user_id', ''), json_module.dumps(quote_record))
     quote_store[quote_id] = quote_record
 
     return jsonify({
@@ -714,6 +718,11 @@ def api_pdf(quote_id):
         return jsonify({"error": "Unauthorized"}), 401
     quote = quote_store.get(quote_id.upper())
     if not quote:
+        db_quote = get_quote(quote_id.upper())
+        if db_quote:
+            quote = json_module.loads(db_quote['quote_data'])
+            quote_store[quote_id.upper()] = quote
+    if not quote:
         abort(404)
     pdf_bytes = generate_pdf(quote)
     return send_file(
@@ -727,10 +736,39 @@ def api_pdf(quote_id):
 @app.route("/q/<quote_id>")
 def view_quote(quote_id):
     quote = quote_store.get(quote_id.upper())
+    if not quote:
+        db_quote = get_quote(quote_id.upper())
+        if db_quote:
+            quote = json_module.loads(db_quote['quote_data'])
+            quote_store[quote_id.upper()] = quote
     tier = session.get('plan_tier', 'basic')
     if not quote:
         return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, error="Quote not found or expired.")
     return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, shared_quote=json.dumps(quote))
+
+
+@app.route("/settings")
+def settings_page():
+    if not session.get('whop_user_id'):
+        return redirect('/access')
+    contractor = get_contractor(session['whop_user_id']) or {}
+    tier = session.get('plan_tier', 'basic')
+    return render_template("settings.html", contractor=contractor, plan_tier=tier)
+
+
+@app.route("/api/settings", methods=["POST"])
+def update_settings():
+    if not session.get('whop_user_id'):
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json(force=True)
+
+    allowed_fields = ['zelle_handle', 'fee_mode']
+    updates = {k: v for k, v in data.items() if k in allowed_fields}
+
+    if updates:
+        upsert_contractor(session['whop_user_id'], **updates)
+
+    return jsonify({"success": True})
 
 
 if __name__ == "__main__":

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuoteBoss - Settings</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23FF6B00'/><text x='50%' y='62%' dominant-baseline='middle' text-anchor='middle' font-size='18'>💼</text></svg>">
+</head>
+<body>
+<nav class="topbar">
+  <a class="logo" href="/">
+    <div class="logo-icon">💼</div>
+    <span class="logo-text">Quote<span>Boss</span></span>
+  </a>
+  <a href="/logout" style="font-size:0.85rem;color:#888;text-decoration:none;">Sign out</a>
+</nav>
+
+<div class="container" style="max-width:600px;padding-top:2rem;">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">⚙️</div>
+      <div>
+        <div class="card-title">Payment Settings</div>
+        <div class="card-subtitle">Connect payment methods to collect from your quote links</div>
+      </div>
+    </div>
+
+    <!-- Stripe Connect placeholder -->
+    <div style="background:#f9f9f9;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+        <span style="font-size:1.5rem;">💳</span>
+        <div>
+          <div style="font-weight:700;color:#0B1F3A;">Stripe</div>
+          <div style="font-size:0.82rem;color:#888;">Accept credit/debit cards directly from your quotes</div>
+        </div>
+      </div>
+      {% if contractor.get('stripe_account_id') %}
+        <div style="color:#2e7d32;font-size:0.85rem;font-weight:600;">Connected</div>
+      {% else %}
+        <button id="stripe-connect-btn" class="btn btn-primary" style="width:100%;margin-top:0.5rem;" disabled>
+          Connect Stripe - Coming Soon
+        </button>
+      {% endif %}
+    </div>
+
+    <!-- Zelle -->
+    <div style="background:#f9f9f9;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+        <span style="font-size:1.5rem;">📱</span>
+        <div>
+          <div style="font-weight:700;color:#0B1F3A;">Zelle</div>
+          <div style="font-size:0.82rem;color:#888;">Show your Zelle info on quote links so clients can pay instantly</div>
+        </div>
+      </div>
+      <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:0.4rem;">Your Zelle email or phone number</label>
+      <input type="text" id="zelle-handle" value="{{ contractor.get('zelle_handle', '') }}"
+             placeholder="e.g. john@email.com or (555) 123-4567"
+             style="width:100%;padding:0.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+    </div>
+
+    <!-- Fee mode (Pro only) -->
+    {% if plan_tier == 'pro' %}
+    <div style="background:#f9f9f9;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+        <span style="font-size:1.5rem;">💰</span>
+        <div>
+          <div style="font-weight:700;color:#0B1F3A;">Processing Fee</div>
+          <div style="font-size:0.82rem;color:#888;">1% processing fee - choose who pays it</div>
+        </div>
+      </div>
+      <select id="fee-mode" style="width:100%;padding:0.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;">
+        <option value="pass_to_client" {% if contractor.get('fee_mode', 'pass_to_client') == 'pass_to_client' %}selected{% endif %}>
+          Pass to client (client pays 1% more)
+        </option>
+        <option value="absorb" {% if contractor.get('fee_mode') == 'absorb' %}selected{% endif %}>
+          I absorb it (I pay the 1%)
+        </option>
+      </select>
+    </div>
+    {% endif %}
+
+    <button class="btn btn-primary btn-lg btn-full" onclick="saveSettings()">Save Settings</button>
+    <div id="save-msg" style="text-align:center;margin-top:0.75rem;font-size:0.85rem;display:none;"></div>
+  </div>
+
+  <div style="text-align:center;margin-top:1rem;">
+    <a href="/" style="color:#888;font-size:0.85rem;">Back to QuoteBoss</a>
+  </div>
+</div>
+
+<script>
+async function saveSettings() {
+  const data = {
+    zelle_handle: document.getElementById('zelle-handle')?.value || '',
+  };
+  {% if plan_tier == 'pro' %}
+  data.fee_mode = document.getElementById('fee-mode')?.value || 'pass_to_client';
+  {% endif %}
+
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const result = await res.json();
+  const msg = document.getElementById('save-msg');
+  if (result.success) {
+    msg.style.color = '#2e7d32';
+    msg.textContent = 'Settings saved!';
+  } else {
+    msg.style.color = '#c62828';
+    msg.textContent = 'Failed to save. Try again.';
+  }
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
+}
+</script>
+</body>
+</html>
