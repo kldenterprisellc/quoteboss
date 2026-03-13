@@ -122,24 +122,44 @@ def calculate_quote(data: dict) -> dict:
     state = get_state_from_location(location)
     multiplier = REGION_MULTIPLIERS.get(state, 1.0)
 
-    # Base price range from pricing table
-    base_min = pricing["min"]
-    base_max = pricing["max"]
+    # Custom pricing override — contractor can supply their own min/max
+    custom_min = data.get("custom_price_min")
+    custom_max = data.get("custom_price_max")
+    using_custom = False
+    if custom_min is not None and custom_max is not None:
+        try:
+            custom_min = float(custom_min)
+            custom_max = float(custom_max)
+            if custom_min > 0 and custom_max >= custom_min:
+                using_custom = True
+        except (TypeError, ValueError):
+            pass
+
+    # Base price range from pricing table (or custom override)
     unit = pricing["unit"]
+    if using_custom:
+        # Custom prices are already the contractor's final base — skip regional scaling
+        base_min = custom_min
+        base_max = custom_max
+        multiplier = 1.0  # already baked in contractor's own rates
+    else:
+        base_min = pricing["min"]
+        base_max = pricing["max"]
 
-    # Scale by sqft for sqft-based jobs
-    if "sqft" in unit:
-        base_min = base_min * property_size
-        base_max = base_max * property_size
-    elif "per sq" in unit:
-        # Roofing "squares" = 100 sqft
-        squares = property_size / 100
-        base_min = base_min * squares
-        base_max = base_max * squares
+    # Scale by sqft for sqft-based jobs (skip scaling for custom prices — contractor set absolute values)
+    if not using_custom:
+        if "sqft" in unit:
+            base_min = base_min * property_size
+            base_max = base_max * property_size
+        elif "per sq" in unit:
+            # Roofing "squares" = 100 sqft
+            squares = property_size / 100
+            base_min = base_min * squares
+            base_max = base_max * squares
 
-    # Apply regional multiplier
-    base_min = base_min * multiplier
-    base_max = base_max * multiplier
+        # Apply regional multiplier
+        base_min = base_min * multiplier
+        base_max = base_max * multiplier
 
     # Labor line
     labor_min = labor_hours * LABOR_RATE * 0.9
@@ -199,6 +219,7 @@ def calculate_quote(data: dict) -> dict:
         "multiplier": multiplier,
         "state": state,
         "unit": unit,
+        "using_custom_pricing": using_custom,
     }
 
 
@@ -468,6 +489,9 @@ def api_quote():
         "labor_hours": data.get("labor_hours", 4),
         "materials": data.get("materials", []),
         "terms": data.get("terms", ""),
+        "custom_price_min": data.get("custom_price_min"),
+        "custom_price_max": data.get("custom_price_max"),
+        "using_custom_pricing": calc["using_custom_pricing"],
         "line_items": calc["line_items"],
         "total_min": calc["total_min"],
         "total_max": calc["total_max"],
@@ -484,6 +508,7 @@ def api_quote():
         "total_max": calc["total_max"],
         "state": calc["state"],
         "multiplier": calc["multiplier"],
+        "using_custom_pricing": calc["using_custom_pricing"],
     })
 
 

@@ -539,6 +539,50 @@ textarea { resize: vertical; min-height: 80px; }
 /* ── Hidden utility ────────────────────────────── */
 .hidden { display: none !important; }
 
+/* ── Custom Pricing Override ───────────────────── */
+.custom-pricing-toggle {
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+.btn-toggle-pricing {
+  background: none;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  color: var(--navy);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  transition: border-color 0.2s, background 0.2s;
+}
+.btn-toggle-pricing:hover {
+  border-color: var(--orange);
+  background: rgba(255, 107, 0, 0.04);
+  color: var(--orange);
+}
+.custom-pricing-panel {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #fffaf6;
+  border: 1px solid rgba(255, 107, 0, 0.2);
+  border-radius: 8px;
+}
+.custom-pricing-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+.custom-pricing-note {
+  font-size: 0.78rem;
+  color: var(--orange);
+  font-weight: 600;
+  margin: 0.5rem 0 0;
+}
+
 /* ── Section transitions ───────────────────────── */
 .step-section { animation: fadeUp 0.3s ease; }
 @keyframes fadeUp {

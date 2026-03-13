@@ -122,6 +122,27 @@
           <textarea id="job-description" placeholder="Describe the scope of work, any special requirements..."></textarea>
         </div>
       </div>
+
+      <!-- Custom Pricing Override -->
+      <div class="custom-pricing-toggle" id="custom-pricing-toggle">
+        <button type="button" class="btn-toggle-pricing" onclick="toggleCustomPricing()" id="custom-pricing-btn">
+          ⚙️ Use my own rates <span id="custom-pricing-chevron">▼</span>
+        </button>
+        <div id="custom-pricing-panel" class="custom-pricing-panel hidden">
+          <p class="custom-pricing-hint">Override national averages with your actual pricing. Your rates will be used as-is — no regional adjustment applied.</p>
+          <div class="form-row cols-2">
+            <div>
+              <label for="custom-price-min">Your Low Price ($)</label>
+              <input type="number" id="custom-price-min" placeholder="e.g. 3500" min="0" step="50">
+            </div>
+            <div>
+              <label for="custom-price-max">Your High Price ($)</label>
+              <input type="number" id="custom-price-max" placeholder="e.g. 5000" min="0" step="50">
+            </div>
+          </div>
+          <p class="custom-pricing-note" id="custom-pricing-note"></p>
+        </div>
+      </div>
     </div>
 
     <div class="step-nav">

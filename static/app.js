@@ -31,7 +31,33 @@ let state = {
   lineItems: [],
   totalMin: 0,
   totalMax: 0,
+  customPricingOpen: false,
 };
+
+// ── localStorage helpers ─────────────────────────────
+const STORAGE_KEY = "quoteboss_contractor";
+
+function saveContractorInfo() {
+  const info = {
+    name: $("contractor-name")?.value || "",
+    business: $("contractor-business")?.value || "",
+    phone: $("contractor-phone")?.value || "",
+    email: $("contractor-email")?.value || "",
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(info)); } catch(e) {}
+}
+
+function loadContractorInfo() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const info = JSON.parse(raw);
+    if (info.name)     { const el = $("contractor-name");     if (el) el.value = info.name; }
+    if (info.business) { const el = $("contractor-business"); if (el) el.value = info.business; }
+    if (info.phone)    { const el = $("contractor-phone");    if (el) el.value = info.phone; }
+    if (info.email)    { const el = $("contractor-email");    if (el) el.value = info.email; }
+  } catch(e) {}
+}
 
 // ── DOM refs ─────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -41,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
   buildTradeGrid();
   setupStepIndicators();
   loadSharedQuote();
+  loadContractorInfo();
   showStep(1);
 });
 
@@ -101,6 +128,33 @@ function selectJob(job, btn) {
   state.jobType = job;
   document.querySelectorAll(".job-btn").forEach(b => b.classList.remove("selected"));
   btn.classList.add("selected");
+  // Update custom pricing hint with national average for this job
+  updateCustomPricingHint();
+}
+
+function updateCustomPricingHint() {
+  const note = $("custom-pricing-note");
+  if (!note || !state.trade || !state.jobType) return;
+  const p = (PRICING[state.trade] || {})[state.jobType];
+  if (!p) return;
+  const unit = p.unit === "job" ? "flat job" : p.unit;
+  note.textContent = `National avg for ${state.jobType}: $${p.min.toLocaleString()}–$${p.max.toLocaleString()} (${unit})`;
+}
+
+function toggleCustomPricing() {
+  state.customPricingOpen = !state.customPricingOpen;
+  const panel = $("custom-pricing-panel");
+  const chevron = $("custom-pricing-chevron");
+  if (state.customPricingOpen) {
+    panel.classList.remove("hidden");
+    chevron.textContent = "▲";
+    updateCustomPricingHint();
+  } else {
+    panel.classList.add("hidden");
+    chevron.textContent = "▼";
+    $("custom-price-min").value = "";
+    $("custom-price-max").value = "";
+  }
 }
 
 // ── Materials Grid ───────────────────────────────────
@@ -176,6 +230,15 @@ async function generateQuote() {
     return;
   }
 
+  // Save contractor info for next time
+  saveContractorInfo();
+
+  // Custom pricing
+  const customMin = $("custom-price-min")?.value;
+  const customMax = $("custom-price-max")?.value;
+  const hasCustom = state.customPricingOpen && customMin && customMax &&
+                    parseFloat(customMin) > 0 && parseFloat(customMax) >= parseFloat(customMin);
+
   const payload = {
     trade: state.trade,
     job_type: state.jobType,
@@ -191,6 +254,10 @@ async function generateQuote() {
     client_address: $("client-address").value.trim(),
     job_description: $("job-description").value.trim(),
     terms: "",
+    ...(hasCustom && {
+      custom_price_min: parseFloat(customMin),
+      custom_price_max: parseFloat(customMax),
+    }),
   };
 
   const btn = $("generate-btn");
@@ -274,17 +341,24 @@ function copyShareLink() {
 
 // ── New Quote ─────────────────────────────────────────
 function newQuote() {
-  state = { step: 1, trade: null, jobType: null, quoteId: null, lineItems: [], totalMin: 0, totalMax: 0 };
+  state = { step: 1, trade: null, jobType: null, quoteId: null, lineItems: [], totalMin: 0, totalMax: 0, customPricingOpen: false };
   document.querySelectorAll(".trade-card").forEach(c => c.classList.remove("selected"));
   document.querySelectorAll(".job-btn").forEach(b => b.classList.remove("selected"));
   document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
   $("job-section").classList.add("hidden");
-  ["contractor-name","contractor-business","contractor-phone","contractor-email",
-   "client-name","client-address","location","job-description"].forEach(id => {
+  // Clear job-specific fields but preserve contractor info
+  ["client-name","client-address","location","job-description"].forEach(id => {
     const el = $(id); if (el) el.value = "";
   });
   $("property-size").value = "1500";
   $("labor-hours").value = "4";
+  // Reset custom pricing
+  const panel = $("custom-pricing-panel");
+  if (panel) panel.classList.add("hidden");
+  const chevron = $("custom-pricing-chevron");
+  if (chevron) chevron.textContent = "▼";
+  const cpMin = $("custom-price-min"); if (cpMin) cpMin.value = "";
+  const cpMax = $("custom-price-max"); if (cpMax) cpMax.value = "";
   showStep(1);
 }
 
