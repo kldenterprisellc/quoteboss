@@ -1098,12 +1098,15 @@ def privacy_page():
 def quote_history():
     if not session.get('whop_user_id'):
         return redirect('/access')
-    conn = __import__('database').get_db()
+    from database import get_db, _placeholder
+    conn = get_db()
     c = conn.cursor()
-    rows = c.execute(
-        'SELECT quote_id, quote_data, created_at FROM quotes WHERE whop_user_id = ? ORDER BY created_at DESC LIMIT 50',
+    ph = _placeholder()
+    c.execute(
+        f'SELECT quote_id, quote_data, created_at FROM quotes WHERE whop_user_id = {ph} ORDER BY created_at DESC LIMIT 50',
         (session['whop_user_id'],)
-    ).fetchall()
+    )
+    rows = c.fetchall()
     conn.close()
     import json as json_lib
     quotes = []
