@@ -679,6 +679,15 @@ def auth_callback():
     except Exception:
         return redirect('/access?error=membership_check_failed')
 
+    # Owner bypass -- always grant Pro access to the account owner
+    OWNER_USER_ID = 'user_rYGUC3pFlNEz5'
+    if user_id == OWNER_USER_ID:
+        session['whop_user_id'] = user_id
+        session['plan_tier'] = 'pro'
+        session['access_token'] = access_token
+        session.permanent = True
+        return redirect('/')
+
     memberships = mem_data.get('data', [])
     active = [m for m in memberships if m.get('status') == 'active']
 
