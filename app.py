@@ -427,56 +427,77 @@ def generate_pdf(quote_data: dict) -> bytes:
     story.append(Spacer(1, 0.2 * inch))
 
     # ── Line Items Table ───────────────────────────────
-    col_headers = ["Description", "Detail", "Est. Low", "Est. High"]
-    table_data = [
-        [Paragraph(f"<b>{h}</b>", ParagraphStyle(
-            "th", fontSize=9, textColor=WHITE, alignment=TA_CENTER if i > 1 else TA_LEFT
-        )) for i, h in enumerate(col_headers)]
-    ]
+    final_price = quote_data.get('final_price')
+    is_client_facing = bool(final_price)
 
     line_item_style = ParagraphStyle("li", fontSize=9, leading=13)
     detail_style = ParagraphStyle("dt", fontSize=8, leading=12, textColor=MID_GRAY)
 
-    for item in quote_data["line_items"]:
+    if is_client_facing:
+        # Single-price client-facing layout
+        col_headers = ["Description", "Detail", "Price"]
+        table_data = [
+            [Paragraph(f"<b>{h}</b>", ParagraphStyle(
+                "th", fontSize=9, textColor=WHITE, alignment=TA_RIGHT if i == 2 else TA_LEFT
+            )) for i, h in enumerate(col_headers)]
+        ]
+        # Scale line item prices proportionally to final_price
+        base_total = quote_data.get('total_max') or quote_data.get('total_min') or 1
+        scale = final_price / base_total if base_total else 1
+        for item in quote_data["line_items"]:
+            item_price = round(item['max'] * scale)
+            table_data.append([
+                Paragraph(f"<b>{item['description']}</b>", line_item_style),
+                Paragraph(item["detail"], detail_style),
+                Paragraph(f"${item_price:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
+            ])
+        # Custom line items
+        for cli in quote_data.get('custom_line_items', []):
+            table_data.append([
+                Paragraph(f"<b>{cli['description']}</b>", line_item_style),
+                Paragraph(f"{cli['markup_pct']}% markup" if cli.get('markup_pct') else "", detail_style),
+                Paragraph(f"${cli['total']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
+            ])
+        # Discount row
+        if quote_data.get('discount_amount') and quote_data['discount_amount'] > 0:
+            table_data.append([
+                Paragraph("<b>Discount</b>", ParagraphStyle("disc", fontSize=9, leading=13, textColor=colors.HexColor("#2e7d32"))),
+                Paragraph("", detail_style),
+                Paragraph(f"-${quote_data['discount_amount']:,.0f}", ParagraphStyle("discn", fontSize=9, alignment=TA_RIGHT, textColor=colors.HexColor("#2e7d32"))),
+            ])
         table_data.append([
-            Paragraph(f"<b>{item['description']}</b>", line_item_style),
-            Paragraph(item["detail"], detail_style),
-            Paragraph(f"${item['min']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
-            Paragraph(f"${item['max']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
+            Paragraph("<b>QUOTE TOTAL</b>", ParagraphStyle("tot", fontSize=10, textColor=WHITE)),
+            Paragraph("", detail_style),
+            Paragraph(f"<b>${final_price:,.0f}</b>", ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)),
         ])
-
-    # Total row
-    _fp = quote_data.get('final_price')
-    if _fp:
-        total_col3 = Paragraph(
-            f"<b>${_fp:,.0f}</b>",
-            ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)
-        )
-        total_col4 = Paragraph("", ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT))
-        total_label = "QUOTE TOTAL"
+        items_table = Table(table_data, colWidths=[2.5 * inch, 2.8 * inch, 1.5 * inch])
     else:
-        total_col3 = Paragraph(
-            f"<b>${quote_data['total_min']:,.0f}</b>",
-            ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)
-        )
-        total_col4 = Paragraph(
-            f"<b>${quote_data['total_max']:,.0f}</b>",
-            ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)
-        )
-        total_label = "ESTIMATED TOTAL"
-    table_data.append([
-        Paragraph(f"<b>{total_label}</b>", ParagraphStyle("tot", fontSize=10, textColor=WHITE)),
-        Paragraph("", detail_style),
-        total_col3,
-        total_col4,
-    ])
+        # Estimate range layout (contractor internal)
+        col_headers = ["Description", "Detail", "Est. Low", "Est. High"]
+        table_data = [
+            [Paragraph(f"<b>{h}</b>", ParagraphStyle(
+                "th", fontSize=9, textColor=WHITE, alignment=TA_CENTER if i > 1 else TA_LEFT
+            )) for i, h in enumerate(col_headers)]
+        ]
+        for item in quote_data["line_items"]:
+            table_data.append([
+                Paragraph(f"<b>{item['description']}</b>", line_item_style),
+                Paragraph(item["detail"], detail_style),
+                Paragraph(f"${item['min']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
+                Paragraph(f"${item['max']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
+            ])
+        table_data.append([
+            Paragraph("<b>ESTIMATED TOTAL</b>", ParagraphStyle("tot", fontSize=10, textColor=WHITE)),
+            Paragraph("", detail_style),
+            Paragraph(f"<b>${quote_data['total_min']:,.0f}</b>", ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)),
+            Paragraph(f"<b>${quote_data['total_max']:,.0f}</b>", ParagraphStyle("totn", fontSize=10, textColor=WHITE, alignment=TA_RIGHT)),
+        ])
+        items_table = Table(table_data, colWidths=[2.5 * inch, 2.3 * inch, 1.0 * inch, 1.0 * inch])
 
-    items_table = Table(
-        table_data,
-        colWidths=[2.5 * inch, 2.3 * inch, 1.0 * inch, 1.0 * inch],
-    )
-
-    n_items = len(quote_data["line_items"])
+    n_base_items = len(quote_data["line_items"])
+    n_custom = len(quote_data.get('custom_line_items', []))
+    has_discount = bool(quote_data.get('discount_amount') and quote_data['discount_amount'] > 0 and is_client_facing)
+    n_items = n_base_items + n_custom + (1 if has_discount else 0)
     total_row = 1 + n_items  # 0=header, 1..n=items, n+1=total
 
     items_table.setStyle(TableStyle([
