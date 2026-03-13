@@ -589,14 +589,8 @@ def access_page():
 @app.route("/auth/login")
 @limiter.limit("10 per minute")
 def auth_login():
-    code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b'=').decode()
-    code_challenge = base64.urlsafe_b64encode(
-        hashlib.sha256(code_verifier.encode()).digest()
-    ).rstrip(b'=').decode()
     state = secrets.token_urlsafe(16)
-
     nonce = secrets.token_urlsafe(16)
-    session['pkce_verifier'] = code_verifier
     session['oauth_state'] = state
     session['oauth_nonce'] = nonce
 
@@ -609,8 +603,6 @@ def auth_login():
         'scope': 'openid profile email',
         'state': state,
         'nonce': nonce,
-        'code_challenge': code_challenge,
-        'code_challenge_method': 'S256',
     })
     return redirect(f'https://api.whop.com/oauth/authorize?{params}')
 
@@ -628,13 +620,10 @@ def auth_callback():
     if state != session.get('oauth_state'):
         return redirect('/access?error=invalid_state')
 
-    code_verifier = session.pop('pkce_verifier', None)
     session.pop('oauth_state', None)
 
-    if not code_verifier:
-        return redirect('/access?error=missing_verifier')
-
     redirect_uri = "https://quoteboss.io/auth/callback"
+    client_secret = os.environ.get('WHOP_CLIENT_SECRET', '')
 
     try:
         token_data = urllib.parse.urlencode({
@@ -642,7 +631,7 @@ def auth_callback():
             'code': code,
             'redirect_uri': redirect_uri,
             'client_id': 'app_RHexXJ7z2jx64T',
-            'code_verifier': code_verifier,
+            'client_secret': client_secret,
         }).encode()
 
         token_req = urllib.request.Request(
