@@ -19,11 +19,19 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         whop_user_id TEXT UNIQUE NOT NULL,
         stripe_account_id TEXT,
+        stripe_onboarding_complete INTEGER DEFAULT 0,
         zelle_handle TEXT,
         fee_mode TEXT DEFAULT 'pass_to_client',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+
+    # Migration: add stripe_onboarding_complete if missing (existing DBs)
+    try:
+        c.execute('ALTER TABLE contractors ADD COLUMN stripe_onboarding_complete INTEGER DEFAULT 0')
+        conn.commit()
+    except Exception:
+        pass  # Column already exists
 
     # Persistent quotes
     c.execute('''CREATE TABLE IF NOT EXISTS quotes (

@@ -37,11 +37,18 @@
         </div>
       </div>
       {% if contractor.get('stripe_account_id') %}
-        <div style="color:#2e7d32;font-size:0.85rem;font-weight:600;">Connected</div>
+        <div style="color:#2e7d32;font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;">Connected</div>
+        <div style="font-size:0.8rem;color:#888;">Account: {{ contractor.get('stripe_account_id') }}</div>
       {% else %}
-        <button id="stripe-connect-btn" class="btn btn-primary" style="width:100%;margin-top:0.5rem;" disabled>
-          Connect Stripe - Coming Soon
-        </button>
+        <a href="/auth/stripe-connect" class="btn btn-primary" style="width:100%;margin-top:0.5rem;display:block;text-align:center;text-decoration:none;">
+          Connect Your Stripe Account
+        </a>
+        <div style="font-size:0.78rem;color:#888;margin-top:0.5rem;">Takes 5 minutes. You get paid directly to your bank.</div>
+      {% endif %}
+      {% if request.args.get('stripe') == 'success' %}
+        <div style="color:#2e7d32;font-size:0.85rem;margin-top:0.5rem;">Stripe connected successfully!</div>
+      {% elif request.args.get('stripe') == 'error' %}
+        <div style="color:#c62828;font-size:0.85rem;margin-top:0.5rem;">Connection failed. Please try again.</div>
       {% endif %}
     </div>
 

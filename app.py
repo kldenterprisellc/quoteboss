@@ -2,6 +2,10 @@ import os
 import io
 import json
 import json as json_module
+import stripe
+
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+PLATFORM_ACCOUNT_ID = 'acct_1JkUcCA2yPglm08v'
 import uuid
 import base64
 import hashlib
@@ -674,6 +678,7 @@ def api_quote():
     quote_id = str(uuid.uuid4())[:8].upper()
     quote_record = {
         "quote_id": quote_id,
+        "whop_user_id": session.get('whop_user_id', ''),
         "contractor_name": data.get("contractor_name", ""),
         "contractor_business": data.get("contractor_business", ""),
         "contractor_phone": data.get("contractor_phone", ""),
@@ -736,15 +741,26 @@ def api_pdf(quote_id):
 @app.route("/q/<quote_id>")
 def view_quote(quote_id):
     quote = quote_store.get(quote_id.upper())
+    whop_user_id = None
     if not quote:
         db_quote = get_quote(quote_id.upper())
         if db_quote:
             quote = json_module.loads(db_quote['quote_data'])
             quote_store[quote_id.upper()] = quote
-    tier = session.get('plan_tier', 'basic')
+            whop_user_id = db_quote.get('whop_user_id')
+    else:
+        whop_user_id = quote.get('whop_user_id')
+
     if not quote:
+        tier = session.get('plan_tier', 'basic')
         return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, error="Quote not found or expired.")
-    return render_template("index.html", pricing=json.dumps(PRICING), plan_tier=tier, shared_quote=json.dumps(quote))
+
+    contractor = get_contractor(whop_user_id) if whop_user_id else {}
+    has_stripe = bool(contractor.get('stripe_account_id')) if contractor else False
+    zelle_handle = contractor.get('zelle_handle', '') if contractor else ''
+    fee_mode = contractor.get('fee_mode', 'pass_to_client') if contractor else 'pass_to_client'
+
+    return render_template("quote_view.html", quote=quote, has_stripe=has_stripe, zelle_handle=zelle_handle, fee_mode=fee_mode)
 
 
 @app.route("/settings")
@@ -769,6 +785,104 @@ def update_settings():
         upsert_contractor(session['whop_user_id'], **updates)
 
     return jsonify({"success": True})
+
+
+@app.route("/auth/stripe-connect")
+def stripe_connect():
+    if not session.get('whop_user_id'):
+        return redirect('/access')
+
+    try:
+        account = stripe.Account.create(
+            type='express',
+            country='US',
+            capabilities={
+                'card_payments': {'requested': True},
+                'transfers': {'requested': True},
+            },
+        )
+
+        upsert_contractor(session['whop_user_id'], stripe_account_id=account.id, stripe_onboarding_complete=False)
+
+        account_link = stripe.AccountLink.create(
+            account=account.id,
+            refresh_url='https://quoteboss.io/auth/stripe-connect',
+            return_url='https://quoteboss.io/settings?stripe=success',
+            type='account_onboarding',
+        )
+
+        return redirect(account_link.url)
+    except Exception:
+        return redirect('/settings?stripe=error')
+
+
+@app.route("/api/create-checkout/<quote_id>", methods=["POST"])
+def create_checkout(quote_id):
+    quote = quote_store.get(quote_id.upper())
+    db_quote = None
+    if not quote:
+        db_quote = get_quote(quote_id.upper())
+        if db_quote:
+            quote = json_module.loads(db_quote['quote_data'])
+    if not quote:
+        return jsonify({"error": "Quote not found"}), 404
+
+    whop_user_id = quote.get('whop_user_id')
+    if not whop_user_id:
+        if db_quote is None:
+            db_quote = get_quote(quote_id.upper())
+        whop_user_id = db_quote.get('whop_user_id') if db_quote else None
+
+    contractor = get_contractor(whop_user_id) if whop_user_id else None
+    if not contractor or not contractor.get('stripe_account_id'):
+        return jsonify({"error": "Contractor has not connected Stripe"}), 400
+
+    data = request.get_json(force=True)
+    payment_type = data.get('payment_type', 'deposit')
+
+    if payment_type == 'full':
+        total = quote['total_max']
+    else:
+        total = round(quote['total_min'] * 0.5)
+
+    fee_mode = contractor.get('fee_mode', 'pass_to_client')
+
+    if fee_mode == 'pass_to_client':
+        client_total_cents = round(total * 1.01 * 100)
+        application_fee_cents = round(total * 0.01 * 100)
+    else:
+        client_total_cents = round(total * 100)
+        application_fee_cents = round(total * 0.01 * 100)
+
+    job_desc = quote.get('job_description') or f"{quote.get('job_type', 'Job')} - {quote.get('trade', '')}"
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': f"{'50% Deposit' if payment_type == 'deposit' else 'Full Payment'} - {job_desc}",
+                        'description': f"Quote #{quote_id} from {quote.get('contractor_business', 'Contractor')}",
+                    },
+                    'unit_amount': client_total_cents,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=f"https://quoteboss.io/q/{quote_id}?paid=true",
+            cancel_url=f"https://quoteboss.io/q/{quote_id}",
+            payment_intent_data={
+                'application_fee_amount': application_fee_cents,
+                'transfer_data': {
+                    'destination': contractor['stripe_account_id'],
+                },
+            },
+        )
+        return jsonify({"checkout_url": checkout_session.url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
