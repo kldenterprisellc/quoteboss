@@ -133,14 +133,20 @@ def calculate_quote(data: dict) -> dict:
     labor_min = labor_hours * LABOR_RATE * 0.9
     labor_max = labor_hours * LABOR_RATE * 1.1
 
-    # Materials line (rough estimate: 30% of base mid)
     materials_count = len(materials)
-    mat_base = (base_min + base_max) / 2 * 0.30
-    materials_min = mat_base * 0.85 if materials_count > 0 else 0
-    materials_max = mat_base * 1.15 if materials_count > 0 else 0
 
-    # For jobs where materials are separate (not bundled)
-    if unit in ("job",) and materials_count > 0:
+    # Per-sq and per-sqft jobs already include materials in the base rate.
+    # Only add separate materials line for flat "job" type pricing.
+    include_materials = unit == "job" and materials_count > 0
+    mat_factor = 0.25  # materials as % of base mid for job-based pricing
+    if include_materials:
+        mat_base = (base_min + base_max) / 2 * mat_factor
+        materials_min = mat_base * 0.85
+        materials_max = mat_base * 1.15
+    else:
+        materials_min = materials_max = 0
+
+    if include_materials:
         total_min = base_min + labor_min + materials_min
         total_max = base_max + labor_max + materials_max
     else:
@@ -153,7 +159,7 @@ def calculate_quote(data: dict) -> dict:
 
     line_items = [
         {
-            "description": f"{job_type} — {trade} Service",
+            "description": f"{job_type} - {trade} Service",
             "detail": f"Base estimate ({unit})",
             "min": r50(base_min),
             "max": r50(base_max),
@@ -166,7 +172,7 @@ def calculate_quote(data: dict) -> dict:
         },
     ]
 
-    if materials_count > 0:
+    if include_materials:
         line_items.append({
             "description": "Materials & Supplies",
             "detail": ", ".join(materials),
