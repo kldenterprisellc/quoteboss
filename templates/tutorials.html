@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuoteBoss - Video Tutorials</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav class="topbar">
+  <a class="logo" href="/">
+    <div class="logo-icon">💼</div>
+    <span class="logo-text">Quote<span>Boss</span></span>
+  </a>
+  <a href="/logout" style="font-size:0.85rem;color:#aaa;text-decoration:none;">Sign out</a>
+</nav>
+
+<div class="container" style="max-width:760px;padding-top:2rem;">
+  <div style="margin-bottom:1.5rem;">
+    <h1 style="font-size:1.6rem;font-weight:800;color:#0B1F3A;">Video Tutorials</h1>
+    <p style="color:#888;font-size:0.9rem;margin-top:0.25rem;">Learn how to create winning quotes for every trade.</p>
+  </div>
+
+  <div style="display:grid;gap:1rem;">
+
+    {% for tutorial in tutorials %}
+    <div class="card" style="padding:0;overflow:hidden;">
+      {% if tutorial.video_url %}
+      <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
+        <iframe src="{{ tutorial.video_url }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe>
+      </div>
+      {% else %}
+      <div style="background:#0B1F3A;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;color:rgba(255,255,255,0.4);">
+          <div style="font-size:3rem;">▶️</div>
+          <div style="font-size:0.85rem;margin-top:0.5rem;">Coming Soon</div>
+        </div>
+      </div>
+      {% endif %}
+      <div style="padding:1rem 1.25rem;">
+        <div style="font-weight:700;color:#0B1F3A;">{{ tutorial.title }}</div>
+        <div style="font-size:0.85rem;color:#888;margin-top:0.25rem;">{{ tutorial.description }}</div>
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+</body>
+</html>

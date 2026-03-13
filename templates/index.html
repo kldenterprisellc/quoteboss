@@ -19,6 +19,7 @@
   <span class="tagline">Professional quotes in 2 minutes</span>
   <div style="display:flex;align-items:center;gap:0.5rem;">
     <a href="/history" style="font-size:0.85rem;color:#888;text-decoration:none;margin-right:0.5rem;">📋 History</a>
+    <a href="/tutorials" style="font-size:0.85rem;color:#888;text-decoration:none;margin-right:0.5rem;">🎬 Tutorials</a>
     <a href="/settings" style="font-size:0.85rem;color:#888;text-decoration:none;margin-right:0.5rem;">⚙️ Settings</a>
     <a href="/logout" style="font-size:0.85rem;color:#888;text-decoration:none;">Sign out</a>
   </div>
@@ -230,6 +231,43 @@
       </div>
     </div>
 
+    <div class="card" id="line-items-card" style="margin-top:1rem;">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        <div>
+          <div class="card-title">Line Items</div>
+          <div class="card-subtitle">Add labor, materials, permits, or any custom charges</div>
+        </div>
+      </div>
+      <div id="line-items-list"></div>
+      <button type="button" onclick="addLineItem()" class="btn btn-secondary" style="width:100%;margin-top:0.75rem;">
+        + Add Line Item
+      </button>
+    </div>
+
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-header">
+        <div class="card-icon">🏷️</div>
+        <div>
+          <div class="card-title">Discount (Optional)</div>
+          <div class="card-subtitle">Give your client a deal -- shows on their quote</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;color:#555;display:block;margin-bottom:0.3rem;">Flat Discount ($)</label>
+          <input type="number" id="discount-flat" placeholder="e.g. 200"
+            style="width:100%;padding:0.6rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.9rem;">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;color:#555;display:block;margin-bottom:0.3rem;">Percent Discount (%)</label>
+          <input type="number" id="discount-pct" placeholder="e.g. 10"
+            style="width:100%;padding:0.6rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.9rem;">
+        </div>
+      </div>
+      <div style="font-size:0.75rem;color:#aaa;margin-top:0.5rem;">Enter one or both. Flat discount applied first, then percentage.</div>
+    </div>
+
     <div class="step-nav">
       <button class="btn btn-secondary" onclick="showStep(2)">← Back</button>
       <button id="generate-btn" class="btn btn-primary btn-lg" style="flex:1" onclick="generateQuote()">
@@ -323,6 +361,17 @@
         ← Start a New Quote
       </button>
     </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem;background:linear-gradient(135deg,#0B1F3A 0%,#1a3a5c 100%);color:white;text-align:center;">
+    <div style="font-size:1.5rem;margin-bottom:0.5rem;">💡</div>
+    <div style="font-weight:800;font-size:1.05rem;margin-bottom:0.5rem;">Looking to grow your business beyond quotes?</div>
+    <div style="font-size:0.85rem;opacity:0.8;margin-bottom:0.4rem;">Common builds include:</div>
+    <div style="font-size:0.85rem;opacity:0.9;margin-bottom:1.25rem;">Website &nbsp;|&nbsp; AI Receptionist &nbsp;|&nbsp; Google Review System</div>
+    <a href="https://calendly.com/kld-enterprisellc/automation-consultation" target="_blank"
+       style="display:inline-block;background:#FF6B00;color:white;font-weight:700;padding:0.75rem 1.75rem;border-radius:8px;text-decoration:none;font-size:0.95rem;">
+      Book a Free Call
+    </a>
   </div>
 
 </div><!-- /container -->

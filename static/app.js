@@ -8,25 +8,75 @@ const LABOR_DEFAULTS = {};
 
 // ── Trade metadata ───────────────────────────────────
 const TRADES = [
-  { id: "HVAC",        emoji: "❄️",  label: "HVAC" },
-  { id: "Plumbing",    emoji: "🔧",  label: "Plumbing" },
-  { id: "Electrical",  emoji: "⚡",  label: "Electrical" },
-  { id: "Roofing",     emoji: "🏠",  label: "Roofing" },
-  { id: "Landscaping", emoji: "🌿",  label: "Landscaping" },
-  { id: "General",     emoji: "🛠️",  label: "General" },
+  { id: "HVAC",             emoji: "❄️",  label: "HVAC" },
+  { id: "Plumbing",         emoji: "🔧",  label: "Plumbing" },
+  { id: "Electrical",       emoji: "⚡",  label: "Electrical" },
+  { id: "Roofing",          emoji: "🏠",  label: "Roofing" },
+  { id: "Landscaping",      emoji: "🌿",  label: "Landscaping" },
+  { id: "General",          emoji: "🛠️",  label: "General" },
+  { id: "Pressure Washing", emoji: "💦",  label: "Pressure Washing" },
 ];
 
 const MATERIALS = {
-  HVAC:        ["Refrigerant", "Filters", "Ductwork", "Thermostat", "Capacitors", "Copper Line"],
-  Plumbing:    ["PVC Pipe", "Copper Pipe", "Fittings", "Sealant", "Fixtures", "Water Heater"],
-  Electrical:  ["Wire", "Breakers", "Outlets", "Junction Box", "Conduit", "Panel"],
-  Roofing:     ["Shingles", "Underlayment", "Flashing", "Gutters", "Ice Shield", "Nails/Fasteners"],
-  Landscaping: ["Sod", "Mulch", "Plants/Shrubs", "Irrigation Parts", "Soil", "Edging"],
-  General:     ["Lumber", "Drywall", "Paint", "Fasteners", "Flooring", "Adhesives"],
+  HVAC:               ["Refrigerant", "Filters", "Ductwork", "Thermostat", "Capacitors", "Copper Line"],
+  Plumbing:           ["PVC Pipe", "Copper Pipe", "Fittings", "Sealant", "Fixtures", "Water Heater"],
+  Electrical:         ["Wire", "Breakers", "Outlets", "Junction Box", "Conduit", "Panel"],
+  Roofing:            ["Shingles", "Underlayment", "Flashing", "Gutters", "Ice Shield", "Nails/Fasteners"],
+  Landscaping:        ["Sod", "Mulch", "Plants/Shrubs", "Irrigation Parts", "Soil", "Edging"],
+  General:            ["Lumber", "Drywall", "Paint", "Fasteners", "Flooring", "Adhesives"],
+  "Pressure Washing": ["Detergent", "Degreaser", "Soft Wash Solution", "Surface Cleaner", "Extension Wand"],
 };
 
 // ── Price confirmation ────────────────────────────────
 let currentQuoteData = null;
+
+// ── Custom Line Items ────────────────────────────────
+let lineItems = [];
+
+function addLineItem() {
+  const id = Date.now();
+  lineItems.push({id, description: '', amount: 0, markup: 0});
+  renderLineItems();
+}
+
+function removeLineItem(id) {
+  lineItems = lineItems.filter(li => li.id !== id);
+  renderLineItems();
+}
+
+function renderLineItems() {
+  const container = document.getElementById('line-items-list');
+  if (!container) return;
+  container.innerHTML = lineItems.map(li => `
+    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0.5rem;align-items:center;padding:0.5rem 0;border-bottom:1px solid #f0f0f0;">
+      <input type="text" placeholder="Description (e.g. Labor, Materials, Permit)"
+        value="${li.description}"
+        onchange="updateLineItem(${li.id},'description',this.value)"
+        style="padding:0.5rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.85rem;">
+      <input type="number" placeholder="Amount $" value="${li.amount || ''}"
+        onchange="updateLineItem(${li.id},'amount',parseFloat(this.value)||0)"
+        style="width:100px;padding:0.5rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.85rem;">
+      <input type="number" placeholder="Markup %" value="${li.markup || ''}"
+        onchange="updateLineItem(${li.id},'markup',parseFloat(this.value)||0)"
+        title="Optional markup percentage on this item"
+        style="width:80px;padding:0.5rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.85rem;">
+      <button onclick="removeLineItem(${li.id})" style="background:none;border:none;color:#e53935;font-size:1.1rem;cursor:pointer;padding:0.25rem;">x</button>
+    </div>
+  `).join('') + (lineItems.length ? '<div style="font-size:0.75rem;color:#aaa;padding:0.4rem 0;">Amount + Markup % = line item total on quote</div>' : '');
+}
+
+function updateLineItem(id, field, value) {
+  const li = lineItems.find(l => l.id === id);
+  if (li) li[field] = value;
+}
+
+function getLineItemsTotal() {
+  return lineItems.reduce((sum, li) => {
+    const base = li.amount || 0;
+    const markup = li.markup ? base * (li.markup / 100) : 0;
+    return sum + base + markup;
+  }, 0);
+}
 
 // ── State ────────────────────────────────────────────
 let state = {
@@ -310,6 +360,13 @@ async function generateQuote() {
       custom_min: customMin,
       custom_max: customMax,
     }),
+    line_items_custom: lineItems.map(li => ({
+      description: li.description,
+      amount: li.amount || 0,
+      markup: li.markup || 0
+    })),
+    discount_flat: parseFloat(document.getElementById('discount-flat')?.value) || 0,
+    discount_pct: parseFloat(document.getElementById('discount-pct')?.value) || 0,
   };
 
   const btn = $("generate-btn");
@@ -422,6 +479,11 @@ function newQuote() {
   const shareSection = document.getElementById('share-section');
   if (shareSection) shareSection.style.display = 'none';
   currentQuoteData = null;
+  // Reset line items and discount
+  lineItems = [];
+  renderLineItems();
+  const dfFlat = document.getElementById('discount-flat'); if (dfFlat) dfFlat.value = '';
+  const dfPct = document.getElementById('discount-pct'); if (dfPct) dfPct.value = '';
   showStep(1);
 }
 

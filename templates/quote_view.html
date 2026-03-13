@@ -71,6 +71,33 @@
       <div class="li-price">${{ "{:,.0f}".format(item.min) }} - ${{ "{:,.0f}".format(item.max) }}</div>
     </div>
     {% endfor %}
+
+    {% if quote.get('custom_line_items') %}
+      {% for item in quote.custom_line_items %}
+      <div class="line-item">
+        <div>
+          <div class="li-name">{{ item.description }}</div>
+          <div class="li-detail">
+            ${{ "{:,.0f}".format(item.amount) }}{% if item.markup_pct %} + {{ item.markup_pct }}% markup{% endif %}
+          </div>
+        </div>
+        <div class="li-price">${{ "{:,.0f}".format(item.total) }}</div>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    {% if quote.get('discount_amount') and quote.discount_amount > 0 %}
+    <div class="line-item" style="color:#2e7d32;">
+      <div>
+        <div class="li-name">Discount</div>
+        <div class="li-detail">
+          {% if quote.get('discount_flat') and quote.discount_flat > 0 %}${{ "{:,.0f}".format(quote.discount_flat) }} off{% endif %}
+          {% if quote.get('discount_pct') and quote.discount_pct > 0 %} + {{ quote.discount_pct }}% off{% endif %}
+        </div>
+      </div>
+      <div class="li-price" style="color:#2e7d32;">-${{ "{:,.0f}".format(quote.discount_amount) }}</div>
+    </div>
+    {% endif %}
   </div>
 
   {% if has_stripe or zelle_handle %}

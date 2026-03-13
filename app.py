@@ -103,6 +103,15 @@ PRICING = {
         "Drywall Repair":         {"min": 200, "max": 800,  "unit": "job"},
         "Deck Build":             {"min": 5000,"max": 18000,"unit": "job"},
     },
+    "Pressure Washing": {
+        # Sources: Angi 2025, HomeAdvisor 2025, HomeGuide 2025
+        "House Exterior Wash":      {"min": 0.15, "max": 0.35, "unit": "per sqft"},
+        "Driveway Cleaning":        {"min": 150,  "max": 400,  "unit": "job"},
+        "Deck or Patio":            {"min": 0.25, "max": 0.45, "unit": "per sqft"},
+        "Roof Soft Wash":           {"min": 300,  "max": 800,  "unit": "job"},
+        "Fence Cleaning":           {"min": 100,  "max": 350,  "unit": "job"},
+        "Commercial Building":      {"min": 0.20, "max": 0.50, "unit": "per sqft"},
+    },
 }
 
 # Regional cost multipliers (rough estimates)
@@ -738,6 +747,48 @@ def api_quote():
         "state": calc["state"],
     }
 
+    # Custom line items
+    custom_line_items = data.get('line_items_custom', [])
+    custom_line_items_total = 0
+    processed_line_items = []
+    for item in custom_line_items:
+        if item.get('description') and item.get('amount', 0) > 0:
+            base = float(item['amount'])
+            markup_pct = float(item.get('markup', 0))
+            markup_amt = base * (markup_pct / 100) if markup_pct else 0
+            item_total = base + markup_amt
+            custom_line_items_total += item_total
+            processed_line_items.append({
+                'description': item['description'],
+                'amount': round(base),
+                'markup_pct': markup_pct,
+                'markup_amt': round(markup_amt),
+                'total': round(item_total)
+            })
+
+    quote_record['custom_line_items'] = processed_line_items
+    quote_record['custom_line_items_total'] = round(custom_line_items_total)
+    quote_record['total_min'] += round(custom_line_items_total)
+    quote_record['total_max'] += round(custom_line_items_total)
+
+    # Discount
+    discount_flat = float(data.get('discount_flat', 0) or 0)
+    discount_pct = float(data.get('discount_pct', 0) or 0)
+
+    discount_amount = 0
+    if discount_flat > 0:
+        discount_amount += discount_flat
+    if discount_pct > 0:
+        after_flat = quote_record['total_min'] - discount_flat
+        discount_amount += after_flat * (discount_pct / 100)
+
+    discount_amount = round(discount_amount)
+    quote_record['discount_flat'] = round(discount_flat)
+    quote_record['discount_pct'] = discount_pct
+    quote_record['discount_amount'] = discount_amount
+    quote_record['total_min'] = max(0, quote_record['total_min'] - discount_amount)
+    quote_record['total_max'] = max(0, quote_record['total_max'] - discount_amount)
+
     # Default final price = midpoint of range
     final_price = round((quote_record['total_min'] + quote_record['total_max']) / 2)
     quote_record['final_price'] = final_price
@@ -1052,6 +1103,22 @@ def quote_history():
         except Exception:
             pass
     return render_template("history.html", quotes=quotes)
+
+
+@app.route("/tutorials")
+def tutorials_page():
+    if not session.get('whop_user_id'):
+        return redirect('/access')
+    tutorials = [
+        {"title": "Getting Started with QuoteBoss", "description": "Sign in, set up your profile, and send your first quote in under 5 minutes.", "video_url": ""},
+        {"title": "Roofing Quotes", "description": "How to quote full replacements, repairs, and gutters accurately.", "video_url": ""},
+        {"title": "HVAC Quotes", "description": "Adding equipment costs, labor, and permits to HVAC quotes.", "video_url": ""},
+        {"title": "Plumbing Quotes", "description": "Handling parts, labor, and markup for plumbing jobs.", "video_url": ""},
+        {"title": "Electrical Quotes", "description": "Panel upgrades, rewiring, and fixture installs with custom line items.", "video_url": ""},
+        {"title": "Pressure Washing Quotes", "description": "Quoting house washes, driveways, and commercial jobs by square foot.", "video_url": ""},
+        {"title": "Collecting Payments", "description": "Connect Stripe and get paid directly from your quote links.", "video_url": ""},
+    ]
+    return render_template("tutorials.html", tutorials=tutorials)
 
 
 if __name__ == "__main__":
