@@ -905,15 +905,11 @@ def reset_onboarding():
     if session.get('whop_user_id') != 'user_rYGUC3pFlNEz5':
         return redirect('/access?error=unauthorized')
     uid = session['whop_user_id']
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute(
-        f"UPDATE contractors SET business_name=NULL, primary_trade=NULL, all_trades=NULL WHERE whop_user_id={_placeholder()}",
-        (uid,)
-    )
-    db.commit()
-    cursor.close()
-    db.close()
+    upsert_contractor(uid, {
+        'business_name': '',
+        'primary_trade': '',
+        'all_trades': '',
+    })
     return redirect('/onboarding')
 
 
