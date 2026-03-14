@@ -1164,13 +1164,21 @@ def create_checkout(quote_id):
 
     data = request.get_json(force=True)
     payment_type = data.get('payment_type', 'deposit')
+    deposit_pct_override = data.get('deposit_pct')
+    fixed_deposit_amt = quote.get('fixed_deposit_amt')
 
     quote_price = quote.get('final_price') or quote['total_max']
 
     if payment_type == 'full':
         total = quote_price
     elif payment_type == 'deposit':
-        total = round(quote_price * 0.5)
+        if fixed_deposit_amt:
+            total = round(float(fixed_deposit_amt))
+        elif deposit_pct_override:
+            total = round(quote_price * int(deposit_pct_override) / 100)
+        else:
+            deposit_pct = quote.get('deposit_pct', 50)
+            total = round(quote_price * (deposit_pct or 50) / 100)
     else:
         total = quote_price
 

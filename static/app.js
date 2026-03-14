@@ -448,7 +448,9 @@ function selectPaymentTerms(btn, terms) {
   btn.classList.add('selected');
   state.paymentTerms = terms;
   const customRow = document.getElementById('custom-deposit-row');
-  if (customRow) customRow.style.display = terms === 'custom' ? 'block' : 'none';
+  const fixedRow = document.getElementById('fixed-deposit-row');
+  if (customRow) customRow.style.display = terms === 'custom_pct' ? 'block' : 'none';
+  if (fixedRow) fixedRow.style.display = terms === 'fixed_deposit' ? 'block' : 'none';
 }
 
 function getPaymentTermsLabel() {
@@ -456,9 +458,13 @@ function getPaymentTermsLabel() {
   if (terms === 'full') return 'Payment in Full';
   if (terms === '50_50') return '50% Deposit, 50% on Completion';
   if (terms === '33_33_33') return '1/3 at Start, 1/3 at Midpoint, 1/3 on Completion';
-  if (terms === 'custom') {
+  if (terms === 'custom_pct') {
     const pct = parseInt(document.getElementById('custom-deposit-pct')?.value || '25');
     return `${pct}% Deposit, ${100 - pct}% on Completion`;
+  }
+  if (terms === 'fixed_deposit') {
+    const amt = parseFloat(document.getElementById('fixed-deposit-amt')?.value || '0');
+    return amt > 0 ? `$${amt.toLocaleString()} Deposit, Balance on Completion` : 'Deposit, Balance on Completion';
   }
   return '';
 }
@@ -468,8 +474,16 @@ function getDepositPct() {
   if (terms === 'full') return 100;
   if (terms === '50_50') return 50;
   if (terms === '33_33_33') return 33;
-  if (terms === 'custom') return parseInt(document.getElementById('custom-deposit-pct')?.value || '25');
+  if (terms === 'custom_pct') return parseInt(document.getElementById('custom-deposit-pct')?.value || '25');
+  if (terms === 'fixed_deposit') return null; // use fixed amount instead
   return 100;
+}
+
+function getFixedDepositAmt() {
+  if (state.paymentTerms === 'fixed_deposit') {
+    return parseFloat(document.getElementById('fixed-deposit-amt')?.value || '0') || null;
+  }
+  return null;
 }
 
 // Collect trade-specific params for the API call
@@ -699,6 +713,7 @@ async function generateQuote() {
     payment_terms: state.paymentTerms,
     payment_terms_label: getPaymentTermsLabel(),
     deposit_pct: getDepositPct(),
+    fixed_deposit_amt: getFixedDepositAmt(),
     ...(hasCustomToggle && {
       custom_price_min: parseFloat(customMinToggle),
       custom_price_max: parseFloat(customMaxToggle),

@@ -575,8 +575,15 @@
 
   <!-- 6. Payment Section -->
   {% set deposit_pct = quote.get('deposit_pct', 100) %}
+  {% set fixed_deposit_amt = quote.get('fixed_deposit_amt') %}
   {% set payment_terms_label = quote.get('payment_terms_label', '') %}
-  {% set deposit_amount = (quote_price * deposit_pct / 100) | round | int %}
+  {% if fixed_deposit_amt %}
+    {% set deposit_amount = fixed_deposit_amt | int %}
+  {% elif deposit_pct %}
+    {% set deposit_amount = (quote_price * deposit_pct / 100) | round | int %}
+  {% else %}
+    {% set deposit_amount = quote_price %}
+  {% endif %}
   {% set balance_amount = (quote_price - deposit_amount) | round | int %}
 
   <div class="card">
