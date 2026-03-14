@@ -2,6 +2,8 @@ import os
 import io
 import json
 import json as json_module
+import smtplib
+from email.mime.text import MIMEText
 import stripe
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
@@ -1237,15 +1239,41 @@ def submit_feedback():
     msg = data.get('message', '').strip()
     if not msg:
         return jsonify({"error": "Message required"}), 400
+    category = data.get('category', '')
     save_feedback(
         session['whop_user_id'],
         data.get('rating', 0),
-        data.get('category', ''),
+        category,
         msg
     )
+    # Alert on urgent or bug submissions
+    if category in ('urgent', 'bug'):
+        send_feedback_alert(category, msg, session['whop_user_id'])
     return jsonify({"success": True})
 
 OWNER_ID = 'user_rYGUC3pFlNEz5'
+
+def send_feedback_alert(category, message, user_id):
+    """Send email alert for urgent/bug feedback."""
+    try:
+        smtp_user = os.environ.get('ALERT_EMAIL_USER', '')
+        smtp_pass = os.environ.get('ALERT_EMAIL_PASS', '')
+        alert_to = os.environ.get('ALERT_EMAIL_TO', 'support@quoteboss.io')
+        if not smtp_user or not smtp_pass:
+            return
+        labels = {'urgent': '🚨 URGENT', 'bug': '🐛 Bug'}
+        label = labels.get(category, category)
+        subject = f"QuoteBoss Feedback: {label}"
+        body = f"{label} feedback from {user_id}:\n\n{message}\n\nView all: https://quoteboss.io/admin/feedback"
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = smtp_user
+        msg['To'] = alert_to
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as s:
+            s.login(smtp_user, smtp_pass)
+            s.send_message(msg)
+    except Exception:
+        pass  # Never crash the app over an email
 
 @app.route("/admin/feedback")
 def admin_feedback():
