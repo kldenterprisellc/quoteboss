@@ -57,19 +57,49 @@
       {% endif %}
     </div>
 
-    <!-- Zelle -->
+    <!-- Payment Methods -->
     <div style="background:#f9f9f9;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;">
       <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
-        <span style="font-size:1.5rem;">📱</span>
+        <span style="font-size:1.5rem;">💳</span>
         <div>
-          <div style="font-weight:700;color:#0B1F3A;">Zelle</div>
-          <div style="font-size:0.82rem;color:#888;">Show your Zelle info on quote links so clients can pay instantly</div>
+          <div style="font-weight:700;color:#0B1F3A;">Accepted Payment Methods</div>
+          <div style="font-size:0.82rem;color:#888;">Only selected methods show on your client quote page</div>
         </div>
       </div>
-      <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:0.4rem;">Your Zelle email or phone number</label>
-      <input type="text" id="zelle-handle" value="{{ contractor.get('zelle_handle', '') }}"
-             placeholder="e.g. john@email.com or (555) 123-4567"
-             style="width:100%;padding:0.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+      {% set pm = contractor.get('payment_methods', 'cash,check,venmo') %}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;" id="settings-payment-grid">
+        <label class="ob-pay-opt {% if 'cash' in pm %}selected{% endif %}" onclick="toggleSettingsPayMethod(this,'cash')">
+          <input type="checkbox" name="spm_cash" {% if 'cash' in pm %}checked{% endif %} style="display:none;">
+          <span>💵 Cash</span>
+        </label>
+        <label class="ob-pay-opt {% if 'check' in pm %}selected{% endif %}" onclick="toggleSettingsPayMethod(this,'check')">
+          <input type="checkbox" name="spm_check" {% if 'check' in pm %}checked{% endif %} style="display:none;">
+          <span>🏦 Check</span>
+        </label>
+        <label class="ob-pay-opt {% if 'venmo' in pm %}selected{% endif %}" onclick="toggleSettingsPayMethod(this,'venmo')">
+          <input type="checkbox" name="spm_venmo" {% if 'venmo' in pm %}checked{% endif %} style="display:none;">
+          <span>💙 Venmo</span>
+        </label>
+        <label class="ob-pay-opt {% if 'paypal' in pm %}selected{% endif %}" onclick="toggleSettingsPayMethod(this,'paypal')">
+          <input type="checkbox" name="spm_paypal" {% if 'paypal' in pm %}checked{% endif %} style="display:none;">
+          <span>🅿️ PayPal</span>
+        </label>
+        <label class="ob-pay-opt {% if 'zelle' in pm %}selected{% endif %}" onclick="toggleSettingsPayMethod(this,'zelle')">
+          <input type="checkbox" name="spm_zelle" {% if 'zelle' in pm %}checked{% endif %} style="display:none;">
+          <span>⚡ Zelle</span>
+        </label>
+        <label class="ob-pay-opt {% if 'stripe' in pm %}selected{% endif %}" onclick="toggleSettingsPayMethod(this,'stripe')">
+          <input type="checkbox" name="spm_stripe" {% if 'stripe' in pm %}checked{% endif %} style="display:none;">
+          <span>💳 Card</span>
+        </label>
+      </div>
+      <input type="hidden" id="settings-payment-methods" value="{{ pm }}">
+      <div id="settings-zelle-row" style="{% if 'zelle' not in pm %}display:none;{% endif %}margin-top:0.5rem;">
+        <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:0.4rem;">Zelle email or phone</label>
+        <input type="text" id="zelle-handle" value="{{ contractor.get('zelle_handle', '') }}"
+               placeholder="e.g. john@email.com or (555) 123-4567"
+               style="width:100%;padding:0.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+      </div>
     </div>
 
     <!-- Fee mode (Pro only) -->
@@ -103,9 +133,28 @@
 </div>
 
 <script>
+let settingsPayMethods = document.getElementById('settings-payment-methods')?.value.split(',').filter(Boolean) || ['cash','check','venmo'];
+
+function toggleSettingsPayMethod(el, value) {
+  const cb = el.querySelector('input[type="checkbox"]');
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    if (cb) cb.checked = false;
+    settingsPayMethods = settingsPayMethods.filter(m => m !== value);
+  } else {
+    el.classList.add('selected');
+    if (cb) cb.checked = true;
+    settingsPayMethods.push(value);
+  }
+  document.getElementById('settings-payment-methods').value = settingsPayMethods.join(',');
+  const zelleRow = document.getElementById('settings-zelle-row');
+  if (zelleRow) zelleRow.style.display = settingsPayMethods.includes('zelle') ? '' : 'none';
+}
+
 async function saveSettings() {
   const data = {
     zelle_handle: document.getElementById('zelle-handle')?.value || '',
+    payment_methods: document.getElementById('settings-payment-methods')?.value || 'cash,check,venmo',
   };
   {% if plan_tier == 'pro' %}
   data.fee_mode = document.getElementById('fee-mode')?.value || 'pass_to_client';
