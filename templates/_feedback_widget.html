@@ -1,0 +1,179 @@
+<!-- ── Feedback Widget ──────────────────────────────────── -->
+<style>
+#fb-bubble {
+  position: fixed;
+  bottom: 5.5rem;
+  left: 1rem;
+  z-index: 9000;
+  background: #0B1F3A;
+  color: white;
+  border: none;
+  border-radius: 100px;
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: transform 0.15s;
+}
+#fb-bubble:hover { transform: scale(1.05); }
+#fb-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9100;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+  padding: 1.5rem 1.25rem 2rem;
+  max-width: 480px;
+  margin: 0 auto;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+}
+#fb-panel.open { transform: translateY(0); }
+#fb-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 9050;
+}
+#fb-overlay.open { display: block; }
+.fb-title { font-size: 1.05rem; font-weight: 800; color: #0B1F3A; margin-bottom: 0.2rem; }
+.fb-subtitle { font-size: 0.8rem; color: #888; margin-bottom: 1rem; }
+.fb-urgency-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+.fb-urgency-btn {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.45rem 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: white;
+  text-align: center;
+  transition: all 0.15s;
+}
+.fb-urgency-btn:hover { border-color: #0B1F3A; }
+.fb-urgency-btn.selected-suggestion { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+.fb-urgency-btn.selected-bug { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+.fb-urgency-btn.selected-urgent { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+.fb-urgency-btn.selected-praise { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+#fb-message {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.9rem;
+  resize: none;
+  height: 90px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+}
+#fb-message:focus { border-color: #FF6B00; }
+#fb-submit {
+  width: 100%;
+  margin-top: 0.75rem;
+  background: #FF6B00;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+#fb-success { display:none; text-align:center; padding:1.5rem 0; color:#0B1F3A; font-weight:700; font-size:1rem; }
+</style>
+
+<button id="fb-bubble" onclick="openFeedback()">💬 Feedback</button>
+<div id="fb-overlay" onclick="closeFeedback()"></div>
+<div id="fb-panel">
+  <div style="width:36px;height:4px;background:#e2e8f0;border-radius:100px;margin:0 auto 1rem;"></div>
+  <div id="fb-form-body">
+    <div class="fb-title">We value your feedback</div>
+    <div class="fb-subtitle">Tell us what's working, what's broken, or what you'd love to see.</div>
+    <div class="fb-urgency-grid">
+      <button class="fb-urgency-btn selected-suggestion" id="fb-u-suggestion" onclick="selectUrgency('suggestion')">
+        💡 Idea
+      </button>
+      <button class="fb-urgency-btn" id="fb-u-bug" onclick="selectUrgency('bug')">
+        🐛 Bug
+      </button>
+      <button class="fb-urgency-btn" id="fb-u-urgent" onclick="selectUrgency('urgent')">
+        🚨 Urgent
+      </button>
+      <button class="fb-urgency-btn" id="fb-u-praise" onclick="selectUrgency('praise')">
+        ⭐ Praise
+      </button>
+    </div>
+    <textarea id="fb-message" placeholder="What's on your mind?"></textarea>
+    <button id="fb-submit" onclick="submitFeedback()">Send Feedback</button>
+  </div>
+  <div id="fb-success">
+    <div style="font-size:2rem;margin-bottom:0.5rem;">🙌</div>
+    <div>Got it, thank you!</div>
+    <div style="font-size:0.8rem;color:#888;margin-top:0.3rem;font-weight:400;">We read every single one.</div>
+  </div>
+</div>
+
+<script>
+let fbUrgency = 'suggestion';
+
+function openFeedback() {
+  document.getElementById('fb-panel').classList.add('open');
+  document.getElementById('fb-overlay').classList.add('open');
+  document.getElementById('fb-message').focus();
+}
+
+function closeFeedback() {
+  document.getElementById('fb-panel').classList.remove('open');
+  document.getElementById('fb-overlay').classList.remove('open');
+  setTimeout(() => {
+    document.getElementById('fb-form-body').style.display = 'block';
+    document.getElementById('fb-success').style.display = 'none';
+    document.getElementById('fb-message').value = '';
+    selectUrgency('suggestion');
+  }, 400);
+}
+
+function selectUrgency(type) {
+  fbUrgency = type;
+  ['suggestion','bug','urgent','praise'].forEach(t => {
+    const btn = document.getElementById('fb-u-' + t);
+    btn.className = 'fb-urgency-btn';
+    if (t === type) btn.classList.add('selected-' + t);
+  });
+}
+
+async function submitFeedback() {
+  const msg = document.getElementById('fb-message').value.trim();
+  if (!msg) { document.getElementById('fb-message').focus(); return; }
+  const btn = document.getElementById('fb-submit');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    await fetch('/api/feedback', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ message: msg, category: fbUrgency, rating: 0 })
+    });
+    document.getElementById('fb-form-body').style.display = 'none';
+    document.getElementById('fb-success').style.display = 'block';
+    setTimeout(closeFeedback, 2000);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Send Feedback';
+  }
+}
+</script>

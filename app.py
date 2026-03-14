@@ -1253,12 +1253,24 @@ def admin_feedback():
         return "Unauthorized", 403
     rows = get_all_feedback()
     stars = {1: "1/5", 2: "2/5", 3: "3/5", 4: "4/5", 5: "5/5", 0: "No rating"}
-    html = "<style>body{font-family:sans-serif;padding:2rem;max-width:800px;margin:0 auto} .entry{border:1px solid #ddd;border-radius:8px;padding:1rem;margin-bottom:1rem;} .meta{font-size:0.8rem;color:#888;margin-bottom:0.5rem;} .msg{font-size:0.95rem;}</style>"
-    html += f"<h2>Feedback ({len(rows)} total)</h2>"
+    category_styles = {
+        'urgent': 'border:2px solid #ef4444;background:#fef2f2;',
+        'bug': 'border:2px solid #f59e0b;background:#fffbeb;',
+        'suggestion': 'border:1px solid #3b82f6;background:#eff6ff;',
+        'praise': 'border:1px solid #10b981;background:#ecfdf5;',
+    }
+    category_labels = {
+        'urgent': '🚨 URGENT', 'bug': '🐛 Bug', 'suggestion': '💡 Idea', 'praise': '⭐ Praise',
+    }
+    html = "<style>body{font-family:sans-serif;padding:2rem;max-width:800px;margin:0 auto} .entry{border-radius:8px;padding:1rem;margin-bottom:1rem;} .meta{font-size:0.8rem;color:#555;margin-bottom:0.5rem;font-weight:600;} .msg{font-size:0.95rem;}</style>"
+    urgent_count = sum(1 for r in rows if r.get('category') == 'urgent')
+    html += f"<h2>Feedback ({len(rows)} total{f' -- <span style=color:red>{urgent_count} urgent</span>' if urgent_count else ''})</h2>"
     for r in rows:
-        rating_str = stars.get(r.get('rating', 0), '')
-        html += f"""<div class='entry'>
-          <div class='meta'>{r['created_at'][:16]} &nbsp;|&nbsp; {r['whop_user_id']} &nbsp;|&nbsp; {r.get('category','uncategorized')} &nbsp;|&nbsp; {rating_str}</div>
+        cat = r.get('category', 'suggestion')
+        style = category_styles.get(cat, 'border:1px solid #ddd;')
+        label = category_labels.get(cat, cat)
+        html += f"""<div class='entry' style='{style}'>
+          <div class='meta'>{label} &nbsp;|&nbsp; {r['created_at'][:16]} &nbsp;|&nbsp; {r['whop_user_id']}</div>
           <div class='msg'>{r['message']}</div>
         </div>"""
     if not rows:
