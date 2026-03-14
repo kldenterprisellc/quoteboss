@@ -178,34 +178,34 @@
 
       <!-- HVAC -->
       <div id="trade-inputs-HVAC" class="trade-input-group hidden">
-        <div class="form-row cols-2">
-          <div>
-            <label for="hvac-tons">System Size (tons)</label>
-            <select id="hvac-tons">
-              <option value="1">1 ton</option>
-              <option value="1.5">1.5 tons</option>
-              <option value="2">2 tons</option>
-              <option value="2.5" selected>2.5 tons</option>
-              <option value="3">3 tons</option>
-              <option value="3.5">3.5 tons</option>
-              <option value="4">4 tons</option>
-              <option value="5">5 tons</option>
-            </select>
+
+        <!-- Central AC / Heat Pump Install or Replace -->
+        <div id="hvac-inputs-ac" class="hvac-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Unit Size</label>
+              <select id="hvac-tons">
+                <option value="1.5">1.5 ton (up to 800 sqft)</option>
+                <option value="2">2 ton (800-1,200 sqft)</option>
+                <option value="2.5" selected>2.5 ton (1,200-1,600 sqft)</option>
+                <option value="3">3 ton (1,600-2,200 sqft)</option>
+                <option value="3.5">3.5 ton (2,200-2,800 sqft)</option>
+                <option value="4">4 ton (2,800-3,500 sqft)</option>
+                <option value="5">5 ton (3,500+ sqft)</option>
+              </select>
+            </div>
+            <div>
+              <label>System Type</label>
+              <select id="hvac-system-type">
+                <option value="central_ac" selected>Central AC Only</option>
+                <option value="heat_pump">Heat Pump</option>
+                <option value="full_system">Full AC + Furnace System</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="hvac-system-type">System Type</label>
-            <select id="hvac-system-type">
-              <option value="central_ac" selected>Central AC</option>
-              <option value="heat_pump">Heat Pump</option>
-              <option value="furnace">Furnace</option>
-              <option value="mini_split">Mini-Split</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-<label>State</label>
-          <select id="location-hvac-state" style="width:100%;height:2.75rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 0.75rem;font-size:0.95rem;background:white;">
-            <option value="">Select State</option>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-hvac-state" class="input-select"><option value="">Select State</option>
 <option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
 <option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
 <option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
@@ -224,9 +224,138 @@
 <option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
 <option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
           </select>
+          </div>
         </div>
-      </div>
 
+        <!-- Furnace Install -->
+        <div id="hvac-inputs-furnace" class="hvac-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Furnace Size (BTU)</label>
+              <select id="hvac-btu">
+                <option value="40000">40,000 BTU (small home)</option>
+                <option value="60000">60,000 BTU</option>
+                <option value="80000" selected>80,000 BTU (most homes)</option>
+                <option value="100000">100,000 BTU</option>
+                <option value="120000">120,000 BTU (large home)</option>
+              </select>
+            </div>
+            <div>
+              <label>Fuel Type</label>
+              <select id="hvac-fuel">
+                <option value="gas" selected>Natural Gas</option>
+                <option value="electric">Electric</option>
+                <option value="propane">Propane</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-hvac-furnace-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+          </select>
+          </div>
+        </div>
+
+        <!-- Mini Split -->
+        <div id="hvac-inputs-minisplit" class="hvac-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Number of Zones (heads)</label>
+              <select id="hvac-zones">
+                <option value="1" selected>1 zone</option>
+                <option value="2">2 zones</option>
+                <option value="3">3 zones</option>
+                <option value="4">4+ zones</option>
+              </select>
+            </div>
+            <div>
+              <label>Unit Size (per zone)</label>
+              <select id="hvac-minisplit-tons">
+                <option value="0.75">9,000 BTU (750 sqft)</option>
+                <option value="1" selected>12,000 BTU (1,000 sqft)</option>
+                <option value="1.5">18,000 BTU (1,500 sqft)</option>
+                <option value="2">24,000 BTU (2,000 sqft)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-hvac-ms-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+          </select>
+          </div>
+        </div>
+
+        <!-- Repair / Tune-up -->
+        <div id="hvac-inputs-repair" class="hvac-sub hidden">
+          <div class="form-row">
+            <label>System Type</label>
+            <select id="hvac-repair-system">
+              <option value="central_ac" selected>Central AC</option>
+              <option value="heat_pump">Heat Pump</option>
+              <option value="furnace">Furnace</option>
+              <option value="mini_split">Mini Split</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-hvac-repair-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+          </select>
+          </div>
+        </div>
+
+        <div id="hvac-prompt" class="input-prompt">Select a scope of work above to see inputs</div>
+      </div>
       <!-- Plumbing -->
       <div id="trade-inputs-Plumbing" class="trade-input-group hidden">
         <div class="form-row cols-2">
@@ -271,24 +400,35 @@
 
       <!-- Electrical -->
       <div id="trade-inputs-Electrical" class="trade-input-group hidden">
-        <div class="form-row cols-2">
-          <div id="elec-panel-size-wrap" style="display:none;">
-            <label for="elec-panel-size">Panel Size</label>
-            <select id="elec-panel-size">
-              <option value="100">100A</option>
-              <option value="200" selected>200A</option>
-              <option value="400">400A</option>
-            </select>
+
+        <!-- Panel Upgrade / Service Upgrade -->
+        <div id="elec-inputs-panel" class="elec-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Current Panel</label>
+              <select id="elec-current-amps">
+                <option value="60">60 amp (very old)</option>
+                <option value="100" selected>100 amp</option>
+                <option value="150">150 amp</option>
+                <option value="200">200 amp</option>
+              </select>
+            </div>
+            <div>
+              <label>Upgrading To</label>
+              <select id="elec-new-amps">
+                <option value="100">100 amp</option>
+                <option value="150">150 amp</option>
+                <option value="200" selected>200 amp</option>
+                <option value="400">400 amp</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="elec-circuits">Number of Circuits/Fixtures</label>
-            <input type="number" id="elec-circuits" placeholder="e.g. 5" min="1" max="20" value="5">
+          <div class="form-row">
+            <div class="input-note">Permit typically required and included in estimate</div>
           </div>
-        </div>
-        <div class="form-row">
-<label>State</label>
-          <select id="location-electrical-state" style="width:100%;height:2.75rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 0.75rem;font-size:0.95rem;background:white;">
-            <option value="">Select State</option>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-electrical-state" class="input-select"><option value="">Select State</option>
 <option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
 <option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
 <option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
@@ -307,9 +447,166 @@
 <option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
 <option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
           </select>
+          </div>
         </div>
-      </div>
 
+        <!-- EV Charger -->
+        <div id="elec-inputs-ev" class="elec-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Charger Amperage</label>
+              <select id="elec-ev-amps">
+                <option value="20">20A (Level 1 upgrade)</option>
+                <option value="30" selected>30A (most common)</option>
+                <option value="40">40A (faster charge)</option>
+                <option value="50">50A (premium)</option>
+                <option value="60">60A (commercial grade)</option>
+              </select>
+            </div>
+            <div>
+              <label>Install Location</label>
+              <select id="elec-ev-location">
+                <option value="garage" selected>Garage (interior)</option>
+                <option value="exterior">Exterior wall</option>
+                <option value="subpanel">Subpanel needed</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-elec-ev-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+          </select>
+          </div>
+        </div>
+
+        <!-- Whole Home Rewire -->
+        <div id="elec-inputs-rewire" class="elec-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Home Size</label>
+              <select id="elec-rewire-size">
+                <option value="under_1000">Under 1,000 sqft</option>
+                <option value="1000_2000" selected>1,000-2,000 sqft</option>
+                <option value="2000_3500">2,000-3,500 sqft</option>
+                <option value="3500_plus">3,500+ sqft</option>
+              </select>
+            </div>
+            <div>
+              <label>Stories</label>
+              <select id="elec-rewire-stories">
+                <option value="1" selected>1 story</option>
+                <option value="2">2 stories</option>
+                <option value="3">3+ stories</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-elec-rewire-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+          </select>
+          </div>
+        </div>
+
+        <!-- Circuit / Outlet Add -->
+        <div id="elec-inputs-circuit" class="elec-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Number of Circuits</label>
+              <input type="number" id="elec-circuits" placeholder="e.g. 3" min="1" max="30" value="3">
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-elec-circuit-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+          </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lighting Install -->
+        <div id="elec-inputs-lighting" class="elec-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Number of Fixtures</label>
+              <input type="number" id="elec-fixtures" placeholder="e.g. 5" min="1" max="50" value="5">
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-elec-lighting-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+          </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="elec-prompt" class="input-prompt">Select a scope of work above to see inputs</div>
+      </div>
       <!-- Painting -->
       <div id="trade-inputs-Painting" class="trade-input-group hidden">
         <div class="form-row cols-2">

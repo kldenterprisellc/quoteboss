@@ -320,18 +320,60 @@ function selectJob(job, btn) {
 }
 
 // Show/hide conditional inputs based on job type
+function showTradeSubInputs(tradePrefix, activeId) {
+  document.querySelectorAll(`.${tradePrefix}-sub`).forEach(el => el.classList.remove('active'));
+  const prompt = document.getElementById(`${tradePrefix}-prompt`);
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el) { el.classList.add('active'); if (prompt) prompt.style.display = 'none'; }
+    else { if (prompt) prompt.style.display = ''; }
+  } else {
+    if (prompt) prompt.style.display = '';
+  }
+}
+
 function updateConditionalInputs(trade, jobType) {
-  if (trade === 'Plumbing') {
-    const homeWrap = document.getElementById('plumbing-home-size-wrap');
-    if (homeWrap) homeWrap.style.display = jobType === 'full_repipe' ? '' : 'none';
+  if (trade === 'HVAC') {
+    const acJobs = ['install', 'replace'];
+    if (acJobs.includes(jobType)) {
+      showTradeSubInputs('hvac', 'hvac-inputs-ac');
+    } else if (jobType === 'tuneup' || jobType === 'repair') {
+      showTradeSubInputs('hvac', 'hvac-inputs-repair');
+    } else {
+      // Could be furnace or mini_split based on system type -- show AC as default
+      showTradeSubInputs('hvac', 'hvac-inputs-ac');
+    }
+    // Also react to system type changes
+    const sysType = document.getElementById('hvac-system-type');
+    if (sysType) {
+      sysType.onchange = () => {
+        const st = sysType.value;
+        if (st === 'mini_split') showTradeSubInputs('hvac', 'hvac-inputs-minisplit');
+        else if (st === 'furnace') showTradeSubInputs('hvac', 'hvac-inputs-furnace');
+        else showTradeSubInputs('hvac', 'hvac-inputs-ac');
+      };
+    }
   }
 
   if (trade === 'Electrical') {
-    const panelWrap = document.getElementById('elec-panel-size-wrap');
-    if (panelWrap) {
-      const showPanel = (jobType === 'panel_upgrade' || jobType === 'service_upgrade');
-      panelWrap.style.display = showPanel ? '' : 'none';
+    if (jobType === 'panel_upgrade' || jobType === 'service_upgrade') {
+      showTradeSubInputs('elec', 'elec-inputs-panel');
+    } else if (jobType === 'ev_charger') {
+      showTradeSubInputs('elec', 'elec-inputs-ev');
+    } else if (jobType === 'whole_home_rewire') {
+      showTradeSubInputs('elec', 'elec-inputs-rewire');
+    } else if (jobType === 'circuit_add') {
+      showTradeSubInputs('elec', 'elec-inputs-circuit');
+    } else if (jobType === 'fixture_install_elec') {
+      showTradeSubInputs('elec', 'elec-inputs-lighting');
+    } else {
+      showTradeSubInputs('elec', 'elec-inputs-panel');
     }
+  }
+
+  if (trade === 'Plumbing') {
+    const homeWrap = document.getElementById('plumbing-home-size-wrap');
+    if (homeWrap) homeWrap.style.display = jobType === 'full_repipe' ? '' : 'none';
   }
 
   if (trade === 'Pressure Washing') {
@@ -554,28 +596,49 @@ function getTradeParams() {
     params.location = loc;
 
   } else if (trade === 'HVAC') {
-    const tons = parseFloat(document.getElementById('hvac-tons')?.value) || 2.5;
     const systemType = document.getElementById('hvac-system-type')?.value || 'central_ac';
-    const loc = document.getElementById('location-hvac-state')?.value || '';
+    const repairSystem = document.getElementById('hvac-repair-system')?.value || 'central_ac';
 
-    let pricingJobType;
+    // Determine location from whichever sub-section is active
+    const loc = document.getElementById('location-hvac-state')?.value ||
+                document.getElementById('location-hvac-furnace-state')?.value ||
+                document.getElementById('location-hvac-ms-state')?.value ||
+                document.getElementById('location-hvac-repair-state')?.value || '';
+
+    let pricingJobType, tradeMult;
+
     if (jobType === 'repair' || jobType === 'tuneup') {
-      pricingJobType = systemType === 'furnace' ? 'Furnace Repair' : 'AC Repair';
+      const rs = repairSystem || systemType;
+      pricingJobType = (rs === 'furnace') ? 'Furnace Repair' : 'AC Repair';
+      tradeMult = 1.0;
     } else if (systemType === 'furnace') {
       pricingJobType = (jobType === 'replace') ? 'Full HVAC System' : 'Furnace Install';
+      const btu = parseInt(document.getElementById('hvac-btu')?.value) || 80000;
+      const btuMults = {40000: 0.75, 60000: 0.85, 80000: 1.0, 100000: 1.15, 120000: 1.30};
+      const fuelMults = {gas: 1.0, electric: 0.95, propane: 1.05};
+      const fuel = document.getElementById('hvac-fuel')?.value || 'gas';
+      tradeMult = (btuMults[btu] || 1.0) * (fuelMults[fuel] || 1.0);
     } else if (systemType === 'mini_split') {
       pricingJobType = 'Mini Split Install';
-    } else if (jobType === 'replace') {
+      const zones = parseInt(document.getElementById('hvac-zones')?.value) || 1;
+      const mstons = parseFloat(document.getElementById('hvac-minisplit-tons')?.value) || 1.0;
+      tradeMult = zones * (mstons / 1.0);
+    } else if (systemType === 'full_system' || jobType === 'replace') {
       pricingJobType = 'Full HVAC System';
+      const tons = parseFloat(document.getElementById('hvac-tons')?.value) || 2.5;
+      const tonMults = {1.5: 0.65, 2: 0.80, 2.5: 1.0, 3: 1.25, 3.5: 1.40, 4: 1.55, 5: 1.85};
+      tradeMult = tonMults[tons] || (tons / 2.5);
     } else {
       pricingJobType = 'AC Install (Central)';
+      const tons = parseFloat(document.getElementById('hvac-tons')?.value) || 2.5;
+      const tonMults = {1.5: 0.65, 2: 0.80, 2.5: 1.0, 3: 1.25, 3.5: 1.40, 4: 1.55, 5: 1.85};
+      tradeMult = tonMults[tons] || (tons / 2.5);
     }
 
-    const laborMap = { install: 7, replace: 10, repair: 2, tuneup: 2 };
     params.job_type = pricingJobType;
     params.property_size = 1500;
-    params.labor_hours = laborMap[jobType] || 5;
-    params.trade_multiplier = tons / 2.5;
+    params.labor_hours = 0;
+    params.trade_multiplier = tradeMult;
     params.location = loc;
 
   } else if (trade === 'Plumbing') {
@@ -609,33 +672,48 @@ function getTradeParams() {
     }
 
   } else if (trade === 'Electrical') {
-    const panelSize = document.getElementById('elec-panel-size')?.value || '200';
-    const circuits = parseInt(document.getElementById('elec-circuits')?.value) || 1;
-    const loc = document.getElementById('location-electrical-state')?.value || '';
+    // Read location from whichever sub-section is active
+    const loc = document.getElementById('location-electrical-state')?.value ||
+                document.getElementById('location-elec-ev-state')?.value ||
+                document.getElementById('location-elec-rewire-state')?.value ||
+                document.getElementById('location-elec-circuit-state')?.value ||
+                document.getElementById('location-elec-lighting-state')?.value || '';
 
     const jobMap = {
-      panel_upgrade: 'Panel Upgrade',
+      panel_upgrade: 'Panel Upgrade', service_upgrade: 'Panel Upgrade',
       whole_home_rewire: 'Whole Home Rewire',
       ev_charger: 'EV Charger (Level 2)',
       circuit_add: 'Outlet Install',
       fixture_install_elec: 'Lighting Install',
-      service_upgrade: 'Panel Upgrade',
-    };
-    const laborMap = {
-      panel_upgrade: 8, whole_home_rewire: 60, ev_charger: 3,
-      circuit_add: 1.5, fixture_install_elec: 2, service_upgrade: 8
     };
 
     params.job_type = jobMap[jobType] || 'Panel Upgrade';
     params.property_size = 1500;
-    params.labor_hours = laborMap[jobType] || 4;
+    params.labor_hours = 0;
     params.location = loc;
 
-    if (['circuit_add', 'fixture_install_elec'].includes(jobType)) {
+    if (jobType === 'panel_upgrade' || jobType === 'service_upgrade') {
+      const fromAmps = parseInt(document.getElementById('elec-current-amps')?.value) || 100;
+      const toAmps = parseInt(document.getElementById('elec-new-amps')?.value) || 200;
+      const panelMults = {'60_100': 0.75, '100_150': 0.85, '100_200': 1.0, '150_200': 0.90, '200_400': 1.6, '100_400': 1.8};
+      params.trade_multiplier = panelMults[`${fromAmps}_${toAmps}`] || 1.0;
+    } else if (jobType === 'ev_charger') {
+      const evAmps = parseInt(document.getElementById('elec-ev-amps')?.value) || 30;
+      const evLoc = document.getElementById('elec-ev-location')?.value || 'garage';
+      const evAmpMults = {20: 0.75, 30: 1.0, 40: 1.15, 50: 1.3, 60: 1.5};
+      const evLocMults = {garage: 1.0, exterior: 1.1, subpanel: 1.4};
+      params.trade_multiplier = (evAmpMults[evAmps] || 1.0) * (evLocMults[evLoc] || 1.0);
+    } else if (jobType === 'whole_home_rewire') {
+      const rewireSize = document.getElementById('elec-rewire-size')?.value || '1000_2000';
+      const rewireStories = parseInt(document.getElementById('elec-rewire-stories')?.value) || 1;
+      const sizeMults = {under_1000: 0.7, '1000_2000': 1.0, '2000_3500': 1.5, '3500_plus': 2.1};
+      params.trade_multiplier = (sizeMults[rewireSize] || 1.0) * (rewireStories === 3 ? 1.2 : rewireStories === 2 ? 1.1 : 1.0);
+    } else if (jobType === 'circuit_add') {
+      const circuits = parseInt(document.getElementById('elec-circuits')?.value) || 3;
       params.trade_multiplier = Math.max(1, circuits);
-    } else if (['panel_upgrade', 'service_upgrade'].includes(jobType)) {
-      const panelMults = { '100': 0.8, '200': 1.0, '400': 1.4 };
-      params.trade_multiplier = panelMults[panelSize] || 1.0;
+    } else if (jobType === 'fixture_install_elec') {
+      const fixtures = parseInt(document.getElementById('elec-fixtures')?.value) || 5;
+      params.trade_multiplier = Math.max(1, fixtures);
     }
 
   } else if (trade === 'Painting') {

@@ -220,6 +220,12 @@ input:focus, select:focus, textarea:focus {
 textarea { resize: vertical; min-height: 80px; }
 
 .form-row { display: grid; gap: 1rem; margin-bottom: 1rem; }
+.input-select { width:100%;height:2.75rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 0.75rem;font-size:0.95rem;background:white; }
+.input-select:focus { outline:none;border-color:var(--orange); }
+.input-note { font-size:0.8rem;color:#6b7280;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.45rem 0.75rem; }
+.input-prompt { font-size:0.85rem;color:#aaa;text-align:center;padding:1rem 0; }
+.hvac-sub, .elec-sub { display:none; }
+.hvac-sub.active, .elec-sub.active { display:block; }
 .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
 .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 
