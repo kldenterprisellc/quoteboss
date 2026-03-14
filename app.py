@@ -305,6 +305,21 @@ def calculate_quote(data: dict) -> dict:
             "max": r50(labor_max),
         })
 
+    # Roofing tear-off surcharge
+    include_tearoff = data.get('include_tearoff', False)
+    roof_squares = data.get('roof_squares', 0)
+    if include_tearoff and roof_squares and trade == 'Roofing':
+        tearoff_min = float(roof_squares) * 150
+        tearoff_max = float(roof_squares) * 200
+        line_items.append({
+            "description": "Tear-off and Disposal",
+            "detail": f"Remove existing roof ({roof_squares} squares)",
+            "min": r50(tearoff_min),
+            "max": r50(tearoff_max),
+        })
+        total_min += tearoff_min
+        total_max += tearoff_max
+
     return {
         "line_items": line_items,
         "total_min": r50(total_min),

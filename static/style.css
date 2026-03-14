@@ -224,8 +224,8 @@ textarea { resize: vertical; min-height: 80px; }
 .input-select:focus { outline:none;border-color:var(--orange); }
 .input-note { font-size:0.8rem;color:#6b7280;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:0.45rem 0.75rem; }
 .input-prompt { font-size:0.85rem;color:#aaa;text-align:center;padding:1rem 0; }
-.hvac-sub, .elec-sub { display:none; }
-.hvac-sub.active, .elec-sub.active { display:block; }
+.hvac-sub, .elec-sub, .roof-sub, .plumb-sub { display:none; }
+.hvac-sub.active, .elec-sub.active, .roof-sub.active, .plumb-sub.active { display:block; }
 .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
 .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 

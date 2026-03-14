@@ -126,34 +126,43 @@
 
       <!-- Roofing -->
       <div id="trade-inputs-Roofing" class="trade-input-group hidden">
-        <div class="form-row cols-2">
-          <div>
-            <label for="roofing-squares">Roof Squares <span style="font-size:11px;color:#888;">(1 square = 100 sqft)</span></label>
-            <input type="number" id="roofing-squares" placeholder="e.g. 25" min="1" max="200" value="25">
+
+        <!-- Full Replacement - Asphalt -->
+        <div id="roof-inputs-replacement" class="roof-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Roof Squares <span style="font-size:11px;color:#888;">(1 sq = 100 sqft)</span></label>
+              <input type="number" id="roofing-squares" placeholder="e.g. 25" min="1" max="200" value="25">
+            </div>
+            <div>
+              <label>Shingle Tier</label>
+              <select id="roofing-shingle-tier">
+                <option value="3tab">3-Tab (budget)</option>
+                <option value="architectural" selected>Architectural (standard)</option>
+                <option value="premium">Premium / Designer</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="roofing-pitch">Roof Pitch</label>
-            <select id="roofing-pitch">
-              <option value="low">Low (flat to 4/12)</option>
-              <option value="medium" selected>Medium (4/12 to 7/12)</option>
-              <option value="steep">Steep (7/12+)</option>
-            </select>
+          <div class="form-row cols-2">
+            <div>
+              <label>Roof Pitch</label>
+              <select id="roofing-pitch">
+                <option value="low">Low (4/12 or less)</option>
+                <option value="medium" selected>Medium (4/12-8/12)</option>
+                <option value="steep">Steep (8/12+)</option>
+              </select>
+            </div>
+            <div>
+              <label>Include Tear-off?</label>
+              <select id="roofing-tearoff">
+                <option value="yes" selected>Yes - remove existing roof</option>
+                <option value="no">No - overlay existing</option>
+              </select>
+            </div>
           </div>
-        </div>
-        <div class="form-row cols-2">
-          <div>
-            <label for="roofing-material">Material</label>
-            <select id="roofing-material">
-              <option value="asphalt" selected>Asphalt Shingles</option>
-              <option value="metal">Metal</option>
-              <option value="tile">Tile</option>
-              <option value="flat">Flat/TPO</option>
-            </select>
-          </div>
-          <div>
-<label>State</label>
-          <select id="location-state" style="width:100%;height:2.75rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 0.75rem;font-size:0.95rem;background:white;">
-            <option value="">Select State</option>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-state" class="input-select"><option value="">Select State</option>
 <option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
 <option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
 <option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
@@ -171,11 +180,134 @@
 <option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
 <option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
 <option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
-          </select>
+</select>
           </div>
         </div>
-      </div>
 
+        <!-- Metal Roof -->
+        <div id="roof-inputs-metal" class="roof-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Roof Squares <span style="font-size:11px;color:#888;">(1 sq = 100 sqft)</span></label>
+              <input type="number" id="roofing-metal-squares" placeholder="e.g. 25" min="1" max="200" value="25">
+            </div>
+            <div>
+              <label>Metal Type</label>
+              <select id="roofing-metal-type">
+                <option value="corrugated">Corrugated (most affordable)</option>
+                <option value="stone_coated">Stone-coated Steel</option>
+                <option value="standing_seam" selected>Standing Seam (premium)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row cols-2">
+            <div>
+              <label>Roof Pitch</label>
+              <select id="roofing-metal-pitch">
+                <option value="low">Low (4/12 or less)</option>
+                <option value="medium" selected>Medium (4/12-8/12)</option>
+                <option value="steep">Steep (8/12+)</option>
+              </select>
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-state-metal" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Repair -->
+        <div id="roof-inputs-repair" class="roof-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Repair Area (approx sqft)</label>
+              <input type="number" id="roofing-repair-sqft" placeholder="e.g. 50" min="1" value="50">
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-state-repair" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gutters -->
+        <div id="roof-inputs-gutters" class="roof-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Linear Footage</label>
+              <input type="number" id="roofing-gutter-lf" placeholder="e.g. 150" min="10" value="150">
+            </div>
+            <div>
+              <label>Material</label>
+              <select id="roofing-gutter-material">
+                <option value="aluminum" selected>Aluminum (most common)</option>
+                <option value="steel">Galvanized Steel</option>
+                <option value="copper">Copper (premium)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-state-gutters" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+          </div>
+        </div>
+
+        <div id="roof-prompt" class="input-prompt">Select a scope of work above to see inputs</div>
+      </div>
       <!-- HVAC -->
       <div id="trade-inputs-HVAC" class="trade-input-group hidden">
 
@@ -358,25 +490,32 @@
       </div>
       <!-- Plumbing -->
       <div id="trade-inputs-Plumbing" class="trade-input-group hidden">
-        <div class="form-row cols-2">
-          <div id="plumbing-fixtures-wrap">
-            <label for="plumbing-fixtures">Number of Fixtures</label>
-            <input type="number" id="plumbing-fixtures" placeholder="e.g. 2" min="1" max="10" value="2">
+
+        <!-- Water Heater Tank -->
+        <div id="plumb-inputs-water-heater" class="plumb-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Tank Size</label>
+              <select id="plumbing-wh-size">
+                <option value="30">30 gallon (1-2 people)</option>
+                <option value="40" selected>40 gallon (2-3 people)</option>
+                <option value="50">50 gallon (3-4 people)</option>
+                <option value="75">75 gallon (4-6 people)</option>
+                <option value="80">80 gallon (large household)</option>
+              </select>
+            </div>
+            <div>
+              <label>Fuel Type</label>
+              <select id="plumbing-wh-fuel">
+                <option value="gas" selected>Natural Gas</option>
+                <option value="electric">Electric</option>
+                <option value="propane">Propane</option>
+              </select>
+            </div>
           </div>
-          <div id="plumbing-home-size-wrap" style="display:none;">
-            <label for="plumbing-home-size">Home Size</label>
-            <select id="plumbing-home-size">
-              <option value="under_1000">Under 1,000 sqft</option>
-              <option value="1000_2000" selected>1,000-2,000 sqft</option>
-              <option value="2000_3500">2,000-3,500 sqft</option>
-              <option value="3500_plus">3,500+ sqft</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-<label>State</label>
-          <select id="location-plumbing-state" style="width:100%;height:2.75rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 0.75rem;font-size:0.95rem;background:white;">
-            <option value="">Select State</option>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-plumbing-state" class="input-select"><option value="">Select State</option>
 <option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
 <option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
 <option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
@@ -394,10 +533,157 @@
 <option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
 <option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
 <option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
-          </select>
+</select>
+          </div>
         </div>
-      </div>
 
+        <!-- Tankless Water Heater -->
+        <div id="plumb-inputs-tankless" class="plumb-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Flow Rate (GPM)</label>
+              <select id="plumbing-tankless-gpm">
+                <option value="6">6 GPM (1-2 bathrooms)</option>
+                <option value="8" selected>8 GPM (2-3 bathrooms)</option>
+                <option value="10">10 GPM (3-4 bathrooms)</option>
+                <option value="12">12 GPM (4+ bathrooms)</option>
+              </select>
+            </div>
+            <div>
+              <label>Fuel Type</label>
+              <select id="plumbing-tankless-fuel">
+                <option value="gas" selected>Natural Gas</option>
+                <option value="electric">Electric</option>
+                <option value="propane">Propane</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-plumbing-tankless-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+          </div>
+        </div>
+
+        <!-- Bathroom Remodel -->
+        <div id="plumb-inputs-bath" class="plumb-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Fixtures to Rough In</label>
+              <select id="plumbing-bath-fixtures">
+                <option value="2">2 fixtures (toilet + sink)</option>
+                <option value="3" selected>3 fixtures (toilet + sink + shower)</option>
+                <option value="4">4 fixtures (full bath)</option>
+                <option value="5">5+ fixtures (master bath)</option>
+              </select>
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-plumbing-bath-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sewer / Repipe -->
+        <div id="plumb-inputs-repipe" class="plumb-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Home Size</label>
+              <select id="plumbing-home-size">
+                <option value="under_1000">Under 1,000 sqft</option>
+                <option value="1000_2000" selected>1,000-2,000 sqft</option>
+                <option value="2000_3500">2,000-3,500 sqft</option>
+                <option value="3500_plus">3,500+ sqft</option>
+              </select>
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-plumbing-repipe-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+        </div>
+
+        <!-- General / Simple jobs -->
+        <div id="plumb-inputs-general" class="plumb-sub hidden">
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-plumbing-general-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+          </div>
+        </div>
+
+        <div id="plumb-prompt" class="input-prompt">Select a scope of work above to see inputs</div>
+      </div>
       <!-- Electrical -->
       <div id="trade-inputs-Electrical" class="trade-input-group hidden">
 

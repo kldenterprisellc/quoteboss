@@ -371,9 +371,20 @@ function updateConditionalInputs(trade, jobType) {
     }
   }
 
+  if (trade === 'Roofing') {
+    if (jobType === 'replacement') showTradeSubInputs('roof', 'roof-inputs-replacement');
+    else if (jobType === 'metal') showTradeSubInputs('roof', 'roof-inputs-metal');
+    else if (jobType === 'repair') showTradeSubInputs('roof', 'roof-inputs-repair');
+    else if (jobType === 'gutters') showTradeSubInputs('roof', 'roof-inputs-gutters');
+    else showTradeSubInputs('roof', 'roof-inputs-replacement');
+  }
+
   if (trade === 'Plumbing') {
-    const homeWrap = document.getElementById('plumbing-home-size-wrap');
-    if (homeWrap) homeWrap.style.display = jobType === 'full_repipe' ? '' : 'none';
+    if (jobType === 'water_heater') showTradeSubInputs('plumb', 'plumb-inputs-water-heater');
+    else if (jobType === 'tankless') showTradeSubInputs('plumb', 'plumb-inputs-tankless');
+    else if (jobType === 'bathroom_remodel') showTradeSubInputs('plumb', 'plumb-inputs-bath');
+    else if (jobType === 'full_repipe') showTradeSubInputs('plumb', 'plumb-inputs-repipe');
+    else showTradeSubInputs('plumb', 'plumb-inputs-general');
   }
 
   if (trade === 'Pressure Washing') {
@@ -574,26 +585,52 @@ function getTradeParams() {
   const params = { trade_multiplier: 1.0 };
 
   if (trade === 'Roofing') {
-    const squares = parseFloat(document.getElementById('roofing-squares')?.value) || 25;
-    const pitch = document.getElementById('roofing-pitch')?.value || 'medium';
-    const material = document.getElementById('roofing-material')?.value || 'asphalt';
-    const loc = document.getElementById('location-state')?.value || '';
+    let pricingJobType, squares, pitchMult, tradeMult, loc, extraFields = {};
 
-    let pricingJobType;
     if (jobType === 'replacement') {
-      pricingJobType = material === 'metal' ? 'Full Replacement (Metal)' : 'Full Replacement (Asphalt)';
+      squares = parseFloat(document.getElementById('roofing-squares')?.value) || 25;
+      const tier = document.getElementById('roofing-shingle-tier')?.value || 'architectural';
+      const pitch = document.getElementById('roofing-pitch')?.value || 'medium';
+      const tearoff = document.getElementById('roofing-tearoff')?.value || 'yes';
+      loc = document.getElementById('location-state')?.value || '';
+      pricingJobType = 'Full Replacement (Asphalt)';
+      const tierMults = {3tab: 0.85, architectural: 1.0, premium: 1.35};
+      pitchMult = {low: 0.9, medium: 1.0, steep: 1.2}[pitch] || 1.0;
+      tradeMult = (tierMults[tier] || 1.0) * pitchMult;
+      extraFields.include_tearoff = tearoff === 'yes';
+      extraFields.roof_squares = squares;
+    } else if (jobType === 'metal') {
+      squares = parseFloat(document.getElementById('roofing-metal-squares')?.value) || 25;
+      const metalType = document.getElementById('roofing-metal-type')?.value || 'standing_seam';
+      const pitch = document.getElementById('roofing-metal-pitch')?.value || 'medium';
+      loc = document.getElementById('location-state-metal')?.value || '';
+      pricingJobType = 'Full Replacement (Metal)';
+      const metalMults = {corrugated: 0.80, stone_coated: 1.0, standing_seam: 1.25};
+      tradeMult = (metalMults[metalType] || 1.0) * ({low: 0.9, medium: 1.0, steep: 1.2}[pitch] || 1.0);
+      extraFields.roof_squares = squares;
     } else if (jobType === 'repair') {
+      const repairSqft = parseFloat(document.getElementById('roofing-repair-sqft')?.value) || 50;
+      squares = repairSqft / 100;
+      loc = document.getElementById('location-state-repair')?.value || '';
       pricingJobType = 'Repair (Minor)';
+      tradeMult = Math.max(0.5, repairSqft / 50);
     } else {
+      // Gutters
+      const lf = parseFloat(document.getElementById('roofing-gutter-lf')?.value) || 150;
+      const gutterMat = document.getElementById('roofing-gutter-material')?.value || 'aluminum';
+      loc = document.getElementById('location-state-gutters')?.value || '';
       pricingJobType = 'Gutter Install/Replace';
+      const gutterMults = {aluminum: 1.0, steel: 1.1, copper: 2.2};
+      tradeMult = (gutterMults[gutterMat] || 1.0) * (lf / 150);
+      squares = 0;
     }
 
-    const pitchMult = { low: 0.9, medium: 1.0, steep: 1.2 }[pitch] || 1.0;
     params.job_type = pricingJobType;
-    params.property_size = squares * 100;
-    params.labor_hours = (jobType === 'replacement') ? 0 : 4;
-    params.trade_multiplier = pitchMult;
+    params.property_size = (squares || 25) * 100;
+    params.labor_hours = 0;
+    params.trade_multiplier = tradeMult || 1.0;
     params.location = loc;
+    Object.assign(params, extraFields);
 
   } else if (trade === 'HVAC') {
     const systemType = document.getElementById('hvac-system-type')?.value || 'central_ac';
@@ -646,30 +683,49 @@ function getTradeParams() {
     const homeSize = document.getElementById('plumbing-home-size')?.value || '1000_2000';
     const loc = document.getElementById('location-plumbing-state')?.value || '';
 
-    const jobMap = {
-      water_heater: 'Water Heater (Tank)',
-      drain_cleaning: 'Drain Cleaning',
-      pipe_repair: 'Pipe Repair',
-      bathroom_remodel: 'Bathroom Remodel (Plumbing)',
-      full_repipe: 'Sewer Line Repair',
-      fixture_install: 'Faucet/Fixture Install',
-    };
-    const laborMap = {
-      water_heater: 4, drain_cleaning: 1.5, pipe_repair: 2,
-      bathroom_remodel: 24, full_repipe: 16, fixture_install: 1.5
-    };
+    const loc = document.getElementById('location-plumbing-state')?.value ||
+                document.getElementById('location-plumbing-tankless-state')?.value ||
+                document.getElementById('location-plumbing-bath-state')?.value ||
+                document.getElementById('location-plumbing-repipe-state')?.value ||
+                document.getElementById('location-plumbing-general-state')?.value || '';
 
-    params.job_type = jobMap[jobType] || 'Faucet/Fixture Install';
-    params.property_size = 1500;
-    params.labor_hours = laborMap[jobType] || 3;
-    params.location = loc;
+    let pricingJobType, tradeMult;
 
-    if (['fixture_install', 'bathroom_remodel'].includes(jobType)) {
-      params.trade_multiplier = Math.max(1, fixtures);
+    if (jobType === 'water_heater') {
+      pricingJobType = 'Water Heater (Tank)';
+      const whSize = parseInt(document.getElementById('plumbing-wh-size')?.value) || 40;
+      const whFuel = document.getElementById('plumbing-wh-fuel')?.value || 'gas';
+      const sizeMults = {30: 0.85, 40: 1.0, 50: 1.15, 75: 1.4, 80: 1.5};
+      const fuelMults = {gas: 1.0, electric: 0.95, propane: 1.05};
+      tradeMult = (sizeMults[whSize] || 1.0) * (fuelMults[whFuel] || 1.0);
+    } else if (jobType === 'tankless') {
+      pricingJobType = 'Water Heater (Tankless)';
+      const gpm = parseInt(document.getElementById('plumbing-tankless-gpm')?.value) || 8;
+      const tFuel = document.getElementById('plumbing-tankless-fuel')?.value || 'gas';
+      const gpmMults = {6: 0.85, 8: 1.0, 10: 1.2, 12: 1.4};
+      tradeMult = (gpmMults[gpm] || 1.0) * ({gas: 1.0, electric: 0.9, propane: 1.1}[tFuel] || 1.0);
+    } else if (jobType === 'bathroom_remodel') {
+      pricingJobType = 'Bathroom Remodel (Plumbing)';
+      const bathFix = parseInt(document.getElementById('plumbing-bath-fixtures')?.value) || 3;
+      tradeMult = {2: 0.8, 3: 1.0, 4: 1.3, 5: 1.6}[bathFix] || 1.0;
     } else if (jobType === 'full_repipe') {
-      const homeMults = { under_1000: 0.7, '1000_2000': 1.0, '2000_3500': 1.5, '3500_plus': 2.2 };
-      params.trade_multiplier = homeMults[homeSize] || 1.0;
+      pricingJobType = 'Sewer Line Repair';
+      const homeSize = document.getElementById('plumbing-home-size')?.value || '1000_2000';
+      const homeMults = {under_1000: 0.7, '1000_2000': 1.0, '2000_3500': 1.5, '3500_plus': 2.2};
+      tradeMult = homeMults[homeSize] || 1.0;
+    } else if (jobType === 'drain_cleaning') {
+      pricingJobType = 'Drain Cleaning'; tradeMult = 1.0;
+    } else if (jobType === 'pipe_repair') {
+      pricingJobType = 'Pipe Repair'; tradeMult = 1.0;
+    } else {
+      pricingJobType = 'Faucet/Fixture Install'; tradeMult = 1.0;
     }
+
+    params.job_type = pricingJobType;
+    params.property_size = 1500;
+    params.labor_hours = 0;
+    params.trade_multiplier = tradeMult;
+    params.location = loc;
 
   } else if (trade === 'Electrical') {
     // Read location from whichever sub-section is active
