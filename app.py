@@ -899,6 +899,24 @@ def owner_login():
     return redirect('/')
 
 
+@app.route("/admin/reset-onboarding")
+def reset_onboarding():
+    """Clear onboarding data for logged-in user so they can redo it."""
+    if session.get('whop_user_id') != 'user_rYGUC3pFlNEz5':
+        return redirect('/access?error=unauthorized')
+    uid = session['whop_user_id']
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute(
+        f"UPDATE contractors SET business_name=NULL, primary_trade=NULL, all_trades=NULL WHERE whop_user_id={_placeholder()}",
+        (uid,)
+    )
+    db.commit()
+    cursor.close()
+    db.close()
+    return redirect('/onboarding')
+
+
 @app.route("/logout")
 def logout():
     session.clear()
