@@ -670,9 +670,11 @@ function getTradeParams() {
       commercial: 'Commercial Building',
     };
 
+    const pwHours = parseFloat(document.getElementById('pw-hours')?.value) || null;
     params.job_type = jobMap[jobType] || 'House Exterior Wash';
     params.property_size = sqft;
-    params.labor_hours = 2;
+    params.labor_hours = pwHours || 2;
+    params.job_hours = pwHours;
     params.trade_multiplier = 1.0;
     params.location = loc;
 
@@ -739,6 +741,7 @@ async function generateQuote() {
     property_size: tradeParams.property_size || 1500,
     location: tradeParams.location || '',
     labor_hours: tradeParams.labor_hours !== undefined ? tradeParams.labor_hours : 4,
+    job_hours: tradeParams.job_hours || null,
     trade_multiplier: tradeParams.trade_multiplier || 1.0,
     materials: getCheckedMaterials(),
     contractor_name: contractorName,

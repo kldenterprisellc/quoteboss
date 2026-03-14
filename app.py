@@ -191,7 +191,19 @@ LABOR_DEFAULTS = {
     },
 }
 
-LABOR_RATE = 85  # $ per hour base
+LABOR_RATE = 85  # $ per hour base (default)
+
+# Per-trade labor rates (national averages 2025)
+TRADE_LABOR_RATES = {
+    "Roofing":          65,
+    "HVAC":             95,
+    "Plumbing":         90,
+    "Electrical":       95,
+    "Painting":         55,
+    "Pressure Washing": 60,
+    "Landscaping":      50,
+    "General":          75,
+}
 
 
 def get_state_from_location(location: str) -> str:
@@ -253,8 +265,9 @@ def calculate_quote(data: dict) -> dict:
         base_min = base_min * multiplier
         base_max = base_max * multiplier
 
-    labor_min = labor_hours * LABOR_RATE * 0.9
-    labor_max = labor_hours * LABOR_RATE * 1.1
+    trade_rate = TRADE_LABOR_RATES.get(trade, LABOR_RATE)
+    labor_min = labor_hours * trade_rate * 0.9
+    labor_max = labor_hours * trade_rate * 1.1
 
     materials_count = len(materials)
     include_materials = (unit == "job" or using_custom) and materials_count > 0
@@ -287,7 +300,7 @@ def calculate_quote(data: dict) -> dict:
         },
         {
             "description": "Labor",
-            "detail": f"{labor_hours:.1f} hrs @ ${LABOR_RATE}/hr (regional adj.)",
+            "detail": f"{labor_hours:.1f} hrs @ ${trade_rate}/hr (regional adj.)",
             "min": r50(labor_min),
             "max": r50(labor_max),
         },
@@ -313,11 +326,20 @@ def calculate_quote(data: dict) -> dict:
 
 
 def calculate_multi_scope_quote(data: dict, job_types: list) -> dict:
-    """Calculate a combined quote for multiple scopes of work."""
-    all_line_items = []
+    """Calculate a combined quote for multiple scopes of work.
+    Labor lines are merged into a single combined labor line."""
+    non_labor_items = []
+    total_labor_min = 0
+    total_labor_max = 0
+    total_labor_hours = 0
     total_min = 0
     total_max = 0
     last_result = None
+    trade = data.get("trade", "General")
+    trade_rate = TRADE_LABOR_RATES.get(trade, LABOR_RATE)
+
+    # If contractor provided explicit total hours, use that for combined labor
+    override_hours = data.get("job_hours")
 
     for jt in job_types:
         scope_data = dict(data)
@@ -326,11 +348,21 @@ def calculate_multi_scope_quote(data: dict, job_types: list) -> dict:
             result = calculate_quote(scope_data)
         except ValueError:
             continue
-        # Label each line item group with the scope name
         items = result["line_items"]
-        if items:
-            items[0]["description"] = f"{jt} - {items[0]['description'].split(' - ')[-1]}"
-        all_line_items.extend(items)
+        for item in items:
+            if item["description"] == "Labor":
+                total_labor_min += item["min"]
+                total_labor_max += item["max"]
+                # Parse hours from detail string
+                try:
+                    total_labor_hours += float(item["detail"].split(" hrs")[0])
+                except Exception:
+                    pass
+            else:
+                # Label base line with scope name
+                if "Service" in item.get("description", ""):
+                    item["description"] = f"{jt} - {item['description'].split(' - ')[-1]}"
+                non_labor_items.append(item)
         total_min += result["total_min"]
         total_max += result["total_max"]
         last_result = result
@@ -338,10 +370,38 @@ def calculate_multi_scope_quote(data: dict, job_types: list) -> dict:
     if not last_result:
         raise ValueError("No valid job types found")
 
+    # If contractor entered explicit hours, recalculate labor from scratch
+    if override_hours and float(override_hours) > 0:
+        hrs = float(override_hours)
+        total_labor_min = hrs * trade_rate * 0.9
+        total_labor_max = hrs * trade_rate * 1.1
+        total_labor_hours = hrs
+        # Recalc totals: non-labor base + new labor
+        base_min = sum(i["min"] for i in non_labor_items if "Materials" not in i["description"])
+        base_max = sum(i["max"] for i in non_labor_items if "Materials" not in i["description"])
+        mat_min = sum(i["min"] for i in non_labor_items if "Materials" in i["description"])
+        mat_max = sum(i["max"] for i in non_labor_items if "Materials" in i["description"])
+        total_min = base_min + total_labor_min + mat_min
+        total_max = base_max + total_labor_max + mat_max
+
+    def r50(v):
+        return round(v / 50) * 50
+
+    # Single combined labor line
+    combined_labor = {
+        "description": "Labor (Combined)",
+        "detail": f"{total_labor_hours:.1f} hrs total @ ${trade_rate}/hr",
+        "min": r50(total_labor_min),
+        "max": r50(total_labor_max),
+    }
+
+    # Non-labor items (base lines + materials), then one labor line at end
+    all_items = non_labor_items + [combined_labor]
+
     return {
-        "line_items": all_line_items,
-        "total_min": total_min,
-        "total_max": total_max,
+        "line_items": all_items,
+        "total_min": r50(total_min),
+        "total_max": r50(total_max),
         "multiplier": last_result.get("multiplier", 1.0),
         "state": last_result.get("state", ""),
         "unit": last_result.get("unit", "job"),
