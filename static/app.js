@@ -229,11 +229,14 @@ function loadSharedQuote() {
   } catch(e) { console.error("Failed to load shared quote", e); }
 }
 
-// Build Trade Grid
+// Build Trade Grid — filtered to contractor's selected trades if allTrades is set
 function buildTradeGrid() {
   const grid = $("trade-grid");
+  if (!grid) return;
   grid.innerHTML = "";
+  const allowedTrades = (window.allTrades && window.allTrades.length > 0) ? window.allTrades : null;
   TRADES.forEach(t => {
+    if (allowedTrades && !allowedTrades.includes(t.id)) return;
     const div = document.createElement("div");
     div.className = "trade-card";
     div.dataset.trade = t.id;
