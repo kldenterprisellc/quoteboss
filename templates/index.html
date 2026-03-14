@@ -601,83 +601,6 @@
       </button>
     </div>
 
-    <div class="card" style="margin-top:1rem;">
-      <div class="card-header">
-        <div class="card-icon">🏷️</div>
-        <div>
-          <div class="card-title">Discount (Optional)</div>
-          <div class="card-subtitle">Give your client a deal and it shows on their quote</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
-        <div>
-          <label style="font-size:0.8rem;font-weight:600;color:#555;display:block;margin-bottom:0.3rem;">Flat Discount ($)</label>
-          <input type="number" id="discount-flat" placeholder="e.g. 200"
-            style="width:100%;padding:0.6rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.9rem;">
-        </div>
-        <div>
-          <label style="font-size:0.8rem;font-weight:600;color:#555;display:block;margin-bottom:0.3rem;">Percent Discount (%)</label>
-          <input type="number" id="discount-pct" placeholder="e.g. 10"
-            style="width:100%;padding:0.6rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.9rem;">
-        </div>
-      </div>
-      <div style="font-size:0.75rem;color:#aaa;margin-top:0.5rem;">Enter one or both. Flat discount applied first, then percentage.</div>
-    </div>
-
-    <!-- Payment Terms -->
-    <div class="card" style="margin-top:1rem;">
-      <div class="card-header">
-        <div class="card-icon">💳</div>
-        <div>
-          <div class="card-title">Payment Terms</div>
-          <div class="card-subtitle">How will the client pay?</div>
-        </div>
-      </div>
-      <div id="payment-terms-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-top:0.75rem;">
-        <button type="button" class="payment-term-btn selected" data-terms="full" onclick="selectPaymentTerms(this,'full')">
-          <span style="font-size:1.2rem;">💵</span>
-          <span style="font-weight:700;display:block;">Pay in Full</span>
-          <span style="font-size:0.75rem;color:#666;">Full amount due upfront</span>
-        </button>
-        <button type="button" class="payment-term-btn" data-terms="50_50" onclick="selectPaymentTerms(this,'50_50')">
-          <span style="font-size:1.2rem;">✌️</span>
-          <span style="font-weight:700;display:block;">50 / 50</span>
-          <span style="font-size:0.75rem;color:#666;">50% now, 50% on completion</span>
-        </button>
-        <button type="button" class="payment-term-btn" data-terms="33_33_33" onclick="selectPaymentTerms(this,'33_33_33')">
-          <span style="font-size:1.2rem;">🔢</span>
-          <span style="font-weight:700;display:block;">3 Payments</span>
-          <span style="font-size:0.75rem;color:#666;">1/3 start, 1/3 mid, 1/3 done</span>
-        </button>
-        <button type="button" class="payment-term-btn" data-terms="custom_pct" onclick="selectPaymentTerms(this,'custom_pct')">
-          <span style="font-size:1.2rem;">⚙️</span>
-          <span style="font-weight:700;display:block;">Custom %</span>
-          <span style="font-size:0.75rem;color:#666;">Set your own deposit %</span>
-        </button>
-        <button type="button" class="payment-term-btn" data-terms="fixed_deposit" onclick="selectPaymentTerms(this,'fixed_deposit')">
-          <span style="font-size:1.2rem;">💰</span>
-          <span style="font-weight:700;display:block;">Fixed Deposit</span>
-          <span style="font-size:0.75rem;color:#666;">Set a dollar amount deposit</span>
-        </button>
-      </div>
-      <div id="custom-deposit-row" style="display:none;margin-top:0.75rem;">
-        <label style="font-size:0.85rem;font-weight:600;color:#555;">Deposit Percentage</label>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">
-          <input type="number" id="custom-deposit-pct" min="5" max="95" value="25" style="width:80px;padding:0.5rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1rem;text-align:center;">
-          <span style="font-weight:600;font-size:1rem;">%</span>
-          <span style="font-size:0.8rem;color:#888;">due upfront</span>
-        </div>
-      </div>
-      <div id="fixed-deposit-row" style="display:none;margin-top:0.75rem;">
-        <label style="font-size:0.85rem;font-weight:600;color:#555;">Deposit Amount</label>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">
-          <span style="font-weight:600;font-size:1rem;">$</span>
-          <input type="number" id="fixed-deposit-amt" min="1" placeholder="500" style="width:100px;padding:0.5rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1rem;text-align:center;">
-          <span style="font-size:0.8rem;color:#888;">due upfront, balance on completion</span>
-        </div>
-      </div>
-    </div>
-
     <div class="step-nav">
       <button class="btn btn-secondary" onclick="showStep(2)">← Back</button>
       <button id="generate-btn" class="btn btn-primary btn-lg" style="flex:1" onclick="generateQuote()">
@@ -751,6 +674,85 @@
         Confirm Price and Get Quote Link
       </button>
     </div>
+
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-header">
+        <div class="card-icon">🏷️</div>
+        <div>
+          <div class="card-title">Discount (Optional)</div>
+          <div class="card-subtitle">Give your client a deal and it shows on their quote</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-top:0.5rem;">
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;color:#555;display:block;margin-bottom:0.3rem;">Flat Discount ($)</label>
+          <input type="number" id="discount-flat" placeholder="e.g. 200"
+            style="width:100%;padding:0.6rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.9rem;">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;color:#555;display:block;margin-bottom:0.3rem;">Percent Discount (%)</label>
+          <input type="number" id="discount-pct" placeholder="e.g. 10"
+            style="width:100%;padding:0.6rem;border:1px solid #e0e0e0;border-radius:6px;font-size:0.9rem;">
+        </div>
+      </div>
+      <div style="font-size:0.75rem;color:#aaa;margin-top:0.5rem;">Enter one or both. Flat discount applied first, then percentage.</div>
+    </div>
+
+
+    <!-- Payment Terms -->
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-header">
+        <div class="card-icon">💳</div>
+        <div>
+          <div class="card-title">Payment Terms</div>
+          <div class="card-subtitle">How will the client pay?</div>
+        </div>
+      </div>
+      <div id="payment-terms-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-top:0.75rem;">
+        <button type="button" class="payment-term-btn selected" data-terms="full" onclick="selectPaymentTerms(this,'full')">
+          <span style="font-size:1.2rem;">💵</span>
+          <span style="font-weight:700;display:block;">Pay in Full</span>
+          <span style="font-size:0.75rem;color:#666;">Full amount due upfront</span>
+        </button>
+        <button type="button" class="payment-term-btn" data-terms="50_50" onclick="selectPaymentTerms(this,'50_50')">
+          <span style="font-size:1.2rem;">✌️</span>
+          <span style="font-weight:700;display:block;">50 / 50</span>
+          <span style="font-size:0.75rem;color:#666;">50% now, 50% on completion</span>
+        </button>
+        <button type="button" class="payment-term-btn" data-terms="33_33_33" onclick="selectPaymentTerms(this,'33_33_33')">
+          <span style="font-size:1.2rem;">🔢</span>
+          <span style="font-weight:700;display:block;">3 Payments</span>
+          <span style="font-size:0.75rem;color:#666;">1/3 start, 1/3 mid, 1/3 done</span>
+        </button>
+        <button type="button" class="payment-term-btn" data-terms="custom_pct" onclick="selectPaymentTerms(this,'custom_pct')">
+          <span style="font-size:1.2rem;">⚙️</span>
+          <span style="font-weight:700;display:block;">Custom %</span>
+          <span style="font-size:0.75rem;color:#666;">Set your own deposit %</span>
+        </button>
+        <button type="button" class="payment-term-btn" data-terms="fixed_deposit" onclick="selectPaymentTerms(this,'fixed_deposit')">
+          <span style="font-size:1.2rem;">💰</span>
+          <span style="font-weight:700;display:block;">Fixed Deposit</span>
+          <span style="font-size:0.75rem;color:#666;">Set a dollar amount deposit</span>
+        </button>
+      </div>
+      <div id="custom-deposit-row" style="display:none;margin-top:0.75rem;">
+        <label style="font-size:0.85rem;font-weight:600;color:#555;">Deposit Percentage</label>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">
+          <input type="number" id="custom-deposit-pct" min="5" max="95" value="25" style="width:80px;padding:0.5rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1rem;text-align:center;">
+          <span style="font-weight:600;font-size:1rem;">%</span>
+          <span style="font-size:0.8rem;color:#888;">due upfront</span>
+        </div>
+      </div>
+      <div id="fixed-deposit-row" style="display:none;margin-top:0.75rem;">
+        <label style="font-size:0.85rem;font-weight:600;color:#555;">Deposit Amount</label>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">
+          <span style="font-weight:600;font-size:1rem;">$</span>
+          <input type="number" id="fixed-deposit-amt" min="1" placeholder="500" style="width:100px;padding:0.5rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:1rem;text-align:center;">
+          <span style="font-size:0.8rem;color:#888;">due upfront, balance on completion</span>
+        </div>
+      </div>
+    </div>
+
 
     <!-- Share Box -->
     <div id="share-section" class="share-box" style="display:none;">

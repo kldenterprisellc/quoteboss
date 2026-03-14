@@ -486,6 +486,45 @@ function getFixedDepositAmt() {
   return null;
 }
 
+// Map raw UI job type values to PRICING dict keys for a given trade
+function mapJobTypeToPricingKey(trade, rawJobType, baseParams) {
+  const material = document.getElementById('roofing-material')?.value || 'asphalt';
+  const systemType = document.getElementById('hvac-system-type')?.value || 'central_ac';
+
+  const maps = {
+    'Roofing': {
+      replacement: material === 'metal' ? 'Full Replacement (Metal)' : 'Full Replacement (Asphalt)',
+      repair: 'Repair (Minor)',
+      gutters: 'Gutter Install/Replace',
+    },
+    'HVAC': {
+      install: 'AC Install (Central)', replace: 'Full HVAC System',
+      repair: systemType === 'furnace' ? 'Furnace Repair' : 'AC Repair',
+      tuneup: systemType === 'furnace' ? 'Furnace Repair' : 'AC Repair',
+    },
+    'Plumbing': {
+      water_heater: 'Water Heater (Tank)', drain_cleaning: 'Drain Cleaning',
+      pipe_repair: 'Pipe Repair', bathroom_remodel: 'Bathroom Remodel (Plumbing)',
+      full_repipe: 'Sewer Line Repair', fixture_install: 'Faucet/Fixture Install',
+    },
+    'Electrical': {
+      panel_upgrade: 'Panel Upgrade', whole_home_rewire: 'Whole Home Rewire',
+      ev_charger: 'EV Charger (Level 2)', circuit_add: 'Outlet Install',
+      fixture_install_elec: 'Lighting Install', service_upgrade: 'Panel Upgrade',
+    },
+    'Painting': {
+      interior: 'Interior Painting', exterior: 'Exterior Painting', both: 'Exterior Painting',
+    },
+    'Pressure Washing': {
+      house_exterior: 'House Exterior Wash', driveway: 'Driveway Cleaning',
+      deck_patio: 'Deck or Patio', roof_soft_wash: 'Roof Soft Wash',
+      fence: 'Fence Cleaning', commercial: 'Commercial Building',
+    },
+  };
+  const tradeMap = maps[trade];
+  return (tradeMap && tradeMap[rawJobType]) ? tradeMap[rawJobType] : rawJobType;
+}
+
 // Collect trade-specific params for the API call
 function getTradeParams() {
   const trade = state.trade;
@@ -696,7 +735,7 @@ async function generateQuote() {
   const payload = {
     trade: tradeParams.trade || state.trade,
     job_type: tradeParams.job_type || state.jobType,
-    job_types: state.jobTypes,
+    job_types: state.jobTypes.map(jt => mapJobTypeToPricingKey(state.trade, jt, tradeParams)),
     property_size: tradeParams.property_size || 1500,
     location: tradeParams.location || '',
     labor_hours: tradeParams.labor_hours !== undefined ? tradeParams.labor_hours : 4,
