@@ -980,12 +980,20 @@ def set_quote_price():
         return jsonify({"error": "Missing quote_id or final_price"}), 400
 
     quote = quote_store.get(quote_id)
+    db_quote = None
     if not quote:
         db_quote = get_quote(quote_id)
         if db_quote:
             quote = json_module.loads(db_quote['quote_data'])
     if not quote:
         return jsonify({"error": "Quote not found"}), 404
+
+    # Ownership check: quote must belong to this user
+    owner_id = quote.get('whop_user_id')
+    if not owner_id and db_quote:
+        owner_id = db_quote.get('whop_user_id')
+    if owner_id and owner_id != session['whop_user_id']:
+        return jsonify({"error": "Forbidden"}), 403
 
     quote['final_price'] = int(final_price)
     quote['final_price_set'] = True
@@ -997,6 +1005,7 @@ def set_quote_price():
 
 
 @app.route("/api/quote/accept/<quote_id>", methods=["POST"])
+@limiter.limit("10 per minute")
 def accept_quote_route(quote_id):
     """Public endpoint: client accepts a quote."""
     accept_quote(quote_id.upper())
@@ -1008,6 +1017,7 @@ def api_pdf(quote_id):
     if not session.get('whop_user_id'):
         return jsonify({"error": "Unauthorized"}), 401
     quote = quote_store.get(quote_id.upper())
+    db_quote = None
     if not quote:
         db_quote = get_quote(quote_id.upper())
         if db_quote:
@@ -1015,6 +1025,12 @@ def api_pdf(quote_id):
             quote_store[quote_id.upper()] = quote
     if not quote:
         abort(404)
+    # Ownership check: only the contractor who created the quote can download its PDF
+    owner_id = quote.get('whop_user_id')
+    if not owner_id and db_quote:
+        owner_id = db_quote.get('whop_user_id')
+    if owner_id and owner_id != session['whop_user_id']:
+        abort(403)
     pdf_bytes = generate_pdf(quote)
     return send_file(
         io.BytesIO(pdf_bytes),
