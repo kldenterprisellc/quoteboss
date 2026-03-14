@@ -435,9 +435,7 @@ function getTradeParams() {
     const squares = parseFloat(document.getElementById('roofing-squares')?.value) || 25;
     const pitch = document.getElementById('roofing-pitch')?.value || 'medium';
     const material = document.getElementById('roofing-material')?.value || 'asphalt';
-    const _city = document.getElementById('location-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-state')?.value || '';
 
     let pricingJobType;
     if (jobType === 'replacement') {
@@ -458,9 +456,7 @@ function getTradeParams() {
   } else if (trade === 'HVAC') {
     const tons = parseFloat(document.getElementById('hvac-tons')?.value) || 2.5;
     const systemType = document.getElementById('hvac-system-type')?.value || 'central_ac';
-    const _city = document.getElementById('location-hvac-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-hvac-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-hvac-state')?.value || '';
 
     let pricingJobType;
     if (jobType === 'repair' || jobType === 'tuneup') {
@@ -485,9 +481,7 @@ function getTradeParams() {
   } else if (trade === 'Plumbing') {
     const fixtures = parseInt(document.getElementById('plumbing-fixtures')?.value) || 1;
     const homeSize = document.getElementById('plumbing-home-size')?.value || '1000_2000';
-    const _city = document.getElementById('location-plumbing-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-plumbing-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-plumbing-state')?.value || '';
 
     const jobMap = {
       water_heater: 'Water Heater (Tank)',
@@ -517,9 +511,7 @@ function getTradeParams() {
   } else if (trade === 'Electrical') {
     const panelSize = document.getElementById('elec-panel-size')?.value || '200';
     const circuits = parseInt(document.getElementById('elec-circuits')?.value) || 1;
-    const _city = document.getElementById('location-electrical-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-electrical-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-electrical-state')?.value || '';
 
     const jobMap = {
       panel_upgrade: 'Panel Upgrade',
@@ -550,9 +542,7 @@ function getTradeParams() {
     const sqft = parseFloat(document.getElementById('painting-sqft')?.value) || 1500;
     const stories = parseInt(document.getElementById('painting-stories')?.value) || 1;
     const prep = document.getElementById('painting-prep')?.value || 'moderate';
-    const _city = document.getElementById('location-painting-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-painting-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-painting-state')?.value || '';
 
     const jobMap = { interior: 'Interior Painting', exterior: 'Exterior Painting', both: 'Exterior Painting' };
     params.job_type = jobMap[jobType] || 'Interior Painting';
@@ -569,9 +559,7 @@ function getTradeParams() {
 
   } else if (trade === 'Pressure Washing') {
     const sqft = parseFloat(document.getElementById('pw-sqft')?.value) || 1500;
-    const _city = document.getElementById('location-pw-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-pw-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-pw-state')?.value || '';
 
     const jobMap = {
       house_exterior: 'House Exterior Wash',
@@ -591,9 +579,7 @@ function getTradeParams() {
   } else if (trade === 'Landscaping') {
     const sqft = parseFloat(document.getElementById('landscaping-sqft')?.value) || 1500;
     const labor = parseFloat(document.getElementById('landscaping-labor')?.value) || 4;
-    const _city = document.getElementById('location-landscaping-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-landscaping-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-landscaping-state')?.value || '';
     params.job_type = jobType;
     params.property_size = sqft;
     params.labor_hours = labor;
@@ -603,9 +589,7 @@ function getTradeParams() {
     // General Contractor
     const sqft = parseFloat(document.getElementById('property-size')?.value) || 1500;
     const labor = parseFloat(document.getElementById('labor-hours')?.value) || 4;
-    const _city = document.getElementById('location-general-city')?.value?.trim() || '';
-    const _state = document.getElementById('location-general-state')?.value || '';
-    const loc = _city && _state ? `${_city}, ${_state}` : (_state || _city);
+    const loc = document.getElementById('location-general-state')?.value || '';
     params.job_type = jobType;
     params.property_size = sqft;
     params.labor_hours = labor;
