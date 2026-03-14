@@ -57,70 +57,75 @@ quote_store = {}
 # ─────────────────────────────────────────────
 PRICING = {
     "HVAC": {
-        # Sources: Angi 2025, HomeAdvisor 2025, JackLehr HVAC
-        "AC Install (Central)":  {"min": 3800, "max": 7500,  "unit": "job"},
-        "Full HVAC System":      {"min": 6000, "max": 14000, "unit": "job"},
+        # Sources: HVAC.com 2025, Thumbtack 2025, JackLehr 2025, Modernize 2026
+        # NOTE: All "job" prices = TOTAL installed (labor + equipment). No separate labor added.
+        "AC Install (Central)":  {"min": 4000, "max": 9000,  "unit": "job"},
+        "Full HVAC System":      {"min": 10000,"max": 20000, "unit": "job"},
         "AC Repair":             {"min": 150,  "max": 650,   "unit": "job"},
-        "Furnace Install":       {"min": 2500, "max": 6500,  "unit": "job"},
+        "Furnace Install":       {"min": 3000, "max": 7500,  "unit": "job"},
         "Furnace Repair":        {"min": 130,  "max": 600,   "unit": "job"},
         "Duct Cleaning":         {"min": 300,  "max": 750,   "unit": "job"},
-        "Mini Split Install":    {"min": 2000, "max": 6000,  "unit": "job"},
+        "Mini Split Install":    {"min": 2500, "max": 8000,  "unit": "job"},
     },
     "Plumbing": {
-        # Sources: HomeAdvisor 2025, Angi 2025, RoyalClassService 2026
-        "Water Heater (Tank)":    {"min": 800,  "max": 2500,  "unit": "job"},
-        "Water Heater (Tankless)":{"min": 1500, "max": 3500,  "unit": "job"},
+        # Sources: ThisOldHouse 2025, AllStatePlumbing 2025, HomeAdvisor 2025, Angi 2026
+        # NOTE: All "job" prices = TOTAL installed (labor + parts). No separate labor added.
+        "Water Heater (Tank)":    {"min": 1000, "max": 3500,  "unit": "job"},
+        "Water Heater (Tankless)":{"min": 2500, "max": 6000,  "unit": "job"},
         "Pipe Repair":            {"min": 150,  "max": 600,   "unit": "job"},
-        "Drain Cleaning":         {"min": 100,  "max": 600,   "unit": "job"},
-        "Bathroom Remodel (Plumbing)":{"min": 1500, "max": 5000, "unit": "job"},
-        "Sewer Line Repair":      {"min": 800,  "max": 5000,  "unit": "job"},
-        "Faucet/Fixture Install": {"min": 100,  "max": 400,   "unit": "job"},
+        "Drain Cleaning":         {"min": 100,  "max": 550,   "unit": "job"},
+        "Bathroom Remodel (Plumbing)":{"min": 2500, "max": 8000, "unit": "job"},
+        "Sewer Line Repair":      {"min": 1000, "max": 7500,  "unit": "job"},
+        "Faucet/Fixture Install": {"min": 150,  "max": 500,   "unit": "job"},
     },
     "Electrical": {
-        # Sources: SartellElectrical 2025, EnergySage 2025, HomeWyse 2026
-        "Panel Upgrade":          {"min": 1300, "max": 4000,  "unit": "job"},
-        "Outlet Install":         {"min": 100,  "max": 300,   "unit": "job"},
+        # Sources: SartellElectrical 2025, PanelLoadCalc 2025, HomeWyse 2026, Angi 2025
+        # NOTE: All "job" prices = TOTAL installed (labor + materials + permit). No separate labor added.
+        "Panel Upgrade":          {"min": 1500, "max": 4500,  "unit": "job"},
+        "Outlet Install":         {"min": 150,  "max": 400,   "unit": "job"},
         "Lighting Install":       {"min": 150,  "max": 600,   "unit": "job"},
         "Ceiling Fan Install":    {"min": 100,  "max": 350,   "unit": "job"},
-        "EV Charger (Level 2)":   {"min": 500,  "max": 2000,  "unit": "job"},
-        "Whole Home Rewire":      {"min": 8000, "max": 20000, "unit": "job"},
-        "Generator Install":      {"min": 3000, "max": 10000, "unit": "job"},
+        "EV Charger (Level 2)":   {"min": 750,  "max": 2500,  "unit": "job"},
+        "Whole Home Rewire":      {"min": 8000, "max": 25000, "unit": "job"},
+        "Generator Install":      {"min": 3500, "max": 12000, "unit": "job"},
     },
     "Roofing": {
-        # Sources: BillRagan 2025, HomeWyse 2026
-        "Full Replacement (Asphalt)": {"min": 550, "max": 900, "unit": "per sq (100 sqft)"},
-        "Full Replacement (Metal)":   {"min": 900, "max": 1600,"unit": "per sq (100 sqft)"},
-        "Repair (Minor)":             {"min": 150, "max": 600, "unit": "job"},
-        "Repair (Major)":             {"min": 600, "max": 2500,"unit": "job"},
+        # Sources: BillRagan 2025, RidgetopExteriors 2026, CMBRoof 2025
+        # Per-sq prices = TOTAL installed (shingles + labor + tear-off). Separate labor added for repairs only.
+        "Full Replacement (Asphalt)": {"min": 550, "max": 950, "unit": "per sq (100 sqft)"},
+        "Full Replacement (Metal)":   {"min": 900, "max": 1800,"unit": "per sq (100 sqft)"},
+        "Repair (Minor)":             {"min": 200, "max": 700, "unit": "job"},
+        "Repair (Major)":             {"min": 700, "max": 3000,"unit": "job"},
         "Gutter Install/Replace":     {"min": 1500,"max": 5500,"unit": "job"},
-        "Skylight Install":           {"min": 900, "max": 3500,"unit": "job"},
+        "Skylight Install":           {"min": 1000, "max": 4000,"unit": "job"},
     },
     "Landscaping": {
         # Sources: Angi 2026, HomeAdvisor 2025, HomeGuide 2025
         "Lawn Maintenance (Monthly)": {"min": 100, "max": 350,  "unit": "per month"},
-        "Sod Installation":           {"min": 1,   "max": 2.5,  "unit": "per sqft"},
-        "Tree Removal (Small)":       {"min": 300, "max": 800,  "unit": "job"},
-        "Tree Removal (Large)":       {"min": 800, "max": 3000, "unit": "job"},
-        "Sprinkler System Install":   {"min": 2500,"max": 6500, "unit": "job"},
+        "Sod Installation":           {"min": 1.5, "max": 3.5,  "unit": "per sqft"},
+        "Tree Removal (Small)":       {"min": 300, "max": 900,  "unit": "job"},
+        "Tree Removal (Large)":       {"min": 900, "max": 3500, "unit": "job"},
+        "Sprinkler System Install":   {"min": 2500,"max": 7000, "unit": "job"},
         "Full Landscape Design":      {"min": 3000,"max": 15000,"unit": "job"},
     },
     "General": {
         # Sources: HomeAdvisor 2025, HomeWyse 2026
         "Handyman (Per Hour)":    {"min": 75,  "max": 200,  "unit": "per hour"},
-        "Interior Painting":      {"min": 900, "max": 3500, "unit": "job"},
-        "Exterior Painting":      {"min": 1800,"max": 6000, "unit": "job"},
-        "Flooring Install":       {"min": 3,   "max": 12,   "unit": "per sqft"},
-        "Drywall Repair":         {"min": 200, "max": 800,  "unit": "job"},
-        "Deck Build":             {"min": 5000,"max": 18000,"unit": "job"},
+        "Interior Painting":      {"min": 2.00,"max": 6.00, "unit": "per sqft"},
+        "Exterior Painting":      {"min": 2.20,"max": 5.00, "unit": "per sqft"},
+        "Flooring Install":       {"min": 4,   "max": 14,   "unit": "per sqft"},
+        "Drywall Repair":         {"min": 250, "max": 900,  "unit": "job"},
+        "Deck Build":             {"min": 6000,"max": 20000,"unit": "job"},
     },
     "Pressure Washing": {
-        # Sources: Angi 2025, HomeAdvisor 2025, HomeGuide 2025
-        "House Exterior Wash":      {"min": 0.15, "max": 0.35, "unit": "per sqft"},
-        "Driveway Cleaning":        {"min": 150,  "max": 400,  "unit": "job"},
-        "Deck or Patio":            {"min": 0.25, "max": 0.45, "unit": "per sqft"},
-        "Roof Soft Wash":           {"min": 300,  "max": 800,  "unit": "job"},
-        "Fence Cleaning":           {"min": 100,  "max": 350,  "unit": "job"},
-        "Commercial Building":      {"min": 0.20, "max": 0.50, "unit": "per sqft"},
+        # Sources: Thumbtack 2025, TaskRabbit 2025, InvoiceFly 2025, HomeGuide 2026
+        # Per-sqft prices = total (labor included). No separate labor added.
+        "House Exterior Wash":      {"min": 0.25, "max": 0.55, "unit": "per sqft"},
+        "Driveway Cleaning":        {"min": 100,  "max": 350,  "unit": "job"},
+        "Deck or Patio":            {"min": 0.25, "max": 0.50, "unit": "per sqft"},
+        "Roof Soft Wash":           {"min": 350,  "max": 800,  "unit": "job"},
+        "Fence Cleaning":           {"min": 100,  "max": 400,  "unit": "job"},
+        "Commercial Building":      {"min": 0.20, "max": 0.55, "unit": "per sqft"},
     },
 }
 
@@ -138,56 +143,58 @@ REGION_MULTIPLIERS = {
 }
 
 LABOR_DEFAULTS = {
+    # "job" unit types: prices already include labor, so labor_hours = 0
+    # "per sqft"/"per sq" types: labor is on top of materials rate
     "HVAC": {
-        "AC Install (Central)": 7,
-        "Full HVAC System": 10,
-        "AC Repair": 2,
-        "Furnace Install": 6,
-        "Furnace Repair": 2,
-        "Duct Cleaning": 4,
-        "Mini Split Install": 5,
+        "AC Install (Central)": 0,   # total job price includes install labor
+        "Full HVAC System": 0,        # total job price includes install labor
+        "AC Repair": 0,
+        "Furnace Install": 0,
+        "Furnace Repair": 0,
+        "Duct Cleaning": 0,
+        "Mini Split Install": 0,
     },
     "Plumbing": {
-        "Water Heater (Tank)": 4,
-        "Water Heater (Tankless)": 6,
-        "Pipe Repair": 2,
-        "Drain Cleaning": 1.5,
-        "Bathroom Remodel (Plumbing)": 24,
-        "Sewer Line Repair": 6,
-        "Faucet/Fixture Install": 1.5,
+        "Water Heater (Tank)": 0,     # total installed price
+        "Water Heater (Tankless)": 0,
+        "Pipe Repair": 0,
+        "Drain Cleaning": 0,
+        "Bathroom Remodel (Plumbing)": 0,
+        "Sewer Line Repair": 0,
+        "Faucet/Fixture Install": 0,
     },
     "Electrical": {
-        "Panel Upgrade": 8,
-        "Outlet Install": 1.5,
-        "Lighting Install": 2,
-        "Ceiling Fan Install": 1.5,
-        "EV Charger (Level 2)": 3,
-        "Whole Home Rewire": 60,
-        "Generator Install": 10,
+        "Panel Upgrade": 0,           # total installed price includes permit + labor
+        "Outlet Install": 0,
+        "Lighting Install": 0,
+        "Ceiling Fan Install": 0,
+        "EV Charger (Level 2)": 0,
+        "Whole Home Rewire": 0,
+        "Generator Install": 0,
     },
     "Roofing": {
-        "Full Replacement (Asphalt)": 0,
+        "Full Replacement (Asphalt)": 0,  # per-sq rate includes tear-off + labor
         "Full Replacement (Metal)": 0,
-        "Repair (Minor)": 2,
-        "Repair (Major)": 4,
+        "Repair (Minor)": 2,              # repairs: add labor on top of parts
+        "Repair (Major)": 5,
         "Gutter Install/Replace": 4,
         "Skylight Install": 4,
     },
     "Landscaping": {
-        "Lawn Maintenance (Monthly)": 3,
-        "Sod Installation": 0,
-        "Tree Removal (Small)": 3,
-        "Tree Removal (Large)": 6,
-        "Sprinkler System Install": 8,
-        "Full Landscape Design": 16,
+        "Lawn Maintenance (Monthly)": 0,
+        "Sod Installation": 0,            # per-sqft rate includes labor
+        "Tree Removal (Small)": 0,
+        "Tree Removal (Large)": 0,
+        "Sprinkler System Install": 0,
+        "Full Landscape Design": 0,
     },
     "General": {
-        "Handyman (Per Hour)": 4,
-        "Interior Painting": 16,
-        "Exterior Painting": 24,
-        "Flooring Install": 0,
-        "Drywall Repair": 4,
-        "Deck Build": 40,
+        "Handyman (Per Hour)": 0,         # IS labor, no separate labor line
+        "Interior Painting": 0,           # per-sqft rate includes labor
+        "Exterior Painting": 0,           # per-sqft rate includes labor
+        "Flooring Install": 0,            # per-sqft rate includes labor
+        "Drywall Repair": 0,
+        "Deck Build": 0,
     },
 }
 
@@ -270,7 +277,9 @@ def calculate_quote(data: dict) -> dict:
     labor_max = labor_hours * trade_rate * 1.1
 
     materials_count = len(materials)
-    include_materials = (unit == "job" or using_custom) and materials_count > 0
+    # Only add a materials line for "job" types with selected materials, not for per-sqft
+    # (per-sqft rates already factor in materials cost)
+    include_materials = unit == "job" and materials_count > 0
     mat_factor = 0.25
     if include_materials:
         mat_base = (base_min + base_max) / 2 * mat_factor
@@ -289,7 +298,7 @@ def calculate_quote(data: dict) -> dict:
     def r50(v):
         return round(v / 50) * 50
 
-    base_detail = "Your custom rate" if using_custom else f"Base estimate ({unit})"
+    base_detail = "Your custom rate" if using_custom else f"Estimated total ({unit})"
 
     line_items = [
         {
@@ -298,13 +307,16 @@ def calculate_quote(data: dict) -> dict:
             "min": r50(base_min),
             "max": r50(base_max),
         },
-        {
+    ]
+    # Only add a separate labor line when labor_hours > 0
+    # (for "job" unit types, labor is already included in the base price)
+    if labor_hours > 0:
+        line_items.append({
             "description": "Labor",
-            "detail": f"{labor_hours:.1f} hrs @ ${trade_rate}/hr (regional adj.)",
+            "detail": f"{labor_hours:.1f} hrs @ ${trade_rate}/hr",
             "min": r50(labor_min),
             "max": r50(labor_max),
-        },
-    ]
+        })
 
     if include_materials:
         line_items.append({
