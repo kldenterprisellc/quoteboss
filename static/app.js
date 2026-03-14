@@ -387,12 +387,21 @@ function updateConditionalInputs(trade, jobType) {
     else showTradeSubInputs('plumb', 'plumb-inputs-general');
   }
 
+  if (trade === 'Painting') {
+    if (jobType === 'interior') showTradeSubInputs('paint', 'paint-inputs-interior');
+    else if (jobType === 'exterior') showTradeSubInputs('paint', 'paint-inputs-exterior');
+    else if (jobType === 'both') showTradeSubInputs('paint', 'paint-inputs-both');
+    else showTradeSubInputs('paint', 'paint-inputs-interior');
+  }
+
   if (trade === 'Pressure Washing') {
-    const sqftWrap = document.getElementById('pw-sqft-wrap');
-    const flatNote = document.getElementById('pw-flat-note');
-    const flatJobs = ['driveway', 'roof_soft_wash', 'fence'];
-    if (sqftWrap) sqftWrap.style.display = flatJobs.includes(jobType) ? 'none' : '';
-    if (flatNote) flatNote.style.display = flatJobs.includes(jobType) ? '' : 'none';
+    if (jobType === 'house_exterior') showTradeSubInputs('pw', 'pw-inputs-house');
+    else if (jobType === 'driveway') showTradeSubInputs('pw', 'pw-inputs-driveway');
+    else if (jobType === 'deck_patio') showTradeSubInputs('pw', 'pw-inputs-deck');
+    else if (jobType === 'roof_soft_wash') showTradeSubInputs('pw', 'pw-inputs-roof');
+    else if (jobType === 'fence') showTradeSubInputs('pw', 'pw-inputs-fence');
+    else if (jobType === 'commercial') showTradeSubInputs('pw', 'pw-inputs-commercial');
+    else showTradeSubInputs('pw', 'pw-inputs-house');
   }
 }
 
@@ -773,44 +782,109 @@ function getTradeParams() {
     }
 
   } else if (trade === 'Painting') {
-    const sqft = parseFloat(document.getElementById('painting-sqft')?.value) || 1500;
-    const stories = parseInt(document.getElementById('painting-stories')?.value) || 1;
-    const prep = document.getElementById('painting-prep')?.value || 'moderate';
-    const loc = document.getElementById('location-painting-state')?.value || '';
+    params.trade = 'General';
+    const prepMults = {minimal: 0.85, moderate: 1.0, heavy: 1.25};
+    const storiesMults = {1: 1.0, 2: 1.15, 3: 1.30};
+    const sidingMults = {vinyl: 1.0, wood: 1.1, brick: 1.2, fiber_cement: 1.05};
 
-    const jobMap = { interior: 'Interior Painting', exterior: 'Exterior Painting', both: 'Exterior Painting' };
-    params.job_type = jobMap[jobType] || 'Interior Painting';
-    params.trade = 'General'; // remap Painting to General PRICING
-    params.property_size = sqft;
-    params.labor_hours = Math.round(sqft / 100);
-    params.location = loc;
-
-    const storiesMults = { 1: 1.0, 2: 1.15, 3: 1.30 };
-    const prepMults = { minimal: 0.85, moderate: 1.0, heavy: 1.25 };
-    let mult = (storiesMults[stories] || 1.0) * (prepMults[prep] || 1.0);
-    if (jobType === 'both') mult *= 1.6;
-    params.trade_multiplier = mult;
+    if (jobType === 'interior') {
+      const sqft = parseFloat(document.getElementById('painting-sqft')?.value) || 1500;
+      const rooms = parseInt(document.getElementById('painting-rooms')?.value) || 3;
+      const prep = document.getElementById('painting-prep-interior')?.value || 'moderate';
+      const loc = document.getElementById('location-painting-state')?.value || '';
+      params.job_type = 'Interior Painting';
+      params.property_size = sqft;
+      params.labor_hours = 0;
+      params.location = loc;
+      params.trade_multiplier = (prepMults[prep] || 1.0) * Math.max(0.5, rooms / 3);
+    } else if (jobType === 'exterior') {
+      const sqft = parseFloat(document.getElementById('painting-ext-sqft')?.value) || 1800;
+      const stories = parseInt(document.getElementById('painting-stories')?.value) || 1;
+      const siding = document.getElementById('painting-siding')?.value || 'vinyl';
+      const prep = document.getElementById('painting-prep')?.value || 'moderate';
+      const loc = document.getElementById('location-painting-ext-state')?.value || '';
+      params.job_type = 'Exterior Painting';
+      params.property_size = sqft;
+      params.labor_hours = 0;
+      params.location = loc;
+      params.trade_multiplier = (storiesMults[stories] || 1.0) * (sidingMults[siding] || 1.0) * (prepMults[prep] || 1.0);
+    } else {
+      // both interior + exterior
+      const sqft = parseFloat(document.getElementById('painting-both-sqft')?.value) || 1500;
+      const stories = parseInt(document.getElementById('painting-both-stories')?.value) || 1;
+      const siding = document.getElementById('painting-both-siding')?.value || 'vinyl';
+      const loc = document.getElementById('location-painting-both-state')?.value || '';
+      params.job_type = 'Exterior Painting';
+      params.property_size = sqft;
+      params.labor_hours = 0;
+      params.location = loc;
+      params.trade_multiplier = (storiesMults[stories] || 1.0) * (sidingMults[siding] || 1.0) * 1.6;
+    }
 
   } else if (trade === 'Pressure Washing') {
-    const sqft = parseFloat(document.getElementById('pw-sqft')?.value) || 1500;
-    const loc = document.getElementById('location-pw-state')?.value || '';
-
     const jobMap = {
-      house_exterior: 'House Exterior Wash',
-      driveway: 'Driveway Cleaning',
-      deck_patio: 'Deck or Patio',
-      roof_soft_wash: 'Roof Soft Wash',
-      fence: 'Fence Cleaning',
-      commercial: 'Commercial Building',
+      house_exterior: 'House Exterior Wash', driveway: 'Driveway Cleaning',
+      deck_patio: 'Deck or Patio', roof_soft_wash: 'Roof Soft Wash',
+      fence: 'Fence Cleaning', commercial: 'Commercial Building',
     };
+    const storiesMults = {1: 1.0, 2: 1.3, 3: 1.6};
 
-    const pwHours = parseFloat(document.getElementById('pw-hours')?.value) || null;
-    params.job_type = jobMap[jobType] || 'House Exterior Wash';
-    params.property_size = sqft;
-    params.labor_hours = pwHours || 2;
-    params.job_hours = pwHours;
-    params.trade_multiplier = 1.0;
-    params.location = loc;
+    if (jobType === 'house_exterior') {
+      const sqft = parseFloat(document.getElementById('pw-sqft')?.value) || 2000;
+      const stories = parseInt(document.getElementById('pw-stories')?.value) || 1;
+      const pwHours = parseFloat(document.getElementById('pw-hours')?.value) || null;
+      const loc = document.getElementById('location-pw-state')?.value || '';
+      params.job_type = 'House Exterior Wash';
+      params.property_size = sqft;
+      params.labor_hours = pwHours || (stories === 1 ? 3 : stories === 2 ? 5 : 7);
+      params.job_hours = pwHours;
+      params.trade_multiplier = storiesMults[stories] || 1.0;
+      params.location = loc;
+    } else if (jobType === 'driveway') {
+      const sqft = parseFloat(document.getElementById('pw-driveway-sqft')?.value) || 500;
+      const loc = document.getElementById('location-pw-driveway-state')?.value || '';
+      params.job_type = 'Driveway Cleaning';
+      params.property_size = sqft;
+      params.labor_hours = Math.max(1, sqft / 500);
+      params.trade_multiplier = 1.0;
+      params.location = loc;
+    } else if (jobType === 'deck_patio') {
+      const sqft = parseFloat(document.getElementById('pw-deck-sqft')?.value) || 400;
+      const material = document.getElementById('pw-deck-material')?.value || 'wood';
+      const loc = document.getElementById('location-pw-deck-state')?.value || '';
+      const matMults = {wood: 1.0, composite: 0.9, concrete: 0.85, pavers: 1.1};
+      params.job_type = 'Deck or Patio';
+      params.property_size = sqft;
+      params.labor_hours = Math.max(1, sqft / 300);
+      params.trade_multiplier = matMults[material] || 1.0;
+      params.location = loc;
+    } else if (jobType === 'roof_soft_wash') {
+      const sqft = parseFloat(document.getElementById('pw-roof-sqft')?.value) || 1800;
+      const loc = document.getElementById('location-pw-roof-state')?.value || '';
+      params.job_type = 'Roof Soft Wash';
+      params.property_size = sqft;
+      params.labor_hours = Math.max(2, sqft / 600);
+      params.trade_multiplier = 1.0;
+      params.location = loc;
+    } else if (jobType === 'fence') {
+      const lf = parseFloat(document.getElementById('pw-fence-lf')?.value) || 100;
+      const loc = document.getElementById('location-pw-fence-state')?.value || '';
+      params.job_type = 'Fence Cleaning';
+      params.property_size = lf * 6; // approx sqft
+      params.labor_hours = Math.max(1, lf / 80);
+      params.trade_multiplier = 1.0;
+      params.location = loc;
+    } else {
+      // commercial
+      const sqft = parseFloat(document.getElementById('pw-commercial-sqft')?.value) || 5000;
+      const stories = parseInt(document.getElementById('pw-commercial-stories')?.value) || 1;
+      const loc = document.getElementById('location-pw-commercial-state')?.value || '';
+      params.job_type = 'Commercial Building';
+      params.property_size = sqft;
+      params.labor_hours = Math.max(3, sqft / 1000);
+      params.trade_multiplier = storiesMults[stories] || 1.0;
+      params.location = loc;
+    }
 
   } else if (trade === 'Landscaping') {
     const sqft = parseFloat(document.getElementById('landscaping-sqft')?.value) || 1500;

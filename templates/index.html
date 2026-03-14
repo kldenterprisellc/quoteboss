@@ -895,33 +895,38 @@
       </div>
       <!-- Painting -->
       <div id="trade-inputs-Painting" class="trade-input-group hidden">
-        <div class="form-row cols-2">
-          <div>
-            <label for="painting-stories">Stories</label>
-            <select id="painting-stories">
-              <option value="1" selected>1 Story</option>
-              <option value="2">2 Stories</option>
-              <option value="3">3+ Stories</option>
-            </select>
+
+        <!-- Interior Painting -->
+        <div id="paint-inputs-interior" class="paint-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Square Footage</label>
+              <input type="number" id="painting-sqft" placeholder="e.g. 1500" min="100" value="1500">
+            </div>
+            <div>
+              <label>Number of Rooms</label>
+              <select id="painting-rooms">
+                <option value="1">1 room</option>
+                <option value="2">2 rooms</option>
+                <option value="3" selected>3 rooms</option>
+                <option value="4">4 rooms</option>
+                <option value="5">5 rooms</option>
+                <option value="6">6+ rooms / whole house</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="painting-prep">Prep Needed</label>
-            <select id="painting-prep">
-              <option value="minimal">Minimal</option>
-              <option value="moderate" selected>Moderate</option>
-              <option value="heavy">Heavy</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row cols-2">
-          <div>
-            <label for="painting-sqft">Square Footage</label>
-            <input type="number" id="painting-sqft" placeholder="e.g. 1500" min="100" value="1500">
-          </div>
-          <div>
-<label>State</label>
-          <select id="location-painting-state" style="width:100%;height:2.75rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 0.75rem;font-size:0.95rem;background:white;">
-            <option value="">Select State</option>
+          <div class="form-row cols-2">
+            <div>
+              <label>Prep Needed</label>
+              <select id="painting-prep-interior">
+                <option value="minimal">Minimal (new drywall / clean walls)</option>
+                <option value="moderate" selected>Moderate (patch + prime)</option>
+                <option value="heavy">Heavy (repair, stain blocking, etc.)</option>
+              </select>
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-painting-state" class="input-select"><option value="">Select State</option>
 <option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
 <option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
 <option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
@@ -939,22 +944,150 @@
 <option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
 <option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
 <option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
-          </select>
+</select>
+            </div>
           </div>
         </div>
-      </div>
 
+        <!-- Exterior Painting -->
+        <div id="paint-inputs-exterior" class="paint-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Square Footage (livable)</label>
+              <input type="number" id="painting-ext-sqft" placeholder="e.g. 1800" min="100" value="1800">
+            </div>
+            <div>
+              <label>Stories</label>
+              <select id="painting-stories">
+                <option value="1" selected>1 story</option>
+                <option value="2">2 stories</option>
+                <option value="3">3 stories</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row cols-2">
+            <div>
+              <label>Siding Type</label>
+              <select id="painting-siding">
+                <option value="vinyl" selected>Vinyl / Aluminum</option>
+                <option value="wood">Wood / Hardboard</option>
+                <option value="brick">Brick / Stucco</option>
+                <option value="fiber_cement">Fiber Cement</option>
+              </select>
+            </div>
+            <div>
+              <label>Prep Needed</label>
+              <select id="painting-prep">
+                <option value="minimal">Minimal (good condition)</option>
+                <option value="moderate" selected>Moderate (some peeling)</option>
+                <option value="heavy">Heavy (scrape + prime)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-painting-ext-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+          </div>
+        </div>
+
+        <!-- Interior + Exterior -->
+        <div id="paint-inputs-both" class="paint-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Square Footage</label>
+              <input type="number" id="painting-both-sqft" placeholder="e.g. 1500" min="100" value="1500">
+            </div>
+            <div>
+              <label>Stories</label>
+              <select id="painting-both-stories">
+                <option value="1" selected>1 story</option>
+                <option value="2">2 stories</option>
+                <option value="3">3 stories</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row cols-2">
+            <div>
+              <label>Siding Type</label>
+              <select id="painting-both-siding">
+                <option value="vinyl" selected>Vinyl / Aluminum</option>
+                <option value="wood">Wood / Hardboard</option>
+                <option value="brick">Brick / Stucco</option>
+                <option value="fiber_cement">Fiber Cement</option>
+              </select>
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-painting-both-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+        </div>
+
+        <div id="paint-prompt" class="input-prompt">Select a scope of work above to see inputs</div>
+      </div>
       <!-- Pressure Washing -->
       <div id="trade-inputs-Pressure Washing" class="trade-input-group hidden">
-        <div id="pw-sqft-wrap" class="form-row cols-2">
-          <div>
-            <label for="pw-sqft">Area Size (sqft)</label>
-            <input type="number" id="pw-sqft" placeholder="e.g. 2000" min="100" value="1500">
+
+        <!-- House Exterior -->
+        <div id="pw-inputs-house" class="pw-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Home Size (sqft)</label>
+              <input type="number" id="pw-sqft" placeholder="e.g. 2000" min="100" value="2000">
+            </div>
+            <div>
+              <label>Stories</label>
+              <select id="pw-stories">
+                <option value="1" selected>1 story</option>
+                <option value="2">2 stories</option>
+                <option value="3">3 stories</option>
+              </select>
+            </div>
           </div>
-          <div>
-<label>State</label>
-          <select id="location-pw-state" style="width:100%;height:2.75rem;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 0.75rem;font-size:0.95rem;background:white;">
-            <option value="">Select State</option>
+          <div class="form-row cols-2">
+            <div>
+              <label>Hours on Site <span style="font-size:11px;color:#888;">(optional override)</span></label>
+              <input type="number" id="pw-hours" placeholder="e.g. 4" min="0.5" step="0.5" value="">
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-pw-state" class="input-select"><option value="">Select State</option>
 <option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
 <option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
 <option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
@@ -972,18 +1105,193 @@
 <option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
 <option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
 <option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
-          </select>
+</select>
+            </div>
           </div>
         </div>
-        <div id="pw-flat-note" style="display:none;font-size:0.82rem;color:#888;margin-bottom:0.75rem;">
-          This is a flat-rate job. Location still helps apply regional pricing.
-        </div>
-        <div class="form-row" style="margin-top:0.5rem;">
-          <label for="pw-hours">How many hours will this job take? <span style="color:#aaa;font-weight:400;">(total on site)</span></label>
-          <input type="number" id="pw-hours" placeholder="e.g. 4" min="0.5" step="0.5" value="">
-        </div>
-      </div>
 
+        <!-- Driveway -->
+        <div id="pw-inputs-driveway" class="pw-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Driveway Size (sqft)</label>
+              <input type="number" id="pw-driveway-sqft" placeholder="e.g. 500" min="50" value="500">
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-pw-driveway-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deck / Patio -->
+        <div id="pw-inputs-deck" class="pw-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Deck / Patio Size (sqft)</label>
+              <input type="number" id="pw-deck-sqft" placeholder="e.g. 400" min="50" value="400">
+            </div>
+            <div>
+              <label>Surface Material</label>
+              <select id="pw-deck-material">
+                <option value="wood" selected>Wood</option>
+                <option value="composite">Composite / Trex</option>
+                <option value="concrete">Concrete</option>
+                <option value="pavers">Pavers</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-pw-deck-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+          </div>
+        </div>
+
+        <!-- Roof Soft Wash -->
+        <div id="pw-inputs-roof" class="pw-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Roof Size (sqft)</label>
+              <input type="number" id="pw-roof-sqft" placeholder="e.g. 1800" min="200" value="1800">
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-pw-roof-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="input-note">Soft wash only -- no high-pressure spraying on shingles</div>
+          </div>
+        </div>
+
+        <!-- Fence -->
+        <div id="pw-inputs-fence" class="pw-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Fence Length (linear ft)</label>
+              <input type="number" id="pw-fence-lf" placeholder="e.g. 100" min="10" value="100">
+            </div>
+            <div>
+              <label>State</label>
+              <select id="location-pw-fence-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Commercial -->
+        <div id="pw-inputs-commercial" class="pw-sub hidden">
+          <div class="form-row cols-2">
+            <div>
+              <label>Building Size (sqft)</label>
+              <input type="number" id="pw-commercial-sqft" placeholder="e.g. 5000" min="500" value="5000">
+            </div>
+            <div>
+              <label>Stories</label>
+              <select id="pw-commercial-stories">
+                <option value="1" selected>1 story</option>
+                <option value="2">2 stories</option>
+                <option value="3">3+ stories</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>State</label>
+            <select id="location-pw-commercial-state" class="input-select"><option value="">Select State</option>
+<option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option>
+<option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="FL">Florida</option>
+<option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option>
+<option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option>
+<option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+<option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+<option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option>
+<option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+<option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option>
+<option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="DC">Washington DC</option>
+</select>
+          </div>
+        </div>
+
+        <div id="pw-prompt" class="input-prompt">Select a scope of work above to see inputs</div>
+      </div>
       <!-- General / Landscaping (existing sqft inputs) -->
       <div id="trade-inputs-General" class="trade-input-group hidden">
         <div class="form-row cols-2">
