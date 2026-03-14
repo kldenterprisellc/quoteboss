@@ -191,27 +191,22 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.singleTradeMode && window.primaryTrade) {
     setTimeout(() => {
       selectTrade(window.primaryTrade);
-      // Hide trade grid, update step 1 title to "What type of job is this?"
-      const tradeGrid = document.getElementById('trade-grid');
-      if (tradeGrid) tradeGrid.style.display = 'none';
-      const tradeCard = document.querySelector('.card:has(#trade-grid)');
+      // Hide entire trade card (single trade -- no need to pick)
+      const tradeCard = document.getElementById('trade-card');
       if (tradeCard) tradeCard.style.display = 'none';
+      // Update job section title
       const jobTitle = document.querySelector('#job-section .card-title');
       if (jobTitle) jobTitle.textContent = 'What type of job is this?';
       const jobSubtitle = document.querySelector('#job-section .card-subtitle');
       if (jobSubtitle) jobSubtitle.textContent = 'Select all that apply to this quote';
-    }, 50);
+    }, 100);
   } else if (window.primaryTrade && window.primaryTrade.length > 0) {
-    // Multi-trade: pre-select but still show trade grid
+    // Multi-trade: pre-select primary trade and show trade grid
     setTimeout(() => {
-      const tradeCard = document.querySelector(`[data-trade="${window.primaryTrade}"]`);
-      if (tradeCard) {
-        selectTrade(window.primaryTrade);
-      }
-      // Rename trade step title for multi-trade contractors
+      selectTrade(window.primaryTrade);
       const tradeTitle = document.querySelector('#step-1 .card-title');
       if (tradeTitle) tradeTitle.textContent = 'What type of job is this?';
-    }, 50);
+    }, 100);
   }
 });
 
