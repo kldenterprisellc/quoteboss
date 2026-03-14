@@ -130,6 +130,7 @@ let state = {
   step: 1,
   trade: null,
   jobType: null,
+  jobTypes: [],
   quoteId: null,
   lineItems: [],
   totalMin: 0,
@@ -228,6 +229,7 @@ function buildTradeGrid() {
 function selectTrade(tradeId) {
   state.trade = tradeId;
   state.jobType = null;
+  state.jobTypes = [];
   document.querySelectorAll(".trade-card").forEach(c => c.classList.remove("selected"));
   const card = document.querySelector(`[data-trade="${tradeId}"]`);
   if (card) card.classList.add("selected");
@@ -281,12 +283,19 @@ function buildJobGrid(tradeId) {
 }
 
 function selectJob(job, btn) {
-  state.jobType = job;
-  document.querySelectorAll(".job-btn").forEach(b => b.classList.remove("selected"));
-  btn.classList.add("selected");
+  // Toggle multi-select
+  if (btn.classList.contains("selected")) {
+    btn.classList.remove("selected");
+    state.jobTypes = state.jobTypes.filter(j => j !== job);
+  } else {
+    btn.classList.add("selected");
+    state.jobTypes.push(job);
+  }
+  // Keep jobType as last selected for backward compat
+  state.jobType = state.jobTypes[state.jobTypes.length - 1] || null;
 
-  // Update conditional inputs based on job type
-  updateConditionalInputs(state.trade, job);
+  // Update conditional inputs based on primary job type
+  if (state.jobType) updateConditionalInputs(state.trade, state.jobType);
 
   // Update custom pricing hint
   updateCustomPricingHint();
@@ -401,10 +410,9 @@ function goToStep2() {
     document.getElementById('trade-grid')?.scrollIntoView({behavior:'smooth', block:'center'});
     return;
   }
-  if (!state.jobType) {
-    showToast("⚠️ Please select a job type below");
+  if (state.jobTypes.length === 0) {
+    showToast("⚠️ Please select at least one scope of work below");
     document.getElementById('job-section')?.scrollIntoView({behavior:'smooth', block:'center'});
-    // Flash the job section to draw attention
     const js = document.getElementById('job-section');
     if (js) { js.style.outline = '2px solid #FF6B00'; setTimeout(() => js.style.outline = '', 1500); }
     return;
@@ -627,6 +635,7 @@ async function generateQuote() {
   const payload = {
     trade: tradeParams.trade || state.trade,
     job_type: tradeParams.job_type || state.jobType,
+    job_types: state.jobTypes,
     property_size: tradeParams.property_size || 1500,
     location: tradeParams.location || '',
     labor_hours: tradeParams.labor_hours !== undefined ? tradeParams.labor_hours : 4,

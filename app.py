@@ -310,6 +310,43 @@ def calculate_quote(data: dict) -> dict:
     }
 
 
+def calculate_multi_scope_quote(data: dict, job_types: list) -> dict:
+    """Calculate a combined quote for multiple scopes of work."""
+    all_line_items = []
+    total_min = 0
+    total_max = 0
+    last_result = None
+
+    for jt in job_types:
+        scope_data = dict(data)
+        scope_data["job_type"] = jt
+        try:
+            result = calculate_quote(scope_data)
+        except ValueError:
+            continue
+        # Label each line item group with the scope name
+        items = result["line_items"]
+        if items:
+            items[0]["description"] = f"{jt} - {items[0]['description'].split(' - ')[-1]}"
+        all_line_items.extend(items)
+        total_min += result["total_min"]
+        total_max += result["total_max"]
+        last_result = result
+
+    if not last_result:
+        raise ValueError("No valid job types found")
+
+    return {
+        "line_items": all_line_items,
+        "total_min": total_min,
+        "total_max": total_max,
+        "multiplier": last_result.get("multiplier", 1.0),
+        "state": last_result.get("state", ""),
+        "unit": last_result.get("unit", "job"),
+        "using_custom_pricing": last_result.get("using_custom_pricing", False),
+    }
+
+
 # ─────────────────────────────────────────────
 # PDF Generation
 # ─────────────────────────────────────────────
@@ -822,10 +859,18 @@ def api_quote():
     # Apply trade_multiplier after calculation (pitch, size, prep, etc.)
     trade_multiplier = float(data.pop('trade_multiplier', 1.0) or 1.0)
 
-    try:
-        calc = calculate_quote(data)
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+    # Support multiple scopes of work
+    job_types = data.get('job_types', [])
+    if isinstance(job_types, list) and len(job_types) > 1:
+        try:
+            calc = calculate_multi_scope_quote(data, job_types)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+    else:
+        try:
+            calc = calculate_quote(data)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
 
     # Apply trade-specific multiplier
     if trade_multiplier != 1.0:
