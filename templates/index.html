@@ -747,6 +747,8 @@
   window.__PLAN_TIER__ = "{{ plan_tier }}";
   var contractorBusiness = "{{ contractor.get('business_name', '')|e }}";
   var primaryTrade = "{{ primary_trade|e }}";
+  var singleTradeMode = {{ 'true' if single_trade_mode else 'false' }};
+  var allTrades = {{ all_trades|tojson }};
   {% if shared_quote is defined and shared_quote %}
   window.__SHARED_QUOTE__ = {{ shared_quote|safe }};
   {% else %}

@@ -425,6 +425,7 @@
         </label>
       </div>
       <input type="hidden" name="primary_trade" id="primary_trade_hidden" value="">
+      <input type="hidden" name="all_trades" id="all_trades_hidden" value="">
       <div class="field-error" id="err-trade" style="margin-top:-0.5rem;margin-bottom:0.5rem;">Please select at least one trade</div>
 
       <button type="button" class="btn-next" onclick="goToStep(3)">Next: Your Team &rarr;</button>
@@ -550,6 +551,7 @@ function toggleTrade(el, value) {
   // First selected trade = primary
   const primary = selectedTrades[0] || '';
   document.getElementById('primary_trade_hidden').value = primary;
+  document.getElementById('all_trades_hidden').value = selectedTrades.join(',');
   if (selectedTrades.length > 0) document.getElementById('err-trade').classList.remove('show');
 }
 

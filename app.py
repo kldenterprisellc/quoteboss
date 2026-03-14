@@ -608,12 +608,17 @@ def index():
         return redirect('/access')
     tier = session.get('plan_tier', 'basic')
     contractor = get_contractor(session['whop_user_id']) or {}
+    all_trades_raw = contractor.get('all_trades', '') or ''
+    all_trades_list = [t.strip() for t in all_trades_raw.split(',') if t.strip()]
+    single_trade_mode = len(all_trades_list) == 1
     return render_template(
         "index.html",
         pricing=json.dumps(PRICING),
         plan_tier=tier,
         contractor=contractor,
-        primary_trade=contractor.get('primary_trade', '')
+        primary_trade=contractor.get('primary_trade', ''),
+        all_trades=all_trades_list,
+        single_trade_mode=single_trade_mode
     )
 
 
@@ -655,6 +660,7 @@ def onboarding():
             'city_state': request.form.get('city_state', '').strip(),
             'primary_trade': request.form.get('primary_trade', '').strip(),
             'team_size': request.form.get('team_size', '').strip(),
+            'all_trades': request.form.get('all_trades', '').strip(),
         }
         if logo_url:
             update_fields['logo_url'] = logo_url
