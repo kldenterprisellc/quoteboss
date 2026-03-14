@@ -66,6 +66,7 @@ def init_db():
             ('team_size', 'TEXT'),
             ('logo_url', 'TEXT'),
             ('all_trades', 'TEXT'),
+            ('payment_methods', 'TEXT'),
         ]
         for col_name, col_type in new_contractor_cols:
             try:
@@ -119,6 +120,7 @@ def init_db():
             ('team_size', 'TEXT'),
             ('logo_url', 'TEXT'),
             ('all_trades', 'TEXT'),
+            ('payment_methods', 'TEXT'),
         ]
         for col_name, col_type in new_contractor_cols:
             try:

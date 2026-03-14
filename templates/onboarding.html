@@ -230,6 +230,24 @@
       box-shadow: 0 0 0 3px rgba(255,107,0,0.13);
     }
 
+    .ob-pay-opt {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      background: white;
+      transition: all 0.15s;
+      display: block;
+    }
+    .ob-pay-opt.selected {
+      border-color: var(--orange);
+      background: rgba(255,107,0,0.09);
+    }
+
     /* Buttons */
     .btn-next {
       width: 100%;
@@ -460,6 +478,40 @@
       </div>
 
       <div class="form-row">
+        <label>How do you accept payment?</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-top:0.4rem;" id="ob-payment-grid">
+          <label class="ob-pay-opt selected" onclick="togglePayMethod(this,'cash')">
+            <input type="checkbox" name="pm_cash" value="cash" checked style="display:none;">
+            <span>💵 Cash</span>
+          </label>
+          <label class="ob-pay-opt selected" onclick="togglePayMethod(this,'check')">
+            <input type="checkbox" name="pm_check" value="check" checked style="display:none;">
+            <span>🏦 Check</span>
+          </label>
+          <label class="ob-pay-opt selected" onclick="togglePayMethod(this,'venmo')">
+            <input type="checkbox" name="pm_venmo" value="venmo" checked style="display:none;">
+            <span>💙 Venmo</span>
+          </label>
+          <label class="ob-pay-opt" onclick="togglePayMethod(this,'paypal')">
+            <input type="checkbox" name="pm_paypal" value="paypal" style="display:none;">
+            <span>🅿️ PayPal</span>
+          </label>
+          <label class="ob-pay-opt" onclick="togglePayMethod(this,'zelle')">
+            <input type="checkbox" name="pm_zelle" value="zelle" style="display:none;">
+            <span>⚡ Zelle</span>
+          </label>
+          <label class="ob-pay-opt" onclick="togglePayMethod(this,'stripe')">
+            <input type="checkbox" name="pm_stripe" value="stripe" style="display:none;">
+            <span>💳 Card</span>
+          </label>
+        </div>
+        <div id="ob-zelle-row" style="display:none;margin-top:0.6rem;">
+          <input type="text" name="zelle_handle" placeholder="Your Zelle phone or email" style="width:100%;padding:0.65rem;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <input type="hidden" name="payment_methods" id="ob-payment-methods-hidden" value="cash,check,venmo">
+      </div>
+
+      <div class="form-row">
         <label>Logo (optional)</label>
         <input type="file" name="logo" accept="image/*">
         <div class="upload-hint">Upload your company logo to use on quotes. JPG or PNG recommended.</div>
@@ -553,6 +605,24 @@ function toggleTrade(el, value) {
   document.getElementById('primary_trade_hidden').value = primary;
   document.getElementById('all_trades_hidden').value = selectedTrades.join(',');
   if (selectedTrades.length > 0) document.getElementById('err-trade').classList.remove('show');
+}
+
+let selectedPayMethods = ['cash','check','venmo'];
+
+function togglePayMethod(el, value) {
+  const cb = el.querySelector('input[type="checkbox"]');
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    cb.checked = false;
+    selectedPayMethods = selectedPayMethods.filter(m => m !== value);
+  } else {
+    el.classList.add('selected');
+    cb.checked = true;
+    selectedPayMethods.push(value);
+  }
+  document.getElementById('ob-payment-methods-hidden').value = selectedPayMethods.join(',');
+  const zelleRow = document.getElementById('ob-zelle-row');
+  if (zelleRow) zelleRow.style.display = selectedPayMethods.includes('zelle') ? 'block' : 'none';
 }
 
 function selectTeam(el, value) {

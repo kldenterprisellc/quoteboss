@@ -595,7 +595,7 @@
     </div>
     {% endif %}
 
-    {% if has_stripe %}
+    {% if has_stripe and 'stripe' in accepted_methods %}
       {% if deposit_pct == 100 %}
       <button class="pay-btn pay-full" onclick="startPayment('full')">
         Pay in Full - ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
@@ -611,7 +611,7 @@
       {% endif %}
     {% endif %}
 
-    {% if zelle_handle %}
+    {% if zelle_handle and 'zelle' in accepted_methods %}
     <div class="zelle-card">
       <div class="zelle-label">Pay via Zelle</div>
       <div class="zelle-handle">{{ zelle_handle }}</div>
@@ -623,14 +623,19 @@
     </div>
     {% endif %}
 
+    {% set other_methods = [] %}
+    {% if 'cash' in accepted_methods %}{% set _ = other_methods.append('Cash') %}{% endif %}
+    {% if 'check' in accepted_methods %}{% set _ = other_methods.append('Check') %}{% endif %}
+    {% if 'venmo' in accepted_methods %}{% set _ = other_methods.append('Venmo') %}{% endif %}
+    {% if 'paypal' in accepted_methods %}{% set _ = other_methods.append('PayPal') %}{% endif %}
+    {% if other_methods %}
     <div class="other-methods">
       <div class="other-methods-label">Also accepted</div>
       <div class="method-pills">
-        <span class="pill">Cash</span>
-        <span class="pill">Check</span>
-        <span class="pill">Venmo</span>
+        {% for m in other_methods %}<span class="pill">{{ m }}</span>{% endfor %}
       </div>
     </div>
+    {% endif %}
 
     <div class="contact-note">
       Contact {{ quote.contractor_business or 'your contractor' }} to confirm your payment method and schedule work.
