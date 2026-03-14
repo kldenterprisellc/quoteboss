@@ -276,24 +276,11 @@ def calculate_quote(data: dict) -> dict:
     labor_min = labor_hours * trade_rate * 0.9
     labor_max = labor_hours * trade_rate * 1.1
 
-    materials_count = len(materials)
-    # Only add a materials line for "job" types with selected materials, not for per-sqft
-    # (per-sqft rates already factor in materials cost)
-    include_materials = unit == "job" and materials_count > 0
-    mat_factor = 0.25
-    if include_materials:
-        mat_base = (base_min + base_max) / 2 * mat_factor
-        materials_min = mat_base * 0.85
-        materials_max = mat_base * 1.15
-    else:
-        materials_min = materials_max = 0
-
-    if include_materials:
-        total_min = base_min + labor_min + materials_min
-        total_max = base_max + labor_max + materials_max
-    else:
-        total_min = base_min + labor_min
-        total_max = base_max + labor_max
+    # Job prices already include materials -- no auto-add
+    # Custom materials are handled as custom line items only
+    materials_min = materials_max = 0
+    total_min = base_min + labor_min
+    total_max = base_max + labor_max
 
     def r50(v):
         return round(v / 50) * 50
@@ -316,14 +303,6 @@ def calculate_quote(data: dict) -> dict:
             "detail": f"{labor_hours:.1f} hrs @ ${trade_rate}/hr",
             "min": r50(labor_min),
             "max": r50(labor_max),
-        })
-
-    if include_materials:
-        line_items.append({
-            "description": "Materials and Supplies",
-            "detail": ", ".join(materials),
-            "min": r50(materials_min),
-            "max": r50(materials_max),
         })
 
     return {
@@ -542,9 +521,13 @@ def generate_pdf(quote_data: dict) -> bytes:
         scale = final_price / base_total if base_total else 1
         for item in quote_data["line_items"]:
             item_price = round(item['max'] * scale)
+            # Hide hourly rate from client PDF -- show hours only
+            raw_detail = item.get("detail", "")
+            if ' @ $' in raw_detail and '/hr' in raw_detail:
+                raw_detail = raw_detail.split(' @ $')[0]
             table_data.append([
                 Paragraph(f"<b>{item['description']}</b>", line_item_style),
-                Paragraph(item["detail"], detail_style),
+                Paragraph(raw_detail, detail_style),
                 Paragraph(f"${item_price:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
             ])
         for cli in quote_data.get('custom_line_items', []):
@@ -573,9 +556,12 @@ def generate_pdf(quote_data: dict) -> bytes:
             )) for i, h in enumerate(col_headers)]
         ]
         for item in quote_data["line_items"]:
+            raw_detail2 = item.get("detail", "")
+            if ' @ $' in raw_detail2 and '/hr' in raw_detail2:
+                raw_detail2 = raw_detail2.split(' @ $')[0]
             table_data.append([
                 Paragraph(f"<b>{item['description']}</b>", line_item_style),
-                Paragraph(item["detail"], detail_style),
+                Paragraph(raw_detail2, detail_style),
                 Paragraph(f"${item['min']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
                 Paragraph(f"${item['max']:,.0f}", ParagraphStyle("num", fontSize=9, alignment=TA_RIGHT)),
             ])

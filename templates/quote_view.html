@@ -519,7 +519,14 @@
         <tr>
           <td>
             <div class="li-desc">{{ item.description }}</div>
-            {% if item.detail %}<div class="li-detail">{{ item.detail }}</div>{% endif %}
+            {% if item.detail %}
+              {# Hide hourly rate from client -- show hours only #}
+              {% set display_detail = item.detail %}
+              {% if ' @ $' in item.detail and '/hr' in item.detail %}
+                {% set display_detail = item.detail.split(' @ $')[0] %}
+              {% endif %}
+              <div class="li-detail">{{ display_detail }}</div>
+            {% endif %}
           </td>
           <td class="li-price-cell">
             {% if fp %}
