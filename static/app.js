@@ -136,6 +136,7 @@ let state = {
   totalMin: 0,
   totalMax: 0,
   customPricingOpen: false,
+  paymentTerms: 'full',
 };
 
 // localStorage helpers
@@ -442,6 +443,35 @@ function goToStep3() {
   showStep(3);
 }
 
+function selectPaymentTerms(btn, terms) {
+  document.querySelectorAll('.payment-term-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.paymentTerms = terms;
+  const customRow = document.getElementById('custom-deposit-row');
+  if (customRow) customRow.style.display = terms === 'custom' ? 'block' : 'none';
+}
+
+function getPaymentTermsLabel() {
+  const terms = state.paymentTerms;
+  if (terms === 'full') return 'Payment in Full';
+  if (terms === '50_50') return '50% Deposit, 50% on Completion';
+  if (terms === '33_33_33') return '1/3 at Start, 1/3 at Midpoint, 1/3 on Completion';
+  if (terms === 'custom') {
+    const pct = parseInt(document.getElementById('custom-deposit-pct')?.value || '25');
+    return `${pct}% Deposit, ${100 - pct}% on Completion`;
+  }
+  return '';
+}
+
+function getDepositPct() {
+  const terms = state.paymentTerms;
+  if (terms === 'full') return 100;
+  if (terms === '50_50') return 50;
+  if (terms === '33_33_33') return 33;
+  if (terms === 'custom') return parseInt(document.getElementById('custom-deposit-pct')?.value || '25');
+  return 100;
+}
+
 // Collect trade-specific params for the API call
 function getTradeParams() {
   const trade = state.trade;
@@ -666,6 +696,9 @@ async function generateQuote() {
     client_address: $("client-address").value.trim(),
     job_description: $("job-description").value.trim(),
     terms: "",
+    payment_terms: state.paymentTerms,
+    payment_terms_label: getPaymentTermsLabel(),
+    deposit_pct: getDepositPct(),
     ...(hasCustomToggle && {
       custom_price_min: parseFloat(customMinToggle),
       custom_price_max: parseFloat(customMaxToggle),
@@ -781,7 +814,7 @@ function openEmail(e) {
 
 // New Quote
 function newQuote() {
-  state = { step: 1, trade: null, jobType: null, quoteId: null, lineItems: [], totalMin: 0, totalMax: 0, customPricingOpen: false };
+  state = { step: 1, trade: null, jobType: null, jobTypes: [], quoteId: null, lineItems: [], totalMin: 0, totalMax: 0, customPricingOpen: false, paymentTerms: 'full' };
   document.querySelectorAll(".trade-card").forEach(c => c.classList.remove("selected"));
   document.querySelectorAll(".job-btn").forEach(b => b.classList.remove("selected"));
   document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);

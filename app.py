@@ -1311,6 +1311,10 @@ def quote_history():
                 'contractor_business': qd.get('contractor_business', ''),
                 'accepted': bool(row_dict.get('accepted', 0)),
                 'accepted_at': str(row_dict.get('accepted_at', '') or ''),
+                'payment_terms': qd.get('payment_terms', 'full'),
+                'payment_terms_label': qd.get('payment_terms_label', ''),
+                'deposit_pct': qd.get('deposit_pct', 100),
+                'final_price': qd.get('final_price', qd.get('total_max', 0)),
             })
         except Exception:
             pass

@@ -56,7 +56,16 @@
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-weight:700;color:#FF6B00;font-size:0.95rem;">${{ "{:,.0f}".format(q.total_min) }} - ${{ "{:,.0f}".format(q.total_max) }}</div>
+          <div style="font-weight:700;color:#FF6B00;font-size:0.95rem;">
+            {% if q.final_price %}${{ "{:,.0f}".format(q.final_price) }}{% else %}${{ "{:,.0f}".format(q.total_min) }} - ${{ "{:,.0f}".format(q.total_max) }}{% endif %}
+          </div>
+          {% if q.payment_terms_label %}
+          <div style="font-size:0.72rem;color:#888;margin-top:0.15rem;">{{ q.payment_terms_label }}</div>
+          {% endif %}
+          {% if q.accepted and q.deposit_pct and q.deposit_pct < 100 and q.final_price %}
+          {% set balance = ((q.final_price * (100 - q.deposit_pct)) / 100) | round | int %}
+          <a href="/q/{{ q.quote_id }}" target="_blank" style="display:inline-block;margin-top:0.35rem;background:#0B1F3A;color:white;font-size:0.72rem;font-weight:700;padding:0.3rem 0.6rem;border-radius:6px;text-decoration:none;">Collect Balance ${{ "{:,.0f}".format(balance) }}</a>
+          {% endif %}
           <div style="margin-top:0.3rem;">
             <a href="/q/{{ q.quote_id }}" style="font-size:0.78rem;color:#888;text-decoration:none;" target="_blank">View quote</a>
             <span style="color:#ddd;margin:0 0.25rem;">|</span>

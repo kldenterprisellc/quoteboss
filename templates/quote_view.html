@@ -574,26 +574,45 @@
   {% endif %}
 
   <!-- 6. Payment Section -->
+  {% set deposit_pct = quote.get('deposit_pct', 100) %}
+  {% set payment_terms_label = quote.get('payment_terms_label', '') %}
+  {% set deposit_amount = (quote_price * deposit_pct / 100) | round | int %}
+  {% set balance_amount = (quote_price - deposit_amount) | round | int %}
+
   <div class="card">
     <div class="pay-title">How would you like to pay?</div>
 
-    {% if has_stripe %}
-    <button class="pay-btn pay-deposit" onclick="startPayment('deposit')">
-      Pay 50% Deposit - ${{ "{:,.0f}".format((quote_price * 0.5 * 1.01) if fee_mode == 'pass_to_client' else (quote_price * 0.5)) }}
-    </button>
-    <button class="pay-btn pay-full" onclick="startPayment('full')">
-      Pay in Full - ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
-    </button>
-    {% if fee_mode == 'pass_to_client' %}
-    <div class="fee-note">Includes 1% processing fee</div>
+    {% if payment_terms_label %}
+    <div style="background:#f0f4ff;border-radius:8px;padding:0.65rem 0.85rem;margin-bottom:0.85rem;font-size:0.85rem;color:#0B1F3A;font-weight:600;">
+      📋 Payment Terms: {{ payment_terms_label }}
+    </div>
     {% endif %}
+
+    {% if has_stripe %}
+      {% if deposit_pct == 100 %}
+      <button class="pay-btn pay-full" onclick="startPayment('full')">
+        Pay in Full - ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
+      </button>
+      {% else %}
+      <button class="pay-btn pay-deposit" onclick="startPayment('deposit', {{ deposit_pct }})">
+        Pay Deposit Now - ${{ "{:,.0f}".format((deposit_amount * 1.01) if fee_mode == 'pass_to_client' else deposit_amount) }}
+      </button>
+      <div style="font-size:0.78rem;color:#888;text-align:center;margin:0.3rem 0;">Balance of ${{ "{:,.0f}".format(balance_amount) }} due on completion</div>
+      <button class="pay-btn pay-full" onclick="startPayment('full')" style="margin-top:0.5rem;opacity:0.8;">
+        Pay in Full Instead - ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
+      </button>
+      {% endif %}
     {% endif %}
 
     {% if zelle_handle %}
     <div class="zelle-card">
       <div class="zelle-label">Pay via Zelle</div>
       <div class="zelle-handle">{{ zelle_handle }}</div>
-      <div class="zelle-note">Send ${{ "{:,.0f}".format(quote_price * 0.5) }} deposit or ${{ "{:,.0f}".format(quote_price) }} in full</div>
+      {% if deposit_pct == 100 %}
+      <div class="zelle-note">Send ${{ "{:,.0f}".format(quote_price) }}</div>
+      {% else %}
+      <div class="zelle-note">Send ${{ "{:,.0f}".format(deposit_amount) }} deposit to {{ zelle_handle }}</div>
+      {% endif %}
     </div>
     {% endif %}
 
