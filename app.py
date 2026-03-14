@@ -905,11 +905,7 @@ def reset_onboarding():
     if session.get('whop_user_id') != 'user_rYGUC3pFlNEz5':
         return redirect('/access?error=unauthorized')
     uid = session['whop_user_id']
-    upsert_contractor(uid, {
-        'business_name': '',
-        'primary_trade': '',
-        'all_trades': '',
-    })
+    upsert_contractor(uid, business_name='', primary_trade='', all_trades='')
     return redirect('/onboarding')
 
 
