@@ -352,7 +352,7 @@
 
       <div class="form-row">
         <label>City, State</label>
-        <input type="text" name="city_state" placeholder="Austin, TX" autocomplete="address-level2">
+        <input type="text" name="city_state" placeholder="Austin, TX" autocomplete="off" list="city-state-list-ob">
       </div>
 
       <button type="button" class="btn-next" onclick="goToStep(2)">Next: Choose Your Trade &rarr;</button>
@@ -445,7 +445,7 @@
         <div class="upload-hint">Upload your company logo to use on quotes. JPG or PNG recommended.</div>
       </div>
 
-      <button type="submit" class="btn-next">Finish Setup and Start Quoting!</button>
+      <button type="button" class="btn-next" onclick="submitOnboarding()">Finish Setup and Start Quoting!</button>
       <button type="button" class="btn-back" onclick="goToStep(2)">&larr; Back</button>
     </div>
 
@@ -539,7 +539,46 @@ function selectTeam(el, value) {
   el.classList.add('selected');
   el.querySelector('input[type="radio"]').checked = true;
 }
+
+function submitOnboarding() {
+  // Re-validate step 1 fields before final submit
+  const biz = document.getElementById('field-business-name').value.trim();
+  const name = document.getElementById('field-owner-name').value.trim();
+  if (!biz || !name) {
+    goToStep(1);
+    if (!biz) document.getElementById('err-business-name').classList.add('show');
+    if (!name) document.getElementById('err-owner-name').classList.add('show');
+    return;
+  }
+  // Validate at least one trade selected
+  if (selectedTrades.length === 0) {
+    goToStep(2);
+    document.getElementById('err-trade').classList.add('show');
+    return;
+  }
+  document.getElementById('onboarding-form').submit();
+}
 </script>
 
+<datalist id="city-state-list-ob">
+  <option value="New York, NY"><option value="Los Angeles, CA"><option value="Chicago, IL">
+  <option value="Houston, TX"><option value="Phoenix, AZ"><option value="Philadelphia, PA">
+  <option value="San Antonio, TX"><option value="San Diego, CA"><option value="Dallas, TX">
+  <option value="Austin, TX"><option value="Jacksonville, FL"><option value="Fort Worth, TX">
+  <option value="Columbus, OH"><option value="San Jose, CA"><option value="Charlotte, NC">
+  <option value="Indianapolis, IN"><option value="San Francisco, CA"><option value="Seattle, WA">
+  <option value="Denver, CO"><option value="Nashville, TN"><option value="Las Vegas, NV">
+  <option value="Louisville, KY"><option value="Memphis, TN"><option value="Portland, OR">
+  <option value="Baltimore, MD"><option value="Milwaukee, WI"><option value="Atlanta, GA">
+  <option value="Kansas City, MO"><option value="Raleigh, NC"><option value="Miami, FL">
+  <option value="Minneapolis, MN"><option value="Tampa, FL"><option value="New Orleans, LA">
+  <option value="Boston, MA"><option value="Providence, RI"><option value="Hartford, CT">
+  <option value="Buffalo, NY"><option value="Rochester, NY"><option value="Salt Lake City, UT">
+  <option value="Boise, ID"><option value="Birmingham, AL"><option value="Richmond, VA">
+  <option value="Detroit, MI"><option value="Grand Rapids, MI"><option value="Tulsa, OK">
+  <option value="Wichita, KS"><option value="St. Louis, MO"><option value="Pittsburgh, PA">
+  <option value="Cincinnati, OH"><option value="Cleveland, OH"><option value="Sacramento, CA">
+  <option value="Orlando, FL"><option value="Tampa, FL"><option value="Fort Lauderdale, FL">
+</datalist>
 </body>
 </html>
