@@ -396,8 +396,19 @@ function updateProgress(n) {
 
 // Step 1 to 2
 function goToStep2() {
-  if (!state.trade) { showToast("⚠️ Please select a trade first"); return; }
-  if (!state.jobType) { showToast("⚠️ Please select a job type"); return; }
+  if (!state.trade) {
+    showToast("⚠️ Please select a trade first");
+    document.getElementById('trade-grid')?.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  if (!state.jobType) {
+    showToast("⚠️ Please select a job type below");
+    document.getElementById('job-section')?.scrollIntoView({behavior:'smooth', block:'center'});
+    // Flash the job section to draw attention
+    const js = document.getElementById('job-section');
+    if (js) { js.style.outline = '2px solid #FF6B00'; setTimeout(() => js.style.outline = '', 1500); }
+    return;
+  }
   showStep(2);
 }
 

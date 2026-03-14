@@ -360,47 +360,53 @@
 
     <!-- ============ STEP 2: Primary Trade ============ -->
     <div id="ob-step-2" class="card wizard-step" style="margin-top:1.5rem;display:none;">
-      <div class="card-title">What's your primary trade?</div>
-      <div class="card-subtitle trade-hint">You can always switch trades when creating quotes</div>
+      <div class="card-title">What trades do you work in?</div>
+      <div class="card-subtitle trade-hint">Select all that apply. Your first selection becomes your default.</div>
 
       <div class="trade-select-grid">
-        <label class="trade-option" onclick="selectTrade(this,'Roofing')">
-          <input type="radio" name="primary_trade" value="Roofing">
+        <label class="trade-option" onclick="toggleTrade(this,'Roofing')">
+          <input type="checkbox" name="trades" value="Roofing">
           <span class="trade-emoji-ob">🏠</span>
           <span class="trade-label-ob">Roofing</span>
         </label>
-        <label class="trade-option" onclick="selectTrade(this,'HVAC')">
-          <input type="radio" name="primary_trade" value="HVAC">
+        <label class="trade-option" onclick="toggleTrade(this,'HVAC')">
+          <input type="checkbox" name="trades" value="HVAC">
           <span class="trade-emoji-ob">❄️</span>
           <span class="trade-label-ob">HVAC</span>
         </label>
-        <label class="trade-option" onclick="selectTrade(this,'Plumbing')">
-          <input type="radio" name="primary_trade" value="Plumbing">
+        <label class="trade-option" onclick="toggleTrade(this,'Plumbing')">
+          <input type="checkbox" name="trades" value="Plumbing">
           <span class="trade-emoji-ob">🔧</span>
           <span class="trade-label-ob">Plumbing</span>
         </label>
-        <label class="trade-option" onclick="selectTrade(this,'Electrical')">
-          <input type="radio" name="primary_trade" value="Electrical">
+        <label class="trade-option" onclick="toggleTrade(this,'Electrical')">
+          <input type="checkbox" name="trades" value="Electrical">
           <span class="trade-emoji-ob">⚡</span>
           <span class="trade-label-ob">Electrical</span>
         </label>
-        <label class="trade-option" onclick="selectTrade(this,'Painting')">
-          <input type="radio" name="primary_trade" value="Painting">
+        <label class="trade-option" onclick="toggleTrade(this,'Painting')">
+          <input type="checkbox" name="trades" value="Painting">
           <span class="trade-emoji-ob">🎨</span>
           <span class="trade-label-ob">Painting</span>
         </label>
-        <label class="trade-option" onclick="selectTrade(this,'Pressure Washing')">
-          <input type="radio" name="primary_trade" value="Pressure Washing">
+        <label class="trade-option" onclick="toggleTrade(this,'Pressure Washing')">
+          <input type="checkbox" name="trades" value="Pressure Washing">
           <span class="trade-emoji-ob">💦</span>
           <span class="trade-label-ob">Pressure Washing</span>
         </label>
-        <label class="trade-option" onclick="selectTrade(this,'General')">
-          <input type="radio" name="primary_trade" value="General">
+        <label class="trade-option" onclick="toggleTrade(this,'Landscaping')">
+          <input type="checkbox" name="trades" value="Landscaping">
+          <span class="trade-emoji-ob">🌿</span>
+          <span class="trade-label-ob">Landscaping</span>
+        </label>
+        <label class="trade-option" onclick="toggleTrade(this,'General')">
+          <input type="checkbox" name="trades" value="General">
           <span class="trade-emoji-ob">🛠️</span>
           <span class="trade-label-ob">General Contractor</span>
         </label>
       </div>
-      <div class="field-error" id="err-trade" style="margin-top:-0.5rem;margin-bottom:0.5rem;">Please select your primary trade</div>
+      <input type="hidden" name="primary_trade" id="primary_trade_hidden" value="">
+      <div class="field-error" id="err-trade" style="margin-top:-0.5rem;margin-bottom:0.5rem;">Please select at least one trade</div>
 
       <button type="button" class="btn-next" onclick="goToStep(3)">Next: Your Team &rarr;</button>
       <button type="button" class="btn-back" onclick="goToStep(1)">&larr; Back</button>
@@ -471,8 +477,7 @@ function goToStep(n) {
       if (!valid) return;
     }
     if (currentStep === 2) {
-      const selected = document.querySelector('input[name="primary_trade"]:checked');
-      if (!selected) {
+      if (selectedTrades.length === 0) {
         document.getElementById('err-trade').classList.add('show');
         return;
       }
@@ -510,11 +515,23 @@ function updateStepIndicator(n) {
   }
 }
 
-function selectTrade(el, value) {
-  document.querySelectorAll('.trade-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  el.querySelector('input[type="radio"]').checked = true;
-  document.getElementById('err-trade').classList.remove('show');
+let selectedTrades = [];
+
+function toggleTrade(el, value) {
+  const cb = el.querySelector('input[type="checkbox"]');
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    cb.checked = false;
+    selectedTrades = selectedTrades.filter(t => t !== value);
+  } else {
+    el.classList.add('selected');
+    cb.checked = true;
+    selectedTrades.push(value);
+  }
+  // First selected trade = primary
+  const primary = selectedTrades[0] || '';
+  document.getElementById('primary_trade_hidden').value = primary;
+  if (selectedTrades.length > 0) document.getElementById('err-trade').classList.remove('show');
 }
 
 function selectTeam(el, value) {
