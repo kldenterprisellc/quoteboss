@@ -67,6 +67,10 @@ def init_db():
             ('logo_url', 'TEXT'),
             ('all_trades', 'TEXT'),
             ('payment_methods', 'TEXT'),
+            ('stripe_account_id', 'TEXT'),
+            ('stripe_onboarding_complete', 'INTEGER DEFAULT 0'),
+            ('zelle_handle', 'TEXT'),
+            ('fee_mode', 'TEXT'),
         ]
         for col_name, col_type in new_contractor_cols:
             try:
@@ -121,6 +125,10 @@ def init_db():
             ('logo_url', 'TEXT'),
             ('all_trades', 'TEXT'),
             ('payment_methods', 'TEXT'),
+            ('stripe_account_id', 'TEXT'),
+            ('stripe_onboarding_complete', 'INTEGER DEFAULT 0'),
+            ('zelle_handle', 'TEXT'),
+            ('fee_mode', 'TEXT'),
         ]
         for col_name, col_type in new_contractor_cols:
             try:
