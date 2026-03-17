@@ -1225,7 +1225,10 @@ def stripe_connect():
         )
 
         return redirect(account_link.url)
-    except Exception:
+    except Exception as e:
+        import traceback
+        print(f"[Stripe Connect Error] {e}")
+        traceback.print_exc()
         return redirect('/settings?stripe=error')
 
 
