@@ -1207,8 +1207,14 @@ def stripe_test():
     try:
         acct = stripe.Account.create(type='express', country='US',
             capabilities={'card_payments':{'requested':True},'transfers':{'requested':True}})
+        link = stripe.AccountLink.create(
+            account=acct.id,
+            refresh_url='https://quoteboss.io/auth/stripe-connect',
+            return_url='https://quoteboss.io/settings?stripe=success',
+            type='account_onboarding',
+        )
         stripe.Account.delete(acct.id)
-        return f"SUCCESS: {acct.id}"
+        return f"SUCCESS: account={acct.id} link={link.url[:60]}..."
     except Exception as e:
         return f"ERROR: {traceback.format_exc()}", 500
 
