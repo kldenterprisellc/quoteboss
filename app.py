@@ -1204,6 +1204,25 @@ def stripe_test():
     if session.get('whop_user_id') != 'user_rYGUC3pFlNEz5':
         return "unauthorized", 403
     import traceback
+    results = []
+    # Check DB columns
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='contractors' ORDER BY ordinal_position")
+        cols = [r[0] for r in cur.fetchall()]
+        conn.close()
+        results.append(f"DB COLS: {cols}")
+    except Exception as e:
+        results.append(f"DB ERROR: {e}")
+    # Test upsert
+    try:
+        upsert_contractor(session['whop_user_id'], stripe_account_id='test_acct_debug', stripe_onboarding_complete=False)
+        results.append("UPSERT OK")
+        upsert_contractor(session['whop_user_id'], stripe_account_id=None, stripe_onboarding_complete=None)
+    except Exception as e:
+        results.append(f"UPSERT ERROR: {traceback.format_exc()}")
+    # Test full Stripe flow
     try:
         acct = stripe.Account.create(type='express', country='US',
             capabilities={'card_payments':{'requested':True},'transfers':{'requested':True}})
@@ -1214,9 +1233,10 @@ def stripe_test():
             type='account_onboarding',
         )
         stripe.Account.delete(acct.id)
-        return f"SUCCESS: account={acct.id} link={link.url[:60]}..."
+        results.append(f"STRIPE OK: {acct.id}")
     except Exception as e:
-        return f"ERROR: {traceback.format_exc()}", 500
+        results.append(f"STRIPE ERROR: {traceback.format_exc()}")
+    return "<br><br>".join(results)
 
 @app.route("/auth/stripe-connect")
 @limiter.limit("5 per minute")
