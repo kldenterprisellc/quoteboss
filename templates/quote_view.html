@@ -292,6 +292,21 @@
       color: var(--navy);
       margin-bottom: 1rem;
     }
+    .pay-tile {
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 0.65rem 0.4rem;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0B1F3A;
+      background: white;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pay-tile:hover { border-color: #FF6B00; background: rgba(255,107,0,0.05); }
+    .pay-tile.selected { border-color: #FF6B00; background: rgba(255,107,0,0.09); color: #FF6B00; }
+    .pay-detail { margin-top: 0.5rem; }
 
     .pay-btn {
       display: block;
@@ -580,7 +595,7 @@
   </div>
   {% endif %}
 
-  <!-- 6. Payment Section -->
+  <!-- 6. Payment & Accept Section -->
   {% set deposit_pct = quote.get('deposit_pct', 100) %}
   {% set fixed_deposit_amt = quote.get('fixed_deposit_amt') %}
   {% set payment_terms_label = quote.get('payment_terms_label', '') %}
@@ -593,75 +608,112 @@
   {% endif %}
   {% set balance_amount = (quote_price - deposit_amount) | round | int %}
 
-  <div class="card">
+  {% if not quote.get('accepted') %}
+  <!-- Accept button -->
+  <div style="margin-top:1.25rem;">
+    <button id="accept-btn" onclick="acceptQuote()" style="background:#0B1F3A;color:white;border:none;padding:1rem 2rem;border-radius:12px;font-size:1.1rem;font-weight:800;cursor:pointer;width:100%;letter-spacing:0.01em;">
+      ✅ Accept This Quote
+    </button>
+    <div style="font-size:0.75rem;color:#aaa;margin-top:0.4rem;text-align:center;">By accepting, you confirm you want to proceed with this project.</div>
+  </div>
+  {% else %}
+  <div style="background:#e8f5e9;border-radius:12px;padding:1rem;text-align:center;color:#2e7d32;font-weight:700;margin-top:1.25rem;font-size:1rem;">
+    ✓ Quote Accepted
+  </div>
+  {% endif %}
+
+  <!-- Payment section -->
+  <div class="card" style="margin-top:1rem;">
     <div class="pay-title">How would you like to pay?</div>
 
     {% if payment_terms_label %}
     <div style="background:#f0f4ff;border-radius:8px;padding:0.65rem 0.85rem;margin-bottom:0.85rem;font-size:0.85rem;color:#0B1F3A;font-weight:600;">
-      📋 Payment Terms: {{ payment_terms_label }}
+      📋 {{ payment_terms_label }}
     </div>
     {% endif %}
 
-    {% if has_stripe and 'stripe' in accepted_methods %}
-      {% if deposit_pct == 100 %}
-      <button class="pay-btn pay-full" onclick="startPayment('full')">
-        Pay in Full - ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
-      </button>
-      {% else %}
+    <!-- Payment method tiles -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:0.5rem;margin-bottom:1rem;" id="pay-method-grid">
+      {% if has_stripe and 'stripe' in accepted_methods %}
+      <div class="pay-tile" onclick="selectPayMethod('stripe')">💳 Card</div>
+      {% endif %}
+      {% if zelle_handle and 'zelle' in accepted_methods %}
+      <div class="pay-tile" onclick="selectPayMethod('zelle')">⚡ Zelle</div>
+      {% endif %}
+      {% if 'venmo' in accepted_methods %}
+      <div class="pay-tile" onclick="selectPayMethod('venmo')">💙 Venmo</div>
+      {% endif %}
+      {% if 'paypal' in accepted_methods %}
+      <div class="pay-tile" onclick="selectPayMethod('paypal')">🅿️ PayPal</div>
+      {% endif %}
+      {% if 'cash' in accepted_methods %}
+      <div class="pay-tile" onclick="selectPayMethod('cash')">💵 Cash</div>
+      {% endif %}
+      {% if 'check' in accepted_methods %}
+      <div class="pay-tile" onclick="selectPayMethod('check')">🏦 Check</div>
+      {% endif %}
+    </div>
+
+    <!-- Method detail panels -->
+    <div id="pay-detail-stripe" class="pay-detail" style="display:none;">
+      {% if deposit_pct and deposit_pct < 100 %}
       <button class="pay-btn pay-deposit" onclick="startPayment('deposit', {{ deposit_pct }})">
-        Pay Deposit Now - ${{ "{:,.0f}".format((deposit_amount * 1.01) if fee_mode == 'pass_to_client' else deposit_amount) }}
+        Pay Deposit Now — ${{ "{:,.0f}".format((deposit_amount * 1.01) if fee_mode == 'pass_to_client' else deposit_amount) }}
       </button>
       <div style="font-size:0.78rem;color:#888;text-align:center;margin:0.3rem 0;">Balance of ${{ "{:,.0f}".format(balance_amount) }} due on completion</div>
       <button class="pay-btn pay-full" onclick="startPayment('full')" style="margin-top:0.5rem;opacity:0.8;">
-        Pay in Full Instead - ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
+        Pay in Full — ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
+      </button>
+      {% else %}
+      <button class="pay-btn pay-full" onclick="startPayment('full')">
+        Pay by Card — ${{ "{:,.0f}".format((quote_price * 1.01) if fee_mode == 'pass_to_client' else quote_price) }}
       </button>
       {% endif %}
-    {% endif %}
-
-    {% if zelle_handle and 'zelle' in accepted_methods %}
-    <div class="zelle-card">
-      <div class="zelle-label">Pay via Zelle</div>
-      <div class="zelle-handle">{{ zelle_handle }}</div>
-      {% if deposit_pct == 100 %}
-      <div class="zelle-note">Send ${{ "{:,.0f}".format(quote_price) }}</div>
-      {% else %}
-      <div class="zelle-note">Send ${{ "{:,.0f}".format(deposit_amount) }} deposit to {{ zelle_handle }}</div>
-      {% endif %}
     </div>
-    {% endif %}
 
-    {% set other_methods = [] %}
-    {% if 'cash' in accepted_methods %}{% set _ = other_methods.append('Cash') %}{% endif %}
-    {% if 'check' in accepted_methods %}{% set _ = other_methods.append('Check') %}{% endif %}
-    {% if 'venmo' in accepted_methods %}{% set _ = other_methods.append('Venmo') %}{% endif %}
-    {% if 'paypal' in accepted_methods %}{% set _ = other_methods.append('PayPal') %}{% endif %}
-    {% if other_methods %}
-    <div class="other-methods">
-      <div class="other-methods-label">Also accepted</div>
-      <div class="method-pills">
-        {% for m in other_methods %}<span class="pill">{{ m }}</span>{% endfor %}
+    <div id="pay-detail-zelle" class="pay-detail" style="display:none;">
+      <div class="zelle-card">
+        <div class="zelle-label">Pay via Zelle</div>
+        <div class="zelle-handle">{{ zelle_handle }}</div>
+        {% if deposit_pct and deposit_pct < 100 %}
+        <div class="zelle-note">Send ${{ "{:,.0f}".format(deposit_amount) }} deposit</div>
+        <div class="zelle-note" style="font-size:0.78rem;color:#888;">Balance of ${{ "{:,.0f}".format(balance_amount) }} due on completion</div>
+        {% else %}
+        <div class="zelle-note">Send ${{ "{:,.0f}".format(quote_price) }}</div>
+        {% endif %}
       </div>
     </div>
-    {% endif %}
 
-    <div class="contact-note">
-      Contact {{ quote.contractor_business or 'your contractor' }} to confirm your payment method and schedule work.
+    <div id="pay-detail-venmo" class="pay-detail" style="display:none;">
+      <div style="background:#f5f0ff;border-radius:10px;padding:1rem;text-align:center;">
+        <div style="font-weight:700;color:#3D95CE;font-size:1rem;margin-bottom:0.35rem;">💙 Venmo</div>
+        <div style="font-size:0.9rem;color:#333;">Send {% if deposit_pct and deposit_pct < 100 %}<strong>${{ "{:,.0f}".format(deposit_amount) }} deposit</strong>{% else %}<strong>${{ "{:,.0f}".format(quote_price) }}</strong>{% endif %} to {{ quote.contractor_business or 'your contractor' }}</div>
+        <div style="font-size:0.78rem;color:#888;margin-top:0.3rem;">Contact them for their Venmo handle</div>
+      </div>
     </div>
-  </div>
 
-  <!-- 7. Accept This Quote -->
-  {% if not quote.get('accepted') %}
-  <div style="margin-top:1rem;text-align:center;">
-    <button onclick="acceptQuote()" style="background:#0B1F3A;color:white;border:none;padding:0.85rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;">
-      Accept This Quote
-    </button>
-    <div style="font-size:0.75rem;color:#aaa;margin-top:0.5rem;">By accepting, you confirm you want to proceed with this project.</div>
+    <div id="pay-detail-paypal" class="pay-detail" style="display:none;">
+      <div style="background:#f0f7ff;border-radius:10px;padding:1rem;text-align:center;">
+        <div style="font-weight:700;color:#003087;font-size:1rem;margin-bottom:0.35rem;">🅿️ PayPal</div>
+        <div style="font-size:0.9rem;color:#333;">Contact {{ quote.contractor_business or 'your contractor' }} for their PayPal info</div>
+      </div>
+    </div>
+
+    <div id="pay-detail-cash" class="pay-detail" style="display:none;">
+      <div style="background:#f9f9f9;border-radius:10px;padding:1rem;text-align:center;">
+        <div style="font-weight:700;color:#333;font-size:1rem;margin-bottom:0.35rem;">💵 Cash</div>
+        <div style="font-size:0.9rem;color:#555;">Contact {{ quote.contractor_business or 'your contractor' }} to arrange cash payment{% if deposit_pct and deposit_pct < 100 %} — ${{ "{:,.0f}".format(deposit_amount) }} deposit{% endif %}</div>
+      </div>
+    </div>
+
+    <div id="pay-detail-check" class="pay-detail" style="display:none;">
+      <div style="background:#f9f9f9;border-radius:10px;padding:1rem;text-align:center;">
+        <div style="font-weight:700;color:#333;font-size:1rem;margin-bottom:0.35rem;">🏦 Check</div>
+        <div style="font-size:0.9rem;color:#555;">Make check payable to {{ quote.contractor_business or 'your contractor' }}{% if deposit_pct and deposit_pct < 100 %} — ${{ "{:,.0f}".format(deposit_amount) }} deposit{% endif %}</div>
+      </div>
+    </div>
+
   </div>
-  {% else %}
-  <div style="background:#e8f5e9;border-radius:10px;padding:1rem;text-align:center;color:#2e7d32;font-weight:600;margin-top:1rem;">
-    ✓ Quote Accepted
-  </div>
-  {% endif %}
 
   <!-- 8. Footer -->
   <div class="footer">Powered by QuoteBoss &bull; quoteboss.io</div>
@@ -669,6 +721,18 @@
 </div>
 
 <script>
+function selectPayMethod(method) {
+  // Highlight selected tile
+  document.querySelectorAll('.pay-tile').forEach(t => t.classList.remove('selected'));
+  const tiles = document.querySelectorAll(`[onclick="selectPayMethod('${method}')"]`);
+  tiles.forEach(t => t.classList.add('selected'));
+  // Hide all detail panels
+  document.querySelectorAll('.pay-detail').forEach(d => d.style.display = 'none');
+  // Show selected
+  const detail = document.getElementById('pay-detail-' + method);
+  if (detail) { detail.style.display = 'block'; detail.scrollIntoView({behavior:'smooth', block:'nearest'}); }
+}
+
 async function acceptQuote() {
   const quoteId = '{{ quote.quote_id }}';
   const btn = event.target;
