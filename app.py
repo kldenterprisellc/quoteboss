@@ -1217,7 +1217,7 @@ def stripe_test():
         results.append(f"DB ERROR: {e}")
     # Test upsert
     try:
-        upsert_contractor(session['whop_user_id'], stripe_account_id='test_acct_debug', stripe_onboarding_complete=False)
+        upsert_contractor(session['whop_user_id'], stripe_account_id='test_acct_debug', stripe_onboarding_complete=0)
         results.append("UPSERT OK")
         upsert_contractor(session['whop_user_id'], stripe_account_id=None, stripe_onboarding_complete=None)
     except Exception as e:
@@ -1254,7 +1254,7 @@ def stripe_connect():
             },
         )
 
-        upsert_contractor(session['whop_user_id'], stripe_account_id=account.id, stripe_onboarding_complete=False)
+        upsert_contractor(session['whop_user_id'], stripe_account_id=account.id, stripe_onboarding_complete=0)
 
         account_link = stripe.AccountLink.create(
             account=account.id,
