@@ -187,26 +187,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Single-trade mode: auto-select trade and skip straight to scope of work
-  if (window.singleTradeMode && window.primaryTrade) {
-    setTimeout(() => {
-      selectTrade(window.primaryTrade);
-      // Hide entire trade card (single trade -- no need to pick)
-      const tradeCard = document.getElementById('trade-card');
-      if (tradeCard) tradeCard.style.display = 'none';
-      // Update job section title
-      const jobTitle = document.querySelector('#job-section .card-title');
-      if (jobTitle) jobTitle.textContent = 'What type of job is this?';
-      const jobSubtitle = document.querySelector('#job-section .card-subtitle');
-      if (jobSubtitle) jobSubtitle.textContent = 'Select all that apply to this quote';
-    }, 100);
-  } else if (window.primaryTrade && window.primaryTrade.length > 0) {
-    // Multi-trade: pre-select primary trade and show trade grid
-    setTimeout(() => {
-      selectTrade(window.primaryTrade);
-      const tradeTitle = document.querySelector('#step-1 .card-title');
-      if (tradeTitle) tradeTitle.textContent = 'What type of job is this?';
-    }, 100);
+  // Pre-select primary trade if set (highlight it, show job types)
+  if (window.primaryTrade && window.primaryTrade.length > 0) {
+    setTimeout(() => selectTrade(window.primaryTrade), 100);
   }
 });
 
