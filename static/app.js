@@ -14,7 +14,7 @@ const TRADES = [
   { id: "Roofing",          emoji: "🏠",  label: "Roofing" },
   { id: "Painting",         emoji: "🎨",  label: "Painting" },
   { id: "Pressure Washing", emoji: "💦",  label: "Pressure Washing" },
-  { id: "General",          emoji: "🛠️",  label: "General Contractor" },
+  // { id: "General", emoji: "🛠️", label: "General Contractor" }, // hidden until post-launch
   { id: "Landscaping",      emoji: "🌿",  label: "Landscaping" },
 ];
 
