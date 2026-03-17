@@ -103,7 +103,7 @@
     </div>
 
     <!-- Fee mode (Pro only) -->
-    {% if plan_tier == 'pro' %}
+    {% if plan_tier == 'pro' and contractor.get('stripe_account_id') %}
     <div style="background:#f9f9f9;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;">
       <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
         <span style="font-size:1.5rem;">💰</span>
