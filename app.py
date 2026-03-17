@@ -1199,6 +1199,19 @@ def update_settings():
     return jsonify({"success": True})
 
 
+@app.route("/admin/stripe-test")
+def stripe_test():
+    if session.get('whop_user_id') != 'user_rYGUC3pFlNEz5':
+        return "unauthorized", 403
+    import traceback
+    try:
+        acct = stripe.Account.create(type='express', country='US',
+            capabilities={'card_payments':{'requested':True},'transfers':{'requested':True}})
+        stripe.Account.delete(acct.id)
+        return f"SUCCESS: {acct.id}"
+    except Exception as e:
+        return f"ERROR: {traceback.format_exc()}", 500
+
 @app.route("/auth/stripe-connect")
 @limiter.limit("5 per minute")
 def stripe_connect():
