@@ -187,9 +187,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Pre-select primary trade if set (highlight it, show job types)
   if (window.primaryTrade && window.primaryTrade.length > 0) {
-    setTimeout(() => selectTrade(window.primaryTrade), 100);
+    setTimeout(() => {
+      selectTrade(window.primaryTrade);
+      if (window.singleTradeMode) {
+        // Single trade: hide the trade card entirely, rename job section
+        const tradeCard = document.getElementById('trade-card');
+        if (tradeCard) tradeCard.style.display = 'none';
+        const jobTitle = document.querySelector('#job-section .card-title');
+        if (jobTitle) jobTitle.textContent = 'What type of job is this?';
+        const jobSubtitle = document.querySelector('#job-section .card-subtitle');
+        if (jobSubtitle) jobSubtitle.textContent = 'Select all that apply to this quote';
+      }
+    }, 100);
   }
 });
 
