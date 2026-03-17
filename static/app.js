@@ -582,7 +582,7 @@ function getTradeParams() {
       const tearoff = document.getElementById('roofing-tearoff')?.value || 'yes';
       loc = document.getElementById('location-state')?.value || '';
       pricingJobType = 'Full Replacement (Asphalt)';
-      const tierMults = {3tab: 0.85, architectural: 1.0, premium: 1.35};
+      const tierMults = {'3tab': 0.85, architectural: 1.0, premium: 1.35};
       pitchMult = {low: 0.9, medium: 1.0, steep: 1.2}[pitch] || 1.0;
       tradeMult = (tierMults[tier] || 1.0) * pitchMult;
       extraFields.include_tearoff = tearoff === 'yes';
@@ -667,10 +667,6 @@ function getTradeParams() {
     params.location = loc;
 
   } else if (trade === 'Plumbing') {
-    const fixtures = parseInt(document.getElementById('plumbing-fixtures')?.value) || 1;
-    const homeSize = document.getElementById('plumbing-home-size')?.value || '1000_2000';
-    const loc = document.getElementById('location-plumbing-state')?.value || '';
-
     const loc = document.getElementById('location-plumbing-state')?.value ||
                 document.getElementById('location-plumbing-tankless-state')?.value ||
                 document.getElementById('location-plumbing-bath-state')?.value ||
