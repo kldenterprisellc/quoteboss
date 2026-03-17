@@ -1168,7 +1168,7 @@ def view_quote(quote_id):
     contractor = get_contractor(whop_user_id) if whop_user_id else {}
     has_stripe = bool(contractor.get('stripe_account_id')) if contractor else False
     zelle_handle = contractor.get('zelle_handle', '') if contractor else ''
-    fee_mode = contractor.get('fee_mode', 'pass_to_client') if contractor else 'pass_to_client'
+    fee_mode = 'pass_to_client'
     raw_methods = contractor.get('payment_methods', '') if contractor else ''
     accepted_methods = [m.strip() for m in raw_methods.split(',') if m.strip()] if raw_methods else ['cash', 'check', 'venmo']
 
@@ -1271,7 +1271,7 @@ def create_checkout(quote_id):
     else:
         total = quote_price
 
-    fee_mode = contractor.get('fee_mode', 'pass_to_client')
+    fee_mode = 'pass_to_client'
 
     if fee_mode == 'pass_to_client':
         client_total_cents = round(total * 1.01 * 100)

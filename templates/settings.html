@@ -102,26 +102,7 @@
       </div>
     </div>
 
-    <!-- Fee mode (Pro only) -->
-    {% if plan_tier == 'pro' and contractor.get('stripe_account_id') %}
-    <div style="background:#f9f9f9;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;">
-      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
-        <span style="font-size:1.5rem;">💰</span>
-        <div>
-          <div style="font-weight:700;color:#0B1F3A;">Processing Fee</div>
-          <div style="font-size:0.82rem;color:#888;">1% processing fee - choose who pays it</div>
-        </div>
-      </div>
-      <select id="fee-mode" style="width:100%;padding:0.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;">
-        <option value="pass_to_client" {% if contractor.get('fee_mode', 'pass_to_client') == 'pass_to_client' %}selected{% endif %}>
-          Pass to client (client pays 1% more)
-        </option>
-        <option value="absorb" {% if contractor.get('fee_mode') == 'absorb' %}selected{% endif %}>
-          I absorb it (I pay the 1%)
-        </option>
-      </select>
-    </div>
-    {% endif %}
+    
 
     <button class="btn btn-primary btn-lg btn-full" onclick="saveSettings()">Save Settings</button>
     <div id="save-msg" style="text-align:center;margin-top:0.75rem;font-size:0.85rem;display:none;"></div>
@@ -157,7 +138,7 @@ async function saveSettings() {
     payment_methods: document.getElementById('settings-payment-methods')?.value || 'cash,check,venmo',
   };
   {% if plan_tier == 'pro' %}
-  data.fee_mode = document.getElementById('fee-mode')?.value || 'pass_to_client';
+  data.fee_mode = 'pass_to_client';
   {% endif %}
 
   const res = await fetch('/api/settings', {
