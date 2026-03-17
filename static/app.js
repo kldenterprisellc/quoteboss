@@ -999,6 +999,8 @@ function renderResult() {
   const container = $("result-line-items");
   container.innerHTML = "";
   state.lineItems.forEach(item => {
+    // Skip zero-value labor lines
+    if (item.min === 0 && item.max === 0) return;
     const div = document.createElement("div");
     div.className = "line-item";
     div.innerHTML = `
@@ -1083,6 +1085,8 @@ function newQuote() {
   if (priceConfirm) priceConfirm.style.display = 'none';
   const shareSection = document.getElementById('share-section');
   if (shareSection) shareSection.style.display = 'none';
+  const resultActions = document.getElementById('result-actions');
+  if (resultActions) resultActions.style.display = 'none';
   currentQuoteData = null;
   currentQuoteLink = null;
   lineItems = [];
@@ -1131,6 +1135,8 @@ async function confirmPrice() {
   const data = await res.json();
   if (data.success) {
     document.getElementById('price-confirm-section').style.display = 'none';
+    const actions = document.getElementById('result-actions');
+    if (actions) actions.style.display = 'flex';
     showShareSection(quoteId, price);
   }
 }
