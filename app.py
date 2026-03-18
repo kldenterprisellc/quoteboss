@@ -1168,11 +1168,12 @@ def view_quote(quote_id):
     contractor = get_contractor(whop_user_id) if whop_user_id else {}
     has_stripe = bool(contractor.get('stripe_account_id')) if contractor else False
     zelle_handle = contractor.get('zelle_handle', '') if contractor else ''
+    venmo_handle = contractor.get('venmo_handle', '') if contractor else ''
     fee_mode = 'pass_to_client'
     raw_methods = contractor.get('payment_methods', '') if contractor else ''
     accepted_methods = [m.strip() for m in raw_methods.split(',') if m.strip()] if raw_methods else ['cash', 'check', 'venmo']
 
-    return render_template("quote_view.html", quote=quote, has_stripe=has_stripe, zelle_handle=zelle_handle, fee_mode=fee_mode, accepted_methods=accepted_methods)
+    return render_template("quote_view.html", quote=quote, has_stripe=has_stripe, zelle_handle=zelle_handle, venmo_handle=venmo_handle, fee_mode=fee_mode, accepted_methods=accepted_methods)
 
 
 @app.route("/settings")
@@ -1190,7 +1191,7 @@ def update_settings():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.get_json(force=True)
 
-    allowed_fields = ['zelle_handle', 'fee_mode', 'payment_methods']
+    allowed_fields = ['zelle_handle', 'venmo_handle', 'fee_mode', 'payment_methods']
     updates = {k: v for k, v in data.items() if k in allowed_fields}
 
     if updates:

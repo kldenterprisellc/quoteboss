@@ -70,6 +70,7 @@ def init_db():
             ('stripe_account_id', 'TEXT'),
             ('stripe_onboarding_complete', 'INTEGER DEFAULT 0'),
             ('zelle_handle', 'TEXT'),
+            ('venmo_handle', 'TEXT'),
             ('fee_mode', 'TEXT'),
         ]
         for col_name, col_type in new_contractor_cols:

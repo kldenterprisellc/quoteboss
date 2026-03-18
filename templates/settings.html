@@ -100,6 +100,12 @@
                placeholder="e.g. john@email.com or (555) 123-4567"
                style="width:100%;padding:0.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
       </div>
+      <div id="settings-venmo-row" style="{% if 'venmo' not in pm %}display:none;{% endif %}margin-top:0.5rem;">
+        <label style="font-size:0.85rem;font-weight:600;color:#333;display:block;margin-bottom:0.4rem;">Venmo username</label>
+        <input type="text" id="venmo-handle" value="{{ contractor.get('venmo_handle', '') }}"
+               placeholder="e.g. @john-smith"
+               style="width:100%;padding:0.75rem;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;box-sizing:border-box;">
+      </div>
     </div>
 
     
@@ -130,11 +136,14 @@ function toggleSettingsPayMethod(el, value) {
   document.getElementById('settings-payment-methods').value = settingsPayMethods.join(',');
   const zelleRow = document.getElementById('settings-zelle-row');
   if (zelleRow) zelleRow.style.display = settingsPayMethods.includes('zelle') ? '' : 'none';
+  const venmoRow = document.getElementById('settings-venmo-row');
+  if (venmoRow) venmoRow.style.display = settingsPayMethods.includes('venmo') ? '' : 'none';
 }
 
 async function saveSettings() {
   const data = {
     zelle_handle: document.getElementById('zelle-handle')?.value || '',
+    venmo_handle: document.getElementById('venmo-handle')?.value || '',
     payment_methods: document.getElementById('settings-payment-methods')?.value || 'cash,check,venmo',
   };
   {% if plan_tier == 'pro' %}

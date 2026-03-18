@@ -687,8 +687,14 @@
     <div id="pay-detail-venmo" class="pay-detail" style="display:none;">
       <div style="background:#f5f0ff;border-radius:10px;padding:1rem;text-align:center;">
         <div style="font-weight:700;color:#3D95CE;font-size:1rem;margin-bottom:0.35rem;">💙 Venmo</div>
+        {% if venmo_handle %}
+        <div style="font-size:1.1rem;font-weight:800;color:#3D95CE;margin-bottom:0.25rem;">{{ venmo_handle }}</div>
+        <div style="font-size:0.9rem;color:#333;">Send {% if deposit_pct and deposit_pct < 100 %}<strong>${{ "{:,.0f}".format(deposit_amount) }} deposit</strong>{% else %}<strong>${{ "{:,.0f}".format(quote_price) }}</strong>{% endif %} via Venmo</div>
+        <div style="font-size:0.78rem;color:#888;margin-top:0.3rem;">Note: {{ quote.contractor_business or 'Job deposit' }}</div>
+        {% else %}
         <div style="font-size:0.9rem;color:#333;">Send {% if deposit_pct and deposit_pct < 100 %}<strong>${{ "{:,.0f}".format(deposit_amount) }} deposit</strong>{% else %}<strong>${{ "{:,.0f}".format(quote_price) }}</strong>{% endif %} to {{ quote.contractor_business or 'your contractor' }}</div>
         <div style="font-size:0.78rem;color:#888;margin-top:0.3rem;">Contact them for their Venmo handle</div>
+        {% endif %}
       </div>
     </div>
 
