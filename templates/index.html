@@ -1431,22 +1431,22 @@
       <div class="form-row cols-2">
         <div>
           <label for="contractor-name">Your Name *</label>
-          <input type="text" id="contractor-name" placeholder="John Smith">
+          <input type="text" id="contractor-name" placeholder="John Smith" value="{{ contractor.get('owner_name', '') | e }}">
         </div>
         <div>
           <label for="contractor-business">Business Name *</label>
-          <input type="text" id="contractor-business" placeholder="Smith HVAC LLC">
+          <input type="text" id="contractor-business" placeholder="Smith HVAC LLC" value="{{ contractor.get('business_name', '') | e }}">
         </div>
       </div>
 
       <div class="form-row cols-2">
         <div>
           <label for="contractor-phone">Phone</label>
-          <input type="tel" id="contractor-phone" placeholder="(555) 123-4567">
+          <input type="tel" id="contractor-phone" placeholder="(555) 123-4567" value="{{ contractor.get('phone', '') | e }}">
         </div>
         <div>
           <label for="contractor-email">Email</label>
-          <input type="email" id="contractor-email" placeholder="john@smithhvac.com">
+          <input type="email" id="contractor-email" placeholder="john@smithhvac.com" value="{{ contractor.get('email', '') | e }}">
         </div>
       </div>
       <div class="form-row" style="margin-top:0.5rem;">

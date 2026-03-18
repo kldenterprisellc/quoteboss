@@ -1156,7 +1156,14 @@ async function confirmPrice() {
   const res = await fetch('/api/quote/set-price', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({quote_id: quoteId, final_price: price})
+    body: JSON.stringify({
+      quote_id: quoteId,
+      final_price: price,
+      payment_terms: state.paymentTerms,
+      payment_terms_label: getPaymentTermsLabel(),
+      deposit_pct: getDepositPct(),
+      fixed_deposit_amt: getFixedDepositAmt(),
+    })
   });
   const data = await res.json();
   if (data.success) {

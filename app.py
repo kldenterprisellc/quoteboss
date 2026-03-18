@@ -1096,6 +1096,14 @@ def set_quote_price():
 
     quote['final_price'] = int(final_price)
     quote['final_price_set'] = True
+    # Update payment terms if provided at confirmation time
+    if data.get('payment_terms'):
+        quote['payment_terms'] = data['payment_terms']
+        quote['payment_terms_label'] = data.get('payment_terms_label', '')
+        if data.get('deposit_pct') is not None:
+            quote['deposit_pct'] = data['deposit_pct']
+        if data.get('fixed_deposit_amt') is not None:
+            quote['fixed_deposit_amt'] = data['fixed_deposit_amt']
     quote_store[quote_id] = quote
 
     save_quote(quote_id, session.get('whop_user_id', ''), json_module.dumps(quote))

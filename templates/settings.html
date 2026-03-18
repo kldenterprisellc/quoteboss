@@ -66,7 +66,7 @@
           <div style="font-size:0.82rem;color:#888;">Only selected methods show on your client quote page</div>
         </div>
       </div>
-      {% set pm = contractor.get('payment_methods', 'cash,check,venmo') %}
+      {% set pm = contractor.get('payment_methods', 'cash,check') %}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;" id="settings-payment-grid">
         <label class="ob-pay-opt {% if 'cash' in pm %}selected{% endif %}" onclick="toggleSettingsPayMethod(this,'cash')">
           <input type="checkbox" name="spm_cash" {% if 'cash' in pm %}checked{% endif %} style="display:none;">
@@ -120,7 +120,7 @@
 </div>
 
 <script>
-let settingsPayMethods = document.getElementById('settings-payment-methods')?.value.split(',').filter(Boolean) || ['cash','check','venmo'];
+let settingsPayMethods = document.getElementById('settings-payment-methods')?.value.split(',').filter(Boolean) || ['cash','check'];
 
 function toggleSettingsPayMethod(el, value) {
   const cb = el.querySelector('input[type="checkbox"]');
@@ -144,7 +144,7 @@ async function saveSettings() {
   const data = {
     zelle_handle: document.getElementById('zelle-handle')?.value || '',
     venmo_handle: document.getElementById('venmo-handle')?.value || '',
-    payment_methods: document.getElementById('settings-payment-methods')?.value || 'cash,check,venmo',
+    payment_methods: document.getElementById('settings-payment-methods')?.value || 'cash,check',
   };
   {% if plan_tier == 'pro' %}
   data.fee_mode = 'pass_to_client';
