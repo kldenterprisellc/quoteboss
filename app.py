@@ -635,11 +635,12 @@ def generate_pdf(quote_data: dict) -> bytes:
     story.append(HRFlowable(width="100%", thickness=2, color=ORANGE))
     story.append(Spacer(1, 0.25 * inch))
 
+    payment_terms_label = quote_data.get("payment_terms_label", "")
+    payment_clause = f"Payment terms: {payment_terms_label}. " if payment_terms_label else "Payment in full due upon project completion. "
     terms_text = quote_data.get("terms") or (
         "This quote is valid for 30 days from the issue date. "
         "Final pricing may vary based on site conditions discovered during work. "
-        "A 50% deposit is required to schedule. "
-        "Payment in full due upon project completion. "
+        + payment_clause +
         "All work performed to local code standards."
     )
     story.append(Paragraph("<b>Terms and Conditions</b>", ParagraphStyle("th2", fontSize=10, textColor=NAVY)))

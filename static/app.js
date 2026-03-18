@@ -250,6 +250,10 @@ function selectTrade(tradeId) {
   document.querySelectorAll(".trade-card").forEach(c => c.classList.remove("selected"));
   const card = document.querySelector(`[data-trade="${tradeId}"]`);
   if (card) card.classList.add("selected");
+  // Clear any previously active sub-inputs from a prior trade
+  ['hvac','elec','roof','plumb','paint','pw'].forEach(prefix => {
+    document.querySelectorAll(`.${prefix}-sub`).forEach(el => el.classList.remove('active'));
+  });
   buildJobGrid(tradeId);
   buildMaterialsGrid(tradeId);
   updateTradeInputs(tradeId);
