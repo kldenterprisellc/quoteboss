@@ -736,7 +736,7 @@ def onboarding():
             'primary_trade': request.form.get('primary_trade', '').strip(),
             'team_size': request.form.get('team_size', '').strip(),
             'all_trades': request.form.get('all_trades', '').strip(),
-            'payment_methods': request.form.get('payment_methods', 'cash,check,venmo').strip(),
+            'payment_methods': request.form.get('payment_methods', 'cash,check').strip(),
             'zelle_handle': request.form.get('zelle_handle', '').strip(),
         }
         if logo_url:
@@ -990,6 +990,10 @@ def api_quote():
         "labor_hours": data.get("labor_hours", 4),
         "materials": data.get("materials", []),
         "terms": data.get("terms", ""),
+        "payment_terms": data.get("payment_terms", "full"),
+        "payment_terms_label": data.get("payment_terms_label", ""),
+        "deposit_pct": data.get("deposit_pct"),
+        "fixed_deposit_amt": data.get("fixed_deposit_amt"),
         "custom_price_min": data.get("custom_price_min"),
         "custom_price_max": data.get("custom_price_max"),
         "using_custom_pricing": calc["using_custom_pricing"],
@@ -1171,7 +1175,7 @@ def view_quote(quote_id):
     venmo_handle = contractor.get('venmo_handle', '') if contractor else ''
     fee_mode = 'pass_to_client'
     raw_methods = contractor.get('payment_methods', '') if contractor else ''
-    accepted_methods = [m.strip() for m in raw_methods.split(',') if m.strip()] if raw_methods else ['cash', 'check', 'venmo']
+    accepted_methods = [m.strip() for m in raw_methods.split(',') if m.strip()] if raw_methods else ['cash', 'check']
 
     return render_template("quote_view.html", quote=quote, has_stripe=has_stripe, zelle_handle=zelle_handle, venmo_handle=venmo_handle, fee_mode=fee_mode, accepted_methods=accepted_methods)
 

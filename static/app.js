@@ -21,7 +21,8 @@ const TRADES = [
 // Custom job type labels for each trade (user-friendly, maps to PRICING keys in getTradeParams)
 const TRADE_JOB_TYPES = {
   'Roofing': [
-    { label: 'Full Replacement', value: 'replacement' },
+    { label: 'Asphalt Replacement', value: 'replacement' },
+    { label: 'Metal Roofing', value: 'metal' },
     { label: 'Repair', value: 'repair' },
     { label: 'Gutters', value: 'gutters' },
   ],
@@ -32,7 +33,8 @@ const TRADE_JOB_TYPES = {
     { label: 'Tune-Up', value: 'tuneup' },
   ],
   'Plumbing': [
-    { label: 'Water Heater', value: 'water_heater' },
+    { label: 'Water Heater (Tank)', value: 'water_heater' },
+    { label: 'Tankless Water Heater', value: 'tankless' },
     { label: 'Drain Cleaning', value: 'drain_cleaning' },
     { label: 'Pipe Repair', value: 'pipe_repair' },
     { label: 'Bathroom Remodel', value: 'bathroom_remodel' },
@@ -52,6 +54,14 @@ const TRADE_JOB_TYPES = {
     { label: 'Exterior Painting', value: 'exterior' },
     { label: 'Interior and Exterior', value: 'both' },
   ],
+  'Landscaping': [
+    { label: 'Lawn Maintenance', value: 'Lawn Maintenance (Monthly)' },
+    { label: 'Sod Installation', value: 'Sod Installation' },
+    { label: 'Tree Removal (Small)', value: 'Tree Removal (Small)' },
+    { label: 'Tree Removal (Large)', value: 'Tree Removal (Large)' },
+    { label: 'Sprinkler System', value: 'Sprinkler System Install' },
+    { label: 'Full Landscape Design', value: 'Full Landscape Design' },
+  ],
   'Pressure Washing': [
     { label: 'House Exterior', value: 'house_exterior' },
     { label: 'Driveway', value: 'driveway' },
@@ -70,7 +80,7 @@ const MATERIALS = {
   Painting:           ["Primer", "Interior Paint", "Exterior Paint", "Brushes/Rollers", "Tape/Drop Cloth", "Caulk"],
   Landscaping:        ["Sod", "Mulch", "Plants/Shrubs", "Irrigation Parts", "Soil", "Edging"],
   General:            ["Lumber", "Drywall", "Paint", "Fasteners", "Flooring", "Adhesives"],
-  "Pressure Washing": ["Detergent", "Degreaser", "Soft Wash Solution", "Surface Cleaner", "Extension Wand"],
+  // "Pressure Washing": [], // PW pricing includes chemicals -- no materials selection needed
 };
 
 // Price confirmation state
@@ -745,7 +755,7 @@ function getTradeParams() {
     if (jobType === 'panel_upgrade' || jobType === 'service_upgrade') {
       const fromAmps = parseInt(document.getElementById('elec-current-amps')?.value) || 100;
       const toAmps = parseInt(document.getElementById('elec-new-amps')?.value) || 200;
-      const panelMults = {'60_100': 0.75, '100_150': 0.85, '100_200': 1.0, '150_200': 0.90, '200_400': 1.6, '100_400': 1.8};
+      const panelMults = {'60_100': 0.75, '60_150': 0.85, '60_200': 1.0, '60_400': 1.6, '100_150': 0.85, '100_200': 1.0, '100_400': 1.8, '150_200': 0.90, '150_400': 1.5, '200_400': 1.6};
       params.trade_multiplier = panelMults[`${fromAmps}_${toAmps}`] || 1.0;
     } else if (jobType === 'ev_charger') {
       const evAmps = parseInt(document.getElementById('elec-ev-amps')?.value) || 30;
