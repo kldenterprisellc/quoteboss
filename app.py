@@ -738,6 +738,7 @@ def onboarding():
             'all_trades': request.form.get('all_trades', '').strip(),
             'payment_methods': request.form.get('payment_methods', 'cash,check').strip(),
             'zelle_handle': request.form.get('zelle_handle', '').strip(),
+            'venmo_handle': request.form.get('venmo_handle', '').strip(),
         }
         if logo_url:
             update_fields['logo_url'] = logo_url

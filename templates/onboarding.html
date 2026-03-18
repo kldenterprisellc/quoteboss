@@ -478,7 +478,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-top:0.4rem;" id="ob-payment-grid">
           <div class="ob-pay-opt selected" data-method="cash">💵 Cash</div>
           <div class="ob-pay-opt selected" data-method="check">🏦 Check</div>
-          <div class="ob-pay-opt selected" data-method="venmo">💙 Venmo</div>
+          <div class="ob-pay-opt" data-method="venmo">💙 Venmo</div>
           <div class="ob-pay-opt" data-method="paypal">🅿️ PayPal</div>
           <div class="ob-pay-opt" data-method="zelle">⚡ Zelle</div>
           <div class="ob-pay-opt" data-method="stripe">💳 Card</div>
@@ -486,7 +486,10 @@
         <div id="ob-zelle-row" style="display:none;margin-top:0.6rem;">
           <input type="text" name="zelle_handle" placeholder="Your Zelle phone or email" style="width:100%;padding:0.65rem;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.9rem;box-sizing:border-box;">
         </div>
-        <input type="hidden" name="payment_methods" id="ob-payment-methods-hidden" value="cash,check,venmo">
+        <div id="ob-venmo-row" style="display:none;margin-top:0.6rem;">
+          <input type="text" name="venmo_handle" placeholder="Your Venmo @username" style="width:100%;padding:0.65rem;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.9rem;box-sizing:border-box;">
+        </div>
+        <input type="hidden" name="payment_methods" id="ob-payment-methods-hidden" value="cash,check">
       </div>
 
       <div class="form-row">
@@ -598,6 +601,8 @@ function togglePayMethod(el, value) {
   document.getElementById('ob-payment-methods-hidden').value = selectedPayMethods.join(',');
   const zelleRow = document.getElementById('ob-zelle-row');
   if (zelleRow) zelleRow.style.display = selectedPayMethods.includes('zelle') ? 'block' : 'none';
+  const venmoRow = document.getElementById('ob-venmo-row');
+  if (venmoRow) venmoRow.style.display = selectedPayMethods.includes('venmo') ? 'block' : 'none';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
