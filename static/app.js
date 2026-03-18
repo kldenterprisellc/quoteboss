@@ -1145,6 +1145,28 @@ function showPriceConfirm(quoteData) {
       '$' + parseInt(this.value).toLocaleString();
   };
 
+  // Show discount summary if one was applied
+  const discountSummary = document.getElementById('discount-summary');
+  if (discountSummary) {
+    const discAmt = quoteData.discount_amount || 0;
+    const discPct = quoteData.discount_pct || 0;
+    const discFlat = quoteData.discount_flat || 0;
+    if (discAmt > 0) {
+      let discLabel = '';
+      if (discPct > 0 && discFlat > 0) {
+        discLabel = `${discPct}% + $${discFlat.toLocaleString()} off`;
+      } else if (discPct > 0) {
+        discLabel = `${discPct}% off`;
+      } else {
+        discLabel = `$${discFlat.toLocaleString()} off`;
+      }
+      discountSummary.textContent = `Discount applied: ${discLabel} ($${discAmt.toLocaleString()})`;
+      discountSummary.style.display = 'block';
+    } else {
+      discountSummary.style.display = 'none';
+    }
+  }
+
   document.getElementById('price-confirm-section').style.display = 'block';
   document.getElementById('price-confirm-section').scrollIntoView({behavior: 'smooth'});
 }
