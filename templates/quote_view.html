@@ -543,6 +543,7 @@
               <div class="li-detail">{{ display_detail }}</div>
             {% endif %}
           </td>
+          {% if not (quote.get('discount_amount') and quote.discount_amount > 0) %}
           <td class="li-price-cell">
             {% if fp %}
             ${{ "{:,.0f}".format((item.max * scale)|round) }}
@@ -550,6 +551,9 @@
             ${{ "{:,.0f}".format(item.min) }} - ${{ "{:,.0f}".format(item.max) }}
             {% endif %}
           </td>
+          {% else %}
+          <td></td>
+          {% endif %}
         </tr>
         {% endfor %}
 
@@ -566,13 +570,15 @@
         {% endif %}
 
         {% if quote.get('discount_amount') and quote.discount_amount > 0 %}
+        {% set display_fp = fp if fp else quote.total_max %}
+        <tr>
+          <td><div class="li-desc" style="color:#888;">Subtotal</div></td>
+          <td class="li-price-cell" style="color:#888;">${{ "{:,.0f}".format(display_fp + quote.discount_amount) }}</td>
+        </tr>
         <tr class="discount-row">
           <td>
             <div class="li-desc">Discount Applied</div>
-            <div class="li-detail">
-              {% if quote.get('discount_flat') and quote.discount_flat > 0 %}${{ "{:,.0f}".format(quote.discount_flat) }} off{% endif %}
-              {% if quote.get('discount_pct') and quote.discount_pct > 0 %}{% if quote.get('discount_flat') and quote.discount_flat > 0 %} + {% endif %}{{ quote.discount_pct }}% off{% endif %}
-            </div>
+            <div class="li-detail">Special pricing for this project</div>
           </td>
           <td class="li-price-cell">-${{ "{:,.0f}".format(quote.discount_amount) }}</td>
         </tr>
