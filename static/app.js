@@ -554,7 +554,8 @@ function mapJobTypeToPricingKey(trade, rawJobType, baseParams) {
 
   const maps = {
     'Roofing': {
-      replacement: material === 'metal' ? 'Full Replacement (Metal)' : 'Full Replacement (Asphalt)',
+      replacement: 'Full Replacement (Asphalt)',
+      metal: 'Full Replacement (Metal)',
       repair: 'Repair (Minor)',
       gutters: 'Gutter Install/Replace',
     },
@@ -564,8 +565,9 @@ function mapJobTypeToPricingKey(trade, rawJobType, baseParams) {
       tuneup: systemType === 'furnace' ? 'Furnace Repair' : 'AC Repair',
     },
     'Plumbing': {
-      water_heater: 'Water Heater (Tank)', drain_cleaning: 'Drain Cleaning',
-      pipe_repair: 'Pipe Repair', bathroom_remodel: 'Bathroom Remodel (Plumbing)',
+      water_heater: 'Water Heater (Tank)', tankless: 'Water Heater (Tankless)',
+      drain_cleaning: 'Drain Cleaning', pipe_repair: 'Pipe Repair',
+      bathroom_remodel: 'Bathroom Remodel (Plumbing)',
       full_repipe: 'Sewer Line Repair', fixture_install: 'Faucet/Fixture Install',
     },
     'Electrical': {
