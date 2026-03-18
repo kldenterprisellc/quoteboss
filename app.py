@@ -1199,44 +1199,7 @@ def update_settings():
     return jsonify({"success": True})
 
 
-@app.route("/admin/stripe-test")
-def stripe_test():
-    if session.get('whop_user_id') != 'user_rYGUC3pFlNEz5':
-        return "unauthorized", 403
-    import traceback
-    results = []
-    # Check DB columns
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='contractors' ORDER BY ordinal_position")
-        cols = [r[0] for r in cur.fetchall()]
-        conn.close()
-        results.append(f"DB COLS: {cols}")
-    except Exception as e:
-        results.append(f"DB ERROR: {e}")
-    # Test upsert
-    try:
-        upsert_contractor(session['whop_user_id'], stripe_account_id='test_acct_debug', stripe_onboarding_complete=0)
-        results.append("UPSERT OK")
-        upsert_contractor(session['whop_user_id'], stripe_account_id=None, stripe_onboarding_complete=None)
-    except Exception as e:
-        results.append(f"UPSERT ERROR: {traceback.format_exc()}")
-    # Test full Stripe flow
-    try:
-        acct = stripe.Account.create(type='express', country='US',
-            capabilities={'card_payments':{'requested':True},'transfers':{'requested':True}})
-        link = stripe.AccountLink.create(
-            account=acct.id,
-            refresh_url='https://quoteboss.io/auth/stripe-connect',
-            return_url='https://quoteboss.io/settings?stripe=success',
-            type='account_onboarding',
-        )
-        stripe.Account.delete(acct.id)
-        results.append(f"STRIPE OK: {acct.id}")
-    except Exception as e:
-        results.append(f"STRIPE ERROR: {traceback.format_exc()}")
-    return "<br><br>".join(results)
+
 
 @app.route("/auth/stripe-connect")
 @limiter.limit("5 per minute")
